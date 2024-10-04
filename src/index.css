@@ -16,6 +16,8 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
+  --font-montserrat: Montserrat, Arial, sans-serif;
+
   --tit-5xl: 4.5em;
   --tit-4xl: 3.75em;
   --tit-3xl: 3em;
@@ -39,6 +41,11 @@
   --primary-color: #12406A;
   --primary-dark: #0B263E;
   --primary-light: #195A96;
+
+  --black: #000000;
+  --black-1: #333333;
+  --black-2: #666666;
+  --black-3: #999999;
 }
 
 a {
@@ -58,10 +65,18 @@ body {
 }
 
 h1 {
+  font-family: var(--font-family);
   font-size: 3.2em;
   line-height: 1.1;
 }
 
+h2{
+  font-family: var(--font-family);
+}
+
+p {
+  font-family: var(--font-montserrat);
+}
 button {
   border-radius: 8px;
   border: 1px solid transparent;

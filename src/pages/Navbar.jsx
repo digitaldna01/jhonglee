@@ -15,7 +15,7 @@ function Navbar(){
     const isActive = (path) => location.pathname === path;
 
     return(
-        <nav className='navbar navbar-expand-lg' style={{border: 'solid 1px red' }}>
+        <nav className='navbar navbar-expand-lg fixed-top' style={{border: 'solid 1px red' }}>
             <div className='container-fluid'>
                 <a className='navbar-brand navbar-component' style={{ fontSize: 'var(--txt-md)' }}>JAY</a>
                 <button 

@@ -8,12 +8,13 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 import Slider from './components/Slider.jsx';
-
+import About from './components/About.jsx';
 
 function Info(){
     return(
         <>
             <Slider/>
+            <About/>
         </>
     );
 }
