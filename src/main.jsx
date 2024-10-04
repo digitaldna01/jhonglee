@@ -8,13 +8,11 @@ import App from './App.jsx'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css'
 
-import Navbar from './components/Navbar.jsx'
 
+const root = createRoot(document.getElementById('root'));
 
-
-createRoot(document.getElementById('root')).render(
+root.render(
   <StrictMode>
     <App />
-    {/* <Navbar/> */}
   </StrictMode>,
-)
+);

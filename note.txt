@@ -1,0 +1,35 @@
+        // <section id="slider-area">
+            {/* <div className='container'>
+                <div className='row'>
+                    <div className='col-md-12 text-center'>
+                        <div className='block wow fadeInUp' data-wow-delay=".3s"> */}
+
+                                {/* Slider */}
+                            {/* <section className="cd-intro">
+                                <h1 className="wow fadeInUp animated cd-headline slide" data-wow-delay=".4s">
+                                    <span>HI, MY NAME IS Jay &amp; I AM A</span><br/>
+                                    <span className="cd-words-wrapper">
+                                        <b className="is-visible">DEVELOPER</b>
+                                        <b>DESIGNER</b>
+                                        <b>STUDENT</b>
+                                    </span>
+                                </h1>
+                            </section> */}
+
+                            {/*} /.slider */}
+                            {/* <h2 class="wow fadeInUp animated" data-wow-delay=".6s">
+                            I am a student at the Boston University studying Computer Science and visual arts.<br/>I am a developer, designer, and student. This site showcases some of my work.
+                            </h2>
+
+                            <a class="btn-lines dark light wow fadeInUp animated btn btn-default btn-green hvr-bounce-to-right"
+                            data-wow-delay=".9s" 
+                            href="pdf/Jae_Hong_Lee_Resume.pdf" 
+                            target="_blank"
+                            >
+                                Discover Resume
+                            </a> */}
+                        {/* </div>
+                    </div>
+                </div>
+            </div> */}
+        // </section>

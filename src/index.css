@@ -35,6 +35,10 @@
   --txt-sm: 0.875em;
   --txt-xs: 0.75em;
   --txt-2xs:0.625em;
+
+  --primary-color: #12406A;
+  --primary-dark: #0B263E;
+  --primary-light: #195A96;
 }
 
 a {
@@ -48,7 +52,6 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
   place-items: center;
   min-width: 320px;
   min-height: 100vh;

@@ -1,0 +1,8 @@
+.navbar-component{
+    font-family: var(--font-family);
+    font-size: var(--txt-lg);
+}
+
+.navbar-component .active{
+    color: var(--primary-color);
+}
