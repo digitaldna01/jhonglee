@@ -1,0 +1,116 @@
+.portfolio{
+    padding: 80px 0;
+    background: #FCFCFC;
+}
+.subtitle {
+    font-size: var(--tit-xl);
+    font-weight: 600;
+    margin-bottom: 18px;
+    text-transform: uppercase;
+}
+.subtitle-des{
+    color: var(--black-2);
+    font-size: var(--txt-md);
+    margin-bottom: 2.5em;
+    font-weight: 300;
+}
+
+
+
+figure {
+    background: #fff;
+    margin-bottom: 45px;
+    box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.04), 0 2px 10px 0 rgba(0, 0, 0, 0.06);
+}
+
+figure .img-wrapper {
+    position: relative;
+    overflow: hidden;
+}
+
+figure img {
+    transform: scale3d(1, 1, 1);
+    transition: transform 400ms;
+}
+
+figure:hover img {
+    transform: scale3d(1.2, 1.2, 1);
+}
+
+figure:hover .overlay {
+    opacity: 1;
+}
+
+figure:hover .overlay .buttons a {
+    transform: scale3d(1, 1, 1);
+}
+
+figure .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 10px;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.7);
+    opacity: 0;
+    transition: opacity 400ms;
+}
+
+figure .overlay a {
+  display: inline-block;
+  color: #fff;
+  padding: 10px 23px;
+  line-height: 1;
+  border: 1px solid #fff;
+  border-radius: 0px;
+  margin: 4px;
+  transform: scale3d(0, 0, 0);
+  transition: all 400ms;
+}
+
+figure .overlay a:hover {
+  text-decoration: none;
+}
+
+figure .overlay:hover a {
+  transform: scale3d(1, 1, 1);
+}
+
+figure .buttons {
+  margin-top: 40%;
+  text-align: center;
+  transform: translateY(-50%);
+  display: inline-block;
+}
+
+figure .buttons a:hover {
+  background: #24456B;
+  border-color: #24456B;
+}
+
+figure .buttons a:focus {
+  text-decoration: none;
+}
+
+figure figcaption {
+  padding: 20px 25px;
+  margin-top: 0;
+  color: var(--black-2);
+}
+
+figure figcaption h4 {
+  margin: 0;
+}
+
+figure figcaption h4 a {
+    font-size: var(--tit-md);
+    color: #24456B;
+}
+
+figure figcaption p {
+  font-size: var(--txt-sm);
+  margin-bottom: 0;
+  margin-top: 5px;
+}
