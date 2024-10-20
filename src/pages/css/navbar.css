@@ -4,7 +4,7 @@
 
 .navbar-component{
     font-family: var(--font-family);
-    font-size: var(--txt-lg);
+    font-size: var(--txt-md);
 }
 
 .navbar-component .active{
