@@ -4,6 +4,7 @@
 }
 .subtitle {
     font-size: var(--tit-xl);
+    font-family: var(--font-family);
     font-weight: 600;
     margin-bottom: 18px;
     text-transform: uppercase;
@@ -15,7 +16,17 @@
     font-weight: 300;
 }
 
+.portfolio-title {
+  font-size: var(--tit-md);
+  color: var(--primary-color);
+  font-family: var(--font-family);
+  text-decoration: none;
+}
 
+.portfolio-title:hover {
+  text-decoration: none;
+  color: var(--primary-dark);
+}
 
 figure {
     background: #fff;
@@ -100,6 +111,7 @@ figure figcaption {
   color: var(--black-2);
 }
 
+
 figure figcaption h4 {
   margin: 0;
 }
@@ -113,4 +125,15 @@ figure figcaption p {
   font-size: var(--txt-sm);
   margin-bottom: 0;
   margin-top: 5px;
+}
+
+.more-projects {
+  font-size: var(--txt-md);
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.more-projects:hover {
+  color: var(--secondary-color);
 }

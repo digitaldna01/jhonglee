@@ -1,3 +1,7 @@
+.navbar{
+    background-color: white;
+}
+
 .navbar-component{
     font-family: var(--font-family);
     font-size: var(--txt-lg);

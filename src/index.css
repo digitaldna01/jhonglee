@@ -42,6 +42,12 @@
   --primary-dark: #0B263E;
   --primary-light: #195A96;
 
+  --secondary-color: #FF8C00;
+  --secondary-dark: #cc7000;
+  --secondary-light: #ffa333;
+
+  --system-color-red: #FF0000;
+
   --black: #000000;
   --black-1: #333333;
   --black-2: #666666;

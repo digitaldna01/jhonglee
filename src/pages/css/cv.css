@@ -1,0 +1,85 @@
+body, html {
+    font-family: var(--font-family); /* 기본 폰트를 Arial로 설정 */
+}
+
+.cv-top-spacing {
+    padding-top: 150px; /* 원하는 만큼 조절 가능 */
+}
+
+.cv-title {
+    font-size: var(--tit-3xl);
+    font-weight: 400;
+}
+
+.cv-subtitle {
+    font-size: var(--txt-md);
+    font-weight: 600;
+    font-family: var(--font-family);
+}
+
+.cv-text {
+    font-size: var(--txt-md);
+    font-family: var(--font-montserrat);
+}
+
+.cv-contact {
+    display: flex;
+    gap: 20px; /* 링크 사이의 간격을 조절합니다 */
+}
+
+.cv-contact a {
+    font-family: var(--font-family);
+    text-decoration: none;
+    color: var(--secondary-color); /* 링크 색상을 조절합니다 */
+}
+
+.cv-contact a:hover {
+    color: var(--secondary-dark); /* 호버 시 색상을 변경합니다 */
+}
+
+.education-title {
+    margin-bottom: 8px;
+}
+
+.cv-list-date {
+    font-size: var(--txt-lg);
+    color: var(--black-3);
+    font-family: var(--font-family);
+    margin-bottom: 4px;
+}
+
+.cv-list-item {
+    display: flex;
+    align-items: baseline;
+}
+
+.cv-list-dot {
+    margin-right: 10px;
+    text-decoration: none;
+    color: var(--black-3); /* 또는 원하는 색상 */
+    font-size: 1.2em; /* 점의 크기 조절 */
+}
+
+.cv-list-dot-link {
+    color: var(--secondary-color); /* 또는 원하는 색상 */
+    cursor: pointer;
+}
+.cv-list-dot-link:hover {
+    color: var(--secondary-dark); /* 또는 원하는 색상 */
+}
+
+.cv-list-text {
+    margin: 0;
+}
+.cv-list-text {
+    font-size: var(--txt-lg);
+    font-family: var(--font-family);
+    margin-bottom: 4px;
+}
+.box-5 {
+    height: 3.75em;
+}
+
+.box-4{
+    height: 2.5em;
+}

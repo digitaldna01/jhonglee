@@ -10,6 +10,7 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import Slider from './components/Slider.jsx';
 import About from './components/About.jsx';
 import Portfolio from './components/Portfolio.jsx';
+import Footer from './components/Footer.jsx';
 
 function Info(){
     return(
@@ -17,6 +18,7 @@ function Info(){
             <Slider/>
             <About/>
             <Portfolio/>
+            <Footer/>
         </>
     );
 }

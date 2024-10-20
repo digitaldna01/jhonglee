@@ -15,9 +15,15 @@ function Navbar(){
     const isActive = (path) => location.pathname === path;
 
     return(
-        <nav className='navbar navbar-expand-lg fixed-top' style={{border: 'solid 1px red' }}>
+        <nav className='navbar navbar-expand-lg fixed-top'>
             <div className='container-fluid'>
-                <a className='navbar-brand navbar-component' style={{ fontSize: 'var(--txt-md)' }}>JAY</a>
+                <Link
+                    to="/"
+                    className={`nav-link navbar-component ${isActive('/') ? 'active' : ''}`}
+                >
+                    JAY
+                </Link>
+                {/* <a className='navbar-brand navbar-component' style={{ fontSize: 'var(--txt-md)' }}>JAY</a> */}
                 <button 
                     className='navbar-toggler' 
                     type='button' 
@@ -33,10 +39,10 @@ function Navbar(){
                     <ul className="navbar-nav">
                         <li className="nav-item">
                             <Link
-                                to="/"
-                                className={`nav-link navbar-component ${isActive('/') ? 'active' : ''}`}
+                                to="/cv"
+                                className={`nav-link navbar-component ${isActive('/cv') ? 'active' : ''}`}
                             >
-                                INFO
+                                CV
                             </Link>
                             {/* <a className="nav-link navbar-component" href="/">INFO</a> */}
                         </li>
@@ -51,10 +57,10 @@ function Navbar(){
                         </li>
                         <li className="nav-item">
                         <Link
-                                to="/contact"
-                                className={`nav-link navbar-component ${isActive('/contact') ? 'active' : ''}`}
+                                to="/blog"
+                                className={`nav-link navbar-component ${isActive('/blog') ? 'active' : ''}`}
                             >
-                                CONTACT
+                                BLOG
                             </Link>
                             {/* <a className="nav-link navbar-component" href="">CONTACT</a> */}
                         </li>

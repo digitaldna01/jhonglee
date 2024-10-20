@@ -16,8 +16,8 @@ const portfolioData = [
         wowDelay: '0ms'
     },
     {
-        title: 'Handpose Estimation',
-        description: 'Hand-pose estimation Machine learning model',
+        title: 'Handpose estimation',
+        description: 'AI-Driven Hand-pose estimation model',
         imageUrl: 'images/handpose.png',
         readLink: 'https://www.mdpi.com/2079-9292/13/10/1970',
         wowDelay: '300ms'
@@ -98,6 +98,9 @@ function Portfolio() {
                         <PortfolioItem key={index} {...item} setItemHeight={setItemHeight} itemHeight={maxHeight} />
                     ))}
                 </div>
+            </div>
+            <div className='text-center'>
+                <a href='/projects' className='more-projects'>Discover More</a>
             </div>
         </section>
     );

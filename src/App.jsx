@@ -5,8 +5,8 @@ import './App.css'
 import Navbar from './pages/Navbar';
 import Info from './pages/Info';
 import Projects from './pages/Projects';
-import Contact from './pages/Contact';
-
+import Blog from './pages/Blog';
+import Cv from './pages/Cv';
 
 function App() {
 
@@ -15,8 +15,9 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<Info />}/>
+        <Route path="/cv" element={<Cv />}/>
         <Route path='/projects' element={<Projects/>}/>
-        <Route path='/contact' element={<Contact />}/>
+        <Route path='/blog' element={<Blog />}/>
       </Routes>
     </Router>
   );
