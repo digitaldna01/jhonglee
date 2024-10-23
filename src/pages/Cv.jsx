@@ -72,6 +72,11 @@ function Cv() {
             date: "January 2024 - May 2024 / Boston, MA",
             link: "https://github.com/CS-411-To-Do-Calendar/cs411-to-do-calendar"
         },
+        {
+            degree: "One Call Away",
+            date: "December 2023 / Boston, MA",
+            link: "public/pdf/OneCallAway.pdf"
+        }
     ];
     return(
         <>
