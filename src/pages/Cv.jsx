@@ -73,6 +73,12 @@ function Cv() {
             link: "https://github.com/CS-411-To-Do-Calendar/cs411-to-do-calendar"
         },
         {
+            degree: "Gill Sans Typeface Stop Motion",
+            date: "December 2023 / Boston, MA",
+            // TODO ADD Links
+            link: ""
+        },
+        {
             degree: "One Call Away",
             date: "December 2023 / Boston, MA",
             link: "public/pdf/OneCallAway.pdf"
