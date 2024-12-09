@@ -1,12 +1,14 @@
 import React from 'react';
 
 // Import CSS
-import './css/cv.css'; // CSS 파일을 import 합니다
-import './css/info.css';
-import './../index.css';
+
 import 'bootstrap/dist/css/bootstrap.min.css';
 // Import Bootstrap JavaScript
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+
+import './css/cv.css'; // CSS 파일을 import 합니다
+import './css/info.css';
+import './../index.css';
 import Footer from './components/Footer';
 
 function Cv() {
@@ -116,7 +118,14 @@ function Cv() {
                                         ) : (
                                             <span className="cv-list-dot">•</span>
                                         )}
-                                        <p className="cv-list-text">{item.degree}</p>
+                                        <p 
+                                            className={`cv-list-text ${item.link ? 'clickable' : ''}`}
+                                            onClick={() => item.link && window.open(item.link, '_blank')}
+                                            style={item.link ? { cursor: 'pointer', color: 'blue', textDecoration: 'underline' } : {}}
+                                        >
+                                            {item.degree}
+                                        </p>
+                                        {/* <p className="cv-list-text">{item.degree}</p> */}
                                     </div>
                                 </div>
                             ))}
@@ -133,7 +142,13 @@ function Cv() {
                                         ) : (
                                             <span className="cv-list-dot">•</span>
                                         )}
-                                        <p className="cv-list-text">{item.degree}</p>
+                                        <p 
+                                            className={`cv-list-text ${item.link ? 'clickable' : ''}`}
+                                            onClick={() => item.link && window.open(item.link, '_blank')}
+                                            style={item.link ? { cursor: 'pointer', color: 'blue', textDecoration: 'underline' } : {}}
+                                        >
+                                            {item.degree}
+                                        </p>
                                     </div>
                                 </div>
                             ))}
@@ -150,7 +165,13 @@ function Cv() {
                                         ) : (
                                             <span className="cv-list-dot">•</span>
                                         )}
-                                        <p className="cv-list-text">{item.degree}</p>
+                                        <p 
+                                            className={`cv-list-text ${item.link ? 'clickable' : ''}`}
+                                            onClick={() => item.link && window.open(item.link, '_blank')}
+                                            style={item.link ? { cursor: 'pointer', color: 'blue', textDecoration: 'underline' } : {}}
+                                        >
+                                            {item.degree}
+                                        </p>
                                     </div>
                                 </div>
                             ))}
@@ -167,7 +188,13 @@ function Cv() {
                                         ) : (
                                             <span className="cv-list-dot">•</span>
                                         )}
-                                        <p className="cv-list-text">{item.degree}</p>
+                                        <p 
+                                            className={`cv-list-text ${item.link ? 'clickable' : ''}`}
+                                            onClick={() => item.link && window.open(item.link, '_blank')}
+                                            style={item.link ? { cursor: 'pointer', color: 'blue', textDecoration: 'underline' } : {}}
+                                        >
+                                            {item.degree}
+                                        </p>
                                     </div>
                                 </div>
                             ))}

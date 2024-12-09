@@ -46,7 +46,7 @@ function Slider(){
                                 </section>
 
                                 <h2 className='wow fadeInUp animated' data-wow-delay=".6s">
-                                    I am a student at Boston University studying Computer Science and Visual Arts. <br/>I am a Engineer, Designer, and Researcher. This site showcase some of my work
+                                    I am a student at Boston University studying Computer Science and Visual Arts. <br/>This site showcase some of my work
                                 </h2>
 
                                 <a className='wow fadeInUp animated btn btn-lines hvr-bounce-to-right' data-wow-delay=".9s" href="pdf/Jae_Hong_Lee_Resume.pdf" target="_blank">

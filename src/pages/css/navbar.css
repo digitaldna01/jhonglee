@@ -7,6 +7,6 @@
     font-size: var(--txt-md);
 }
 
-.navbar-component .active{
-    color: var(--primary-color);
+#navbarItem.active{
+    color: var(--secondary-color) !important; 
 }

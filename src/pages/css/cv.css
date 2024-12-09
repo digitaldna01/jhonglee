@@ -76,6 +76,18 @@ body, html {
     font-family: var(--font-family);
     margin-bottom: 4px;
 }
+
+.cv-list-text.clickable {
+    cursor: pointer; /* 클릭 가능 표시 */
+    color: black !important;
+    text-decoration: none !important; /* 밑줄 제거 */
+}
+
+.cv-list-text.clickable:hover {
+    color: inherit; /* 호버 시 색상 유지 */
+    text-decoration: none; /* 호버 시 밑줄 제거 */
+}
+
 .box-5 {
     height: 3.75em;
 }
@@ -83,3 +95,4 @@ body, html {
 .box-4{
     height: 2.5em;
 }
+

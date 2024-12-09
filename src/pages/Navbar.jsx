@@ -37,9 +37,10 @@ function Navbar(){
                 </button>
                 <div className='collapse navbar-collapse justify-content-center' id="navbarText">
                     <ul className="navbar-nav">
-                        <li className="nav-item">
+                        <li className="nav-item" id="navbar-active">
                             <Link
                                 to="/cv"
+                                id="navbarItem"
                                 className={`nav-link navbar-component ${isActive('/cv') ? 'active' : ''}`}
                             >
                                 CV
@@ -49,6 +50,7 @@ function Navbar(){
                         <li className="nav-item">
                         <Link
                                 to="/projects"
+                                id="navbarItem"
                                 className={`nav-link navbar-component ${isActive('/projects') ? 'active' : ''}`}
                             >
                                 PROJECTS
@@ -58,6 +60,7 @@ function Navbar(){
                         <li className="nav-item">
                         <Link
                                 to="/blog"
+                                id="navbarItem"
                                 className={`nav-link navbar-component ${isActive('/blog') ? 'active' : ''}`}
                             >
                                 BLOG
