@@ -4,7 +4,6 @@ import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 // Import Bootstrap JavaScript
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
-import './css/info.css';
 import './../index.css';
 
 import Slider from './components/Slider.jsx';

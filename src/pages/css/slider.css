@@ -221,3 +221,7 @@ x.no-js .cd-words-wrapper b.is-visible {
         transform: translateY(100%);
     }
 }
+
+.hvr-bounce-to-right:before {
+    background: var(--primary-light) !important;
+}

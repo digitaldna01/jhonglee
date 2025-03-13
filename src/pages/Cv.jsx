@@ -7,7 +7,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 import './css/cv.css'; // CSS 파일을 import 합니다
-import './css/info.css';
+
 import './../index.css';
 import Footer from './components/Footer';
 
@@ -69,6 +69,16 @@ function Cv() {
     ];
 
     const projectData = [
+        {
+            degree: "Cogs and Gears",
+            date: "January 2025 - March 2025 / Boston, MA",
+            link: "https://digitaldna01.github.io/digital-narrative/"
+        },
+        {
+            degree: "Quantum Simulator",
+            date: "June 2024 - August 2024 / Seungnam, KOR",
+            link: "https://github.com/digitaldna01/quantum-simulator"
+        },
         {
             degree: "TO-DO Calendar Web",
             date: "January 2024 - May 2024 / Boston, MA",

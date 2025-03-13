@@ -1,0 +1,71 @@
+body, html {
+    font-family: var(--font-family); /* 기본 폰트를 Arial로 설정 */
+}
+.full-width {
+    width: 100vh;
+}
+
+.container {
+    position: relative;
+}
+.projects-top-spacing {
+    padding-top: 100px; /* 원하는 만큼 조절 가능 */
+}
+
+.projects-title {
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: var(--tit-2xl);
+    font-weight: 200;
+    z-index: 10;
+}
+
+.project-section {
+    position: relative;
+    width: auto;
+    height: 100vh;
+}
+
+.brain-image{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /* width: 858px; */
+    width: 100%;
+}
+
+.project-description{
+    position: absolute;
+    width: 250px;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.hover-zone {
+    position: absolute;
+    width: 30%;
+    height: 100%;
+    top: 0%;
+    cursor: pointer;
+    border: 1px solid black;
+}
+
+.hover-triangle {
+    position: absolute;
+    width: 50%;
+    height: 50%;
+    background: transparent;
+    cursor: pointer;
+}
+
+.hover-1 { top: 0; left: 0; clip-path: polygon(100% 100%, 100% 0%, 0% 0%); }
+.hover-2 { top: 0; left: 0%; clip-path: polygon(100% 100%, 0% 100%, 0% 0%);  }
+.hover-3 { top: 50%; left: 0; clip-path: polygon(100% 0%, 0% 0%, 0% 100%);  }
+.hover-4 { top: 50%; left: 0%; clip-path: polygon(100% 0%, 100% 100%, 0% 100%);  }
+
+.hover-5 { top: 0; right: 0; clip-path: polygon(0% 100%, 0% 0%, 100% 0%);  }
+.hover-6 { top: 0; right: 0%; clip-path: polygon(0% 100%, 100% 100%, 100% 0%);  }
+.hover-7 { top: 50%; right:0%; clip-path: polygon(0% 0%, 100% 0%, 100% 100%);  }
+.hover-8 { top: 50%; right: 0%; clip-path: polygon(0% 0%, 0% 100%, 100% 100%);  }
