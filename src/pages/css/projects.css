@@ -33,16 +33,43 @@ body, html {
     left: 50%;
     transform: translate(-50%, -50%);
     /* width: 858px; */
-    width: 100%;
+    width: 75%;
 }
 
-.project-description{
+.project-template{
     position: absolute;
     width: 250px;
     padding: 10px;
     border-radius: 8px;
 }
 
+.project-title {
+    font-size: var(--tit-lg);
+    margin-bottom: 4px;
+}
+
+.art-title {
+    color: var(--secondary-color);
+}
+
+.cs-title {
+    color: var(--primary-color);
+}
+
+.project-date {
+    font-size: var(--txt-2xs);
+    font-family: var(--font-montserrat);
+    color: grey;
+}
+
+.project-image {
+    width: auto;
+}
+.project-description {
+    font-size: var(--txt-xs);
+    font-family: var(--font-montserrat);
+    font-weight: 100;
+}
 .hover-zone {
     position: absolute;
     width: 30%;
