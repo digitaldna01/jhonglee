@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 
-
 import '../css/slider.css'; 
 import '../../index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
