@@ -25,7 +25,8 @@ function Cv() {
         },
         {
             degree: "Aquinas Institute of Rochester / High School ",
-            date: "September 2016 - June 2019 / Rochester, NY"
+            date: "September 2016 - June 2019 / Rochester, NY",
+            link: "https://www.aquinasinstitute.com/"
         },
         {
             degree: "Bowie High School / High School ",

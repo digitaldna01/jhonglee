@@ -10,3 +10,27 @@
 #navbarItem.active{
     color: var(--secondary-color) !important; 
 }
+
+.blog-category-container {
+    width: 100%;
+}
+
+.blog-categories {
+    width: 100%;
+    text-align: center;
+    display: flex;
+    font-size: var(--txt-sm);
+}
+
+.blog-category-link {
+    text-decoration: none;
+    font-weight: bold;
+    color: #333;
+    padding: 5px 15px;
+    transition: color 0.3s ease-in-out;
+}
+
+.blog-category-link:hover {
+    color: #ff7f50; /* Highlight on hover */
+}
+

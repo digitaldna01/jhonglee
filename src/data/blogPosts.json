@@ -1,0 +1,18 @@
+[
+    {
+        "id": 1,
+        "title": "My First Blog Post",
+        "date": "2025-03-10",
+        "category": "NEWS",
+        "content": "This is my first blog post!",
+        "keywords": ["update", "announcement"]
+    },
+    {
+        "id": 2,
+        "title": "My Music Playlist",
+        "date": "2025-03-09",
+        "category": "MUSIC",
+        "content": "Here are some songs I’m enjoying...",
+        "keywords": ["playlist", "chill"]
+    }
+]

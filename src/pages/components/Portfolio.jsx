@@ -16,7 +16,7 @@ const portfolioData = [
         wowDelay: '0ms'
     },
     {
-        title: 'Handpose estimation',
+        title: 'Handpose Predict',
         description: 'AI-Driven Hand-pose estimation model',
         imageUrl: 'images/handpose.png',
         readLink: 'https://www.mdpi.com/2079-9292/13/10/1970',
