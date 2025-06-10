@@ -1,24 +1,24 @@
-import React from 'react';
+import React from "react";
 
 // Import CSS
-import 'bootstrap/dist/css/bootstrap.min.css';
+import "bootstrap/dist/css/bootstrap.min.css";
 // Import Bootstrap JavaScript
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
-import './../index.css';
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
+import "../index.css";
 
-import Slider from './components/Slider.jsx';
-import About from './components/About.jsx';
-import Portfolio from './components/Portfolio.jsx';
-import Footer from './components/Footer.jsx';
+import Slider from "../components/Slider.jsx";
+import About from "../components/About.jsx";
+import Portfolio from "../components/Portfolio.jsx";
+import Footer from "../components/Footer.jsx";
 
-function Info(){
-    return(
-        <>
-            <Slider/>
-            <About/>
-            <Portfolio/>
-            <Footer/>
-        </>
-    );
+function Info() {
+  return (
+    <>
+      <Slider />
+      <About />
+      <Portfolio />
+      <Footer />
+    </>
+  );
 }
 export default Info;

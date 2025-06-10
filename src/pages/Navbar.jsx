@@ -1,101 +1,132 @@
 // src/components/Navbar.jsx
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
 // Import CSS
-import './css/navbar.css'
-import './../index.css'
-import 'bootstrap/dist/css/bootstrap.min.css'
+import "../styles/navbar.css";
+import "../index.css";
+import "bootstrap/dist/css/bootstrap.min.css";
 // Import Bootstrap JavaScript
-import 'bootstrap/dist/js/bootstrap.bundle.min.js'
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
-function Navbar(){
-    const location = useLocation();
+function Navbar() {
+  const location = useLocation();
 
-    // Function to check if the link is active
-    const isActive = (path) => location.pathname === path;
+  // Function to check if the link is active
+  const isActive = (path) => location.pathname === path;
 
-    return(
-        <>
-            <nav className='navbar navbar-expand-lg fixed-top'>
-                <div className='container-fluid d-flex flex-wrap'>
-                        <div className='col-12 d-flex justify-content-between align-items-center'>
-                            <Link
-                                to="/"
-                                className={`nav-link navbar-component ${isActive('/') ? 'active' : ''}`}
-                            >
-                                JAY
-                            </Link>
+  return (
+    <>
+      <nav className="navbar navbar-expand-lg fixed-top">
+        <div className="container-fluid d-flex flex-wrap">
+          <div className="col-12 d-flex justify-content-between align-items-center">
+            <Link
+              to="/"
+              className={`nav-link navbar-component ${
+                isActive("/") ? "active" : ""
+              }`}
+            >
+              JAY
+            </Link>
 
-                            {/* <a className='navbar-brand navbar-component' style={{ fontSize: 'var(--txt-md)' }}>JAY</a> */}
-                            <button 
-                                className='navbar-toggler' 
-                                type='button' 
-                                data-bs-toggle='collapse' 
-                                data-bs-target="#navbarText" 
-                                aria-controls="navbarText" 
-                                aria-expanded="false" 
-                                aria-label="Toggle navigation"
-                            >
-                                <span className="navbar-toggler-icon"></span>
-                            </button>
-                            <div className='collapse navbar-collapse justify-content-center' id="navbarText">
-                                <ul className="navbar-nav">
-                                    <li className="nav-item" id="navbar-active">
-                                        <Link
-                                            to="/cv"
-                                            id="navbarItem"
-                                            className={`nav-link navbar-component ${isActive('/cv') ? 'active' : ''}`}
-                                        >
-                                            CV
-                                        </Link>
-                                    </li>
-                                    <li className="nav-item">
-                                    <Link
-                                            to="/projects"
-                                            id="navbarItem"
-                                            className={`nav-link navbar-component ${isActive('/projects') ? 'active' : ''}`}
-                                        >
-                                            PROJECTS
-                                        </Link>
-                                    </li>
-                                    <li className="nav-item">
-                                    <Link
-                                            to="/blog"
-                                            id="navbarItem"
-                                            className={`nav-link navbar-component ${isActive('/blog') ? 'active' : ''}`}
-                                        >
-                                            BLOG
-                                        </Link>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    {/* ✅ Blog Category Navbar (Only Shows When on `/blog`) */}
-                    {isActive('/blog') && (
-                        <div className='col-12 d-flex blog-category-container'>
-                            <ul className="navbar-nav blog-categories flex-row justify-content-center">
-                                <li className="nav-item">
+            {/* <a className='navbar-brand navbar-component' style={{ fontSize: 'var(--txt-md)' }}>JAY</a> */}
+            <button
+              className="navbar-toggler"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#navbarText"
+              aria-controls="navbarText"
+              aria-expanded="false"
+              aria-label="Toggle navigation"
+            >
+              <span className="navbar-toggler-icon"></span>
+            </button>
+            <div
+              className="collapse navbar-collapse justify-content-center"
+              id="navbarText"
+            >
+              <ul className="navbar-nav">
+                <li className="nav-item" id="navbar-active">
+                  <Link
+                    to="/cv"
+                    id="navbarItem"
+                    className={`nav-link navbar-component ${
+                      isActive("/cv") ? "active" : ""
+                    }`}
+                  >
+                    CV
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link
+                    to="/projects"
+                    id="navbarItem"
+                    className={`nav-link navbar-component ${
+                      isActive("/projects") ? "active" : ""
+                    }`}
+                  >
+                    PROJECTS
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link
+                    to="/blog"
+                    id="navbarItem"
+                    className={`nav-link navbar-component ${
+                      isActive("/blog") ? "active" : ""
+                    }`}
+                  >
+                    BLOG
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+          {/* ✅ Blog Category Navbar (Only Shows When on `/blog`) */}
+          {isActive("/blog") && (
+            <div className="col-12 d-flex blog-category-container">
+              <ul className="navbar-nav blog-categories flex-row justify-content-center">
+                {/* <li className="nav-item">
                                     <Link to="/blog?category=NEWS" className="nav-link blog-category-link">NEWS</Link>
-                                </li>
-                                <li className="nav-item">
-                                    <Link to="/blog?category=LOG" className="nav-link blog-category-link">LOG</Link>
-                                </li>
-                                <li className="nav-item">
-                                    <Link to="/blog?category=PROJECTS" className="nav-link blog-category-link">PROJECTS</Link>
-                                </li>
-                                <li className="nav-item">
-                                    <Link to="/blog?category=GALLERY" className="nav-link blog-category-link">GALLERY</Link>
-                                </li>
-                                <li className="nav-item">
-                                    <Link to="/blog?category=MUSIC" className="nav-link blog-category-link">MUSIC</Link>
-                                </li>
-                            </ul>
-                        </div>
-                    )}
-                </div> 
-            </nav>
-        </>
-    ) 
+                                </li> */}
+                <li className="nav-item">
+                  <Link
+                    to="/blog?category=LOG"
+                    className="nav-link blog-category-link"
+                  >
+                    BLOG
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link
+                    to="/blog?category=PROJECTS"
+                    className="nav-link blog-category-link"
+                  >
+                    PROJECTS
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link
+                    to="/blog?category=GALLERY"
+                    className="nav-link blog-category-link"
+                  >
+                    GALLERY
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link
+                    to="/blog?category=MUSIC"
+                    className="nav-link blog-category-link"
+                  >
+                    MUSIC
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          )}
+        </div>
+      </nav>
+    </>
+  );
 }
 
 export default Navbar;

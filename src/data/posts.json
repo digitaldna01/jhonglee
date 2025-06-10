@@ -1,18 +1,20 @@
 [
     {
-        "id": 1,
+        "id": "post-1",
+        "slug": "my-first-blog-post",
         "title": "My First Blog Post",
         "date": "2025-03-10",
         "category": "NEWS",
-        "content": "This is my first blog post!",
+        "excerpt": "This is my first blog post!",
         "keywords": ["update", "announcement"]
     },
     {
-        "id": 2,
+        "id": "post-2",
+        "slug": "my-music-playlist",
         "title": "My Music Playlist",
         "date": "2025-03-09",
         "category": "MUSIC",
-        "content": "Here are some songs I’m enjoying...",
+        "excerpt": "Here are some songs I’m enjoying...",
         "keywords": ["playlist", "chill"]
     }
 ]
