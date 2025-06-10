@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 import posts from "../data/posts.json";
+import "../styles/blog.css";
 import "../styles/post.css";
 
 // MDX 파일을 glob으로 import
@@ -30,15 +31,16 @@ export default function Post() {
   if (!PostComponent) return <p>Loading...</p>;
 
   return (
-    <div className="post-page post-top-spacing">
-      <h1>{postMeta.title}</h1>
-      <p>
-        <i>{postMeta.date}</i>
-      </p>
-      <p>
-        <i>{postMeta.date}</i>
-      </p>
-      <PostComponent />
-    </div>
+    <>
+      <section className="post-page">
+        <div className="blog-post"></div>
+        <div className="blog-title">{postMeta.title}</div>
+        <p className="blog-meta">
+          {postMeta.category} | {postMeta.date}
+        </p>
+
+        <PostComponent />
+      </section>
+    </>
   );
 }

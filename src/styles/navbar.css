@@ -1,36 +1,35 @@
-.navbar{
-    background-color: white;
+.navbar {
+  background-color: white;
 }
 
-.navbar-component{
-    font-family: var(--font-family);
-    font-size: var(--txt-md);
+.navbar-component {
+  font-family: var(--font-family);
+  font-size: var(--txt-md);
 }
 
-#navbarItem.active{
-    color: var(--secondary-color) !important; 
+#navbarItem.active {
+  color: var(--secondary-color) !important;
 }
 
 .blog-category-container {
-    width: 100%;
+  width: 100%;
 }
 
 .blog-categories {
-    width: 100%;
-    text-align: center;
-    display: flex;
-    font-size: var(--txt-sm);
+  width: 100%;
+  text-align: center;
+  display: flex;
+  font-size: var(--txt-sm);
 }
 
 .blog-category-link {
-    text-decoration: none;
-    font-weight: bold;
-    color: #333;
-    padding: 5px 15px;
-    transition: color 0.3s ease-in-out;
+  text-decoration: none;
+  font-weight: bold;
+  color: #333;
+  padding: 5px 15px;
+  transition: color 0.3s ease-in-out;
 }
 
 .blog-category-link:hover {
-    color: #ff7f50; /* Highlight on hover */
+  color: #ff7f50; /* Highlight on hover */
 }
-

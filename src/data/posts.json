@@ -1,20 +1,21 @@
 [
-    {
-        "id": "post-1",
-        "slug": "my-first-blog-post",
-        "title": "My First Blog Post",
-        "date": "2025-03-10",
-        "category": "NEWS",
-        "excerpt": "This is my first blog post!",
-        "keywords": ["update", "announcement"]
-    },
-    {
-        "id": "post-2",
-        "slug": "my-music-playlist",
-        "title": "My Music Playlist",
-        "date": "2025-03-09",
-        "category": "MUSIC",
-        "excerpt": "Here are some songs I’m enjoying...",
-        "keywords": ["playlist", "chill"]
-    }
+  {
+    "id": "project-1",
+    "slug": "project-1",
+    "title": "Quantum Simulator",
+    "date": "2024-08-15",
+    "category": "PROJECTS",
+    "image": "",
+    "excerpt": "This is my first blog post!",
+    "keywords": ["update", "announcement"]
+  },
+  {
+    "id": "post-2",
+    "slug": "my-music-playlist",
+    "title": "My Second Blog Post",
+    "date": "2025-03-09",
+    "category": "MUSIC",
+    "excerpt": "Here are some songs I’m enjoying...",
+    "keywords": ["playlist", "chill"]
+  }
 ]

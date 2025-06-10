@@ -1,48 +1,53 @@
 import { useState, useEffect } from "react";
 import blogData from "../data/posts.json";
 import { Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 import "../styles/blog.css";
 
 function Blog() {
   const [blogPosts, setBlogPosts] = useState([]);
-  const [filter, setFilter] = useState("ALL");
+  const location = useLocation();
+
+  // Get category from query
+  const queryParams = new URLSearchParams(location.search);
+  const categoryQuery = queryParams.get("category") || "ALL";
 
   useEffect(() => {
     setBlogPosts(blogData); // Load posts from JSON
   }, []);
 
   const filteredPosts =
-    filter === "ALL"
+    categoryQuery === "ALL"
       ? blogPosts
-      : blogPosts.filter((post) => post.category === filter);
+      : blogPosts.filter((post) => post.category === categoryQuery);
+
+  // 최신 날짜순 정렬
+  const sortedPosts = [...filteredPosts].sort(
+    (a, b) => new Date(b.date) - new Date(a.date)
+  );
 
   return (
     // Infinite Scroll style
     <>
       <section>
-        <div className="filter-buttons">
-          {["ALL", "BLOG", "PROJECTS", "GALLERY", "MUSIC"].map((category) => (
-            <button
-              key={category}
-              className={filter === category ? "active" : ""}
-              onClick={() => setFilter(category)}
+        <div className="blog-container">
+          {sortedPosts.map((post) => (
+            <Link
+              to={`/posts/${post.slug}`}
+              key={post.id}
+              className="blog-post-link"
             >
-              {category}
-            </button>
-          ))}
-        </div>
-
-        <div className="blog-posts blog-top-spacing">
-          {filteredPosts.map((post) => (
-            <div key={post.id} className="blog-card">
-              <h2>{post.title}</h2>
-              <p>
-                <i>{post.date}</i>
-              </p>
-              <p>{post.excerpt}</p>
-              <Link to={`/posts/${post.slug}`}>Read More</Link>
-            </div>
+              <div className="blog-post">
+                <div className="blog-title">{post.title}</div>
+                <p className="blog-meta">
+                  {post.category} | {post.date}
+                </p>
+                <p>{post.excerpt}</p>
+                <p>{post.keywords}</p>
+                {/* <Link to={`/posts/${post.slug}`}>Read More</Link> */}
+              </div>
+            </Link>
           ))}
         </div>
       </section>
