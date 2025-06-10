@@ -14,6 +14,7 @@ import Projects from "./pages/Projects";
 import Blog from "./pages/Blog";
 import Cv from "./pages/Cv";
 import Post from "./pages/Post";
+import Footer from "./components/Footer";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
         <Route path="/blog" element={<Blog />} />
         <Route path="/posts/:slug" element={<Post />} /> {/* ✅ 이 줄만 추가 */}
       </Routes>
+      <Footer />
     </Router>
   );
 }

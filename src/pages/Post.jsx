@@ -2,8 +2,14 @@ import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 import posts from "../data/posts.json";
+
+import "bootstrap/dist/css/bootstrap.min.css";
+// Import Bootstrap JavaScript
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
+
 import "../styles/blog.css";
 import "../styles/post.css";
+import "../index.css";
 
 // MDX 파일을 glob으로 import
 const postModules = import.meta.glob("../posts/*.mdx");
@@ -32,14 +38,14 @@ export default function Post() {
 
   return (
     <>
-      <section className="post-page">
-        <div className="blog-post"></div>
-        <div className="blog-title">{postMeta.title}</div>
-        <p className="blog-meta">
-          {postMeta.category} | {postMeta.date}
-        </p>
-
-        <PostComponent />
+      <section className="post-page full-width">
+        <div className="post-container">
+          <div className="blog-title">{postMeta.title}</div>
+          <p className="blog-meta">
+            {postMeta.category} | {postMeta.date}
+          </p>
+          <PostComponent />
+        </div>
       </section>
     </>
   );

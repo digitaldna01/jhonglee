@@ -3,7 +3,12 @@ import blogData from "../data/posts.json";
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 
+import "bootstrap/dist/css/bootstrap.min.css";
+// Import Bootstrap JavaScript
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
+
 import "../styles/blog.css";
+import "../index.css";
 
 function Blog() {
   const [blogPosts, setBlogPosts] = useState([]);
@@ -43,9 +48,13 @@ function Blog() {
                 <p className="blog-meta">
                   {post.category} | {post.date}
                 </p>
+                <img
+                  src={post.thumbnail}
+                  alt={post.title}
+                  className="blog-thumbnail xl:w-full lg:w-full md:w-full sm:w-full xs:w-full"
+                />
                 <p>{post.excerpt}</p>
                 <p>{post.keywords}</p>
-                {/* <Link to={`/posts/${post.slug}`}>Read More</Link> */}
               </div>
             </Link>
           ))}

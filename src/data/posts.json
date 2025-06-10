@@ -1,69 +1,91 @@
 [
   {
     "id": "project-1",
-    "slug": "project-1",
+    "slug": "designStudy",
     "title": "Design Study",
     "date": "2023-11-30",
     "category": "PROJECTS",
     "subcategory": "visual",
-    "image": "",
+    "thumbnail": "images/project/thumbnail/designStudy.svg",
     "excerpt": "This is my first blog post!",
-    "keywords": ["update", "Book"]
+    "keywords": ["Graphic Design", "Book"]
   },
   {
     "id": "project-2",
-    "slug": "project-2",
+    "slug": "gillSans",
     "title": "Gill Sans",
     "date": "2023-12-15",
     "category": "PROJECTS",
     "subcategory": "visual",
-    "image": "",
+    "thumbnail": "images/project/thumbnail/gillSans.svg",
     "excerpt": "This is my first blog post!",
-    "keywords": ["Stop Motion", ""]
+    "keywords": ["Typography", "Stop Motion"]
   },
   {
     "id": "project-3",
-    "slug": "project-3",
+    "slug": "visualArtPortfolio",
     "title": "Visual Art Portfolio",
     "date": "2023-08-15",
     "category": "PROJECTS",
     "subcategory": "visual",
-    "image": "",
+    "thumbnail": "images/project/thumbnail/visualArtPortfolio.svg",
     "excerpt": "This is my first blog post!",
-    "keywords": ["update", "announcement"]
+    "keywords": ["", ""]
   },
   {
     "id": "project-4",
-    "slug": "project-4",
+    "slug": "handPoseEstimation",
     "title": "Hand Pose Estimation",
     "date": "2024-05-15",
     "category": "PROJECTS",
     "subcategory": "logical",
-    "image": "",
+    "thumbnail": "images/project/thumbnail-handpose.svg",
     "excerpt": "This is my first blog post!",
-    "keywords": ["Machine Learning", "announcement"]
+    "keywords": ["", ""]
   },
   {
     "id": "project-5",
-    "slug": "project-5",
+    "slug": "quantumSimulator",
     "title": "Quantum Simulator",
     "date": "2024-08-15",
     "category": "PROJECTS",
     "subcategory": "logical",
-    "image": "images/project/brain-CS1.png",
+    "thumbnail": "images/project/thumbnail-QuantumSimulator.svg",
     "excerpt": "The purpose of this project is to create a quantum simulator using Google's Tensor Network framework.",
-    "keywords": ["update", "announcement"]
+    "keywords": ["", ""]
   },
   {
     "id": "project-6",
-    "slug": "project-6",
-    "title": "Gears and Cogs",
+    "slug": "handPoseEstimation",
+    "title": "Hand Pose Estimation",
+    "date": "2024-05-15",
+    "category": "PROJECTS",
+    "subcategory": "logical",
+    "thumbnail": "images/project/thumbnail/handPose.svg",
+    "excerpt": "This is my first blog post!",
+    "keywords": ["Machine Learning", ""]
+  },
+  {
+    "id": "project-7",
+    "slug": "quantumSimulator",
+    "title": "Quantum Simulator",
+    "date": "2024-08-15",
+    "category": "PROJECTS",
+    "subcategory": "logical",
+    "thumbnail": "images/project/thumbnail/quantumSimulator.svg",
+    "excerpt": "The purpose of this project is to create a quantum simulator using Google's Tensor Network framework.",
+    "keywords": ["", ""]
+  },
+  {
+    "id": "project-8",
+    "slug": "cogsAndGears",
+    "title": "Cogs and Gears",
     "date": "2025-03-09",
     "category": "PROJECTS",
     "subcategory": "visual",
-    "image": "",
+    "thumbnail": "images/project/thumbnail/cogsAndGears.svg",
     "excerpt": "This is my first blog post!",
-    "keywords": ["update", "announcement"]
+    "keywords": ["", ""]
   },
   {
     "id": "blog-1",

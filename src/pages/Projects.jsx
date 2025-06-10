@@ -1,6 +1,7 @@
-import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-// Data import
+import React, { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+
+//  import Data from the JSON file
 import blogData from "../data/posts.json";
 
 import "../styles/projects.css";
@@ -9,117 +10,94 @@ import "../index.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 // Import Bootstrap JavaScript
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
-import Footer from "../components/Footer";
 
 function Projects() {
+  // updating part  start =========================================================================
+  const [projects, setProjects] = useState([]);
   const [activeProject, setActiveProject] = useState(null);
-  const [showLinkOptions, setShowLinkOptions] = useState(false);
-  const [linkPosition, setLinkPosition] = useState({ top: 0, left: 0 });
+  const navigate = useNavigate();
 
-  const projectData = {
-    CS1: {
-      category: "logical",
-      image: "images/project/brain-CS1.png",
-      thumbnail: "images/project/thumbnail-CS1.svg",
-      title: "Quantum Computing",
-      date: "August 2024",
-      description:
-        "The purpose of this project is to create a quantum simulator using Google's Tensor Network framework.",
-      Links: [
-        { label: "Demo" },
-        {
-          label: "Code",
-          url: "https://github.com/digitaldna01/quantum-simulator",
+  const logicalPositions = [
+    {
+      top: "5%",
+      left: "-5%",
+      image: "images/project/brain/brain-logical-1.png",
+    },
+    {
+      top: "25%",
+      left: "-5%",
+      image: "images/project/brain/brain-logical-2.png",
+    },
+    {
+      top: "45%",
+      left: "-5%",
+      image: "images/project/brain/brain-logical-3.png",
+    },
+    {
+      top: "55%",
+      left: "-5%",
+      image: "images/project/brain/brain-logical-4.png",
+    },
+  ];
+
+  const visualPositions = [
+    {
+      top: "5%",
+      left: "75%",
+      image: "images/project/brain/brain-visual-1.png",
+    },
+    {
+      top: "25%",
+      left: "75%",
+      image: "images/project/brain/brain-visual-2.png",
+    },
+    {
+      top: "45%",
+      left: "75%",
+      image: "images/project/brain/brain-visual-3.png",
+    },
+    {
+      top: "55%",
+      left: "75%",
+      image: "images/project/brain/brain-visual-4.png",
+    },
+  ];
+
+  useEffect(() => {
+    const visual = blogData
+      .filter(
+        (post) => post.category === "PROJECTS" && post.subcategory === "visual"
+      )
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 4)
+      .map((project, idx) => ({
+        ...project,
+        position: {
+          top: visualPositions[idx].top,
+          left: visualPositions[idx].left,
         },
-      ],
-      position: { top: "5%", left: "-5%" },
-    },
-    CS2: {
-      category: "logical",
-      image: "images/project/brain-CS2.png",
-      thumbnail: "images/project/thumbnail-CS2.svg",
-      title: "Hand Pose Estimation",
-      date: "April 2024",
-      description:
-        "The purpose of this project is to create a quantum simulator using Google's Tensor Network framework.",
-      detailsLink: "https://www.mdpi.com/2079-9292/13/10/1970",
-      position: { top: "25%", left: "-5%" },
-    },
-    CS3: {
-      category: "logical",
-      image: "images/project/brain-CS3.png",
-      thumbnail: "images/project/thumbnail-CS1.svg",
-      title: "AI Research",
-      date: "August 2024",
-      description:
-        "The purpose of this project is to create a quantum simulator using Google's Tensor Network framework.",
-      detailsLink: "https://www.mdpi.com/2079-9292/13/10/1970",
-      position: { top: "45%", left: "-5%" },
-    },
-    CS4: {
-      category: "logical",
-      image: "images/project/brain-CS4.png",
-      thumbnail: "images/project/thumbnail-CS1.svg",
-      title: "Cybersecurity",
-      date: "August 2024",
-      description:
-        "The purpose of this project is to create a quantum simulator using Google's Tensor Network framework.",
-      detailsLink: "https://www.mdpi.com/2079-9292/13/10/1970",
-      position: { top: "55%", left: "-5%" },
-    },
+        image: visualPositions[idx].image,
+      }));
 
-    Art1: {
-      category: "Visual",
-      image: "images/project/brain-ART1.png",
-      thumbnail: "images/project/thumbnail-Art1.svg",
-      title: "Cogs and Gears",
-      date: "March 2025",
-      description:
-        "The purpose of this project is to create a quantum simulator using Google's Tensor Network framework.",
-      detailsLink: "https://digitaldna01.github.io/digital-narrative/",
-      position: { top: "5%", left: "75%" },
-    },
-    Art2: {
-      category: "Visual",
-      image: "images/project/brain-Art2.png",
-      thumbnail: "images/project/thumbnail-Art2.svg",
-      title: "Visual Art Portfolio",
-      date: "August 2023",
-      description:
-        "The purpose of this project is to create a quantum simulator using Google's Tensor Network framework.",
-      position: { top: "25%", left: "75%" },
-    },
-    Art3: {
-      category: "Visual",
-      image: "images/project/brain-ART3.png",
-      thumbnail: "images/project/thumbnail-Art3.svg",
-      title: "Gill Sans",
-      date: "August 2024",
-      description:
-        "The purpose of this project is to create a quantum simulator using Google's Tensor Network framework.",
-      detailsLink: "https://www.mdpi.com/2079-9292/13/10/1970",
-      position: { top: "45%", left: "75%" },
-    },
-    Art4: {
-      category: "Visual",
-      image: "images/project/brain-ART4.png",
-      thumbnail: "images/project/thumbnail-Art4.svg",
-      title: "Design Study",
-      date: "August 2024",
-      description:
-        "The purpose of this project is to create a quantum simulator using Google's Tensor Network framework.",
-      detailsLink: "https://www.mdpi.com/2079-9292/13/10/1970",
-      position: { top: "55%", left: "75%" },
-    },
-  };
+    const logical = blogData
+      .filter(
+        (post) => post.category === "PROJECTS" && post.subcategory === "logical"
+      )
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 4)
+      .map((project, idx) => ({
+        ...project,
+        position: {
+          top: logicalPositions[idx].top,
+          left: logicalPositions[idx].left,
+        },
+        image: logicalPositions[idx].image,
+      }));
 
-  const handleMouseEnter = (projectKey) => {
-    setActiveProject(projectKey);
-  };
+    setProjects([...logical, ...visual]);
+  }, []);
 
-  const handleMouseLeave = () => {
-    setActiveProject(null);
-  };
+  // updating part end      =========================================================================
 
   return (
     <>
@@ -133,8 +111,8 @@ function Projects() {
             <img
               src={
                 activeProject
-                  ? projectData[activeProject].image
-                  : "images/project/default-brain.png"
+                  ? activeProject.image
+                  : "images/project/brain/default-brain.png"
               }
               className="brain-image"
               alt="Brain"
@@ -145,92 +123,43 @@ function Projects() {
               <div
                 className="project-template"
                 style={{
-                  top: projectData[activeProject].position.top,
-                  left: projectData[activeProject].position.left,
+                  top: activeProject.position.top,
+                  left: activeProject.position.left,
                 }}
               >
                 <h2
                   className={`project-title ${
-                    projectData[activeProject].category === "Visual"
+                    activeProject.subcategory === "visual"
                       ? "art-title"
                       : "cs-title"
                   }`}
                 >
-                  {projectData[activeProject].title}
+                  {activeProject.title}
                 </h2>
-                <p className="project-date">
-                  {projectData[activeProject].date}
-                </p>
+                <p className="project-date">{activeProject.date}</p>
                 <img
-                  src={projectData[activeProject].thumbnail}
-                  alt={projectData[activeProject].title}
+                  src={activeProject.thumbnail}
+                  alt={activeProject.title}
                   className="project-image"
                 />
-                <p className="project-description">
-                  {projectData[activeProject].description}
-                </p>
+                <p className="project-description">{activeProject.excerpt}</p>
               </div>
             )}
             {/* Invisible Hover Areas */}
-            {Object.keys(projectData).map((key, index) => (
+            {projects.map((project, index) => (
               <div
-                key={key}
+                key={index}
                 className={`hover-triangle hover-${index + 1}`}
-                onMouseEnter={() => setActiveProject(key)}
+                onMouseEnter={() => setActiveProject(project)}
                 onMouseLeave={() => setActiveProject(null)}
-                onClick={(e) => {
-                  const links = projectData[key].Links;
-                  if (!links || links.length === 0) return; // No link to open
-
-                  const rect = e.target.getBoundingClientRect();
-                  setLinkPosition({
-                    top: rect.top + window.scrollY,
-                    left: rect.left + window.scrollX,
-                  });
-                  setActiveProject(key);
-                  setShowLinkOptions(true);
-                  e.stopPropagation(); // Prevent triggering the parent click event
-                  // if (projectData[key].detailsLink) {
-                  //     window.open(projectData[key].detailsLink, "_blank");
-                  // }
+                onClick={() => {
+                  navigate(`/posts/${project.slug}`);
                 }}
                 style={{ cursor: "pointer" }} // Show hand cursor
               />
             ))}
-            {/* <div className="hover-zone left" onMouseEnter={() => handleMouseEnter('CS1')} onMouseLeave={handleMouseLeave} />
-                                <div className="hover-zone right" onMouseEnter={() => handleMouseEnter('Art1')} onMouseLeave={handleMouseLeave} /> */}
           </div>
-          {showLinkOptions && activeProject && (
-            <div
-              className="link-popup"
-              style={{
-                position: "absolute",
-                top: linkPosition.top,
-                left: linkPosition.left,
-                background: "white",
-                border: "1px solid #ccc",
-                padding: "10px",
-                zIndex: 999,
-                borderRadius: "8px",
-              }}
-            >
-              {projectData[activeProject].Links.map((linkItem, index) => (
-                <div
-                  key={index}
-                  className="popup-item"
-                  style={{ cursor: "pointer", marginBottom: "5px" }}
-                  onClick={() => window.open(linkItem.url, "_blank")}
-                >
-                  {linkItem.label}
-                </div>
-              ))}
-            </div>
-          )}
-          {/* </div>
-                    </div> */}
         </div>
-
-        <Footer />
       </section>
     </>
   );

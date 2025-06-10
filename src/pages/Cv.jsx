@@ -8,7 +8,6 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 import "../styles/cv.css"; // CSS 파일을 import 합니다
 import "../index.css";
-import Footer from "../components/Footer";
 
 function Cv() {
   const educationData = [
@@ -328,7 +327,6 @@ function Cv() {
           </div>
         </div>
       </section>
-      <Footer />
     </>
   );
 }

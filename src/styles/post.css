@@ -1,3 +1,12 @@
 .post-page {
+  width: 100%;
   padding-top: 100px; /* 원하는 만큼 조절 가능 */
+
+  font-family: var(--font-family);
+
+  border: 1px solid red;
+}
+
+.post-container {
+  width: 100%;
 }
