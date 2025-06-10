@@ -2,19 +2,75 @@
   {
     "id": "project-1",
     "slug": "project-1",
-    "title": "Quantum Simulator",
-    "date": "2024-08-15",
+    "title": "Design Study",
+    "date": "2023-11-30",
     "category": "PROJECTS",
+    "subcategory": "visual",
+    "image": "",
+    "excerpt": "This is my first blog post!",
+    "keywords": ["update", "Book"]
+  },
+  {
+    "id": "project-2",
+    "slug": "project-2",
+    "title": "Gill Sans",
+    "date": "2023-12-15",
+    "category": "PROJECTS",
+    "subcategory": "visual",
+    "image": "",
+    "excerpt": "This is my first blog post!",
+    "keywords": ["Stop Motion", ""]
+  },
+  {
+    "id": "project-3",
+    "slug": "project-3",
+    "title": "Visual Art Portfolio",
+    "date": "2023-08-15",
+    "category": "PROJECTS",
+    "subcategory": "visual",
     "image": "",
     "excerpt": "This is my first blog post!",
     "keywords": ["update", "announcement"]
   },
   {
-    "id": "post-2",
-    "slug": "my-music-playlist",
-    "title": "My Second Blog Post",
+    "id": "project-4",
+    "slug": "project-4",
+    "title": "Hand Pose Estimation",
+    "date": "2024-05-15",
+    "category": "PROJECTS",
+    "subcategory": "logical",
+    "image": "",
+    "excerpt": "This is my first blog post!",
+    "keywords": ["Machine Learning", "announcement"]
+  },
+  {
+    "id": "project-5",
+    "slug": "project-5",
+    "title": "Quantum Simulator",
+    "date": "2024-08-15",
+    "category": "PROJECTS",
+    "subcategory": "logical",
+    "image": "images/project/brain-CS1.png",
+    "excerpt": "The purpose of this project is to create a quantum simulator using Google's Tensor Network framework.",
+    "keywords": ["update", "announcement"]
+  },
+  {
+    "id": "project-6",
+    "slug": "project-6",
+    "title": "Gears and Cogs",
     "date": "2025-03-09",
-    "category": "MUSIC",
+    "category": "PROJECTS",
+    "subcategory": "visual",
+    "image": "",
+    "excerpt": "This is my first blog post!",
+    "keywords": ["update", "announcement"]
+  },
+  {
+    "id": "blog-1",
+    "slug": "blog-1",
+    "title": "My First Blog Post",
+    "date": "2025-06-10",
+    "category": "BLOG",
     "excerpt": "Here are some songs I’m enjoying...",
     "keywords": ["playlist", "chill"]
   }

@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+// Data import
+import blogData from "../data/posts.json";
 
 import "../styles/projects.css";
 import "../index.css";
@@ -16,7 +18,7 @@ function Projects() {
 
   const projectData = {
     CS1: {
-      category: "CS",
+      category: "logical",
       image: "images/project/brain-CS1.png",
       thumbnail: "images/project/thumbnail-CS1.svg",
       title: "Quantum Computing",
@@ -33,7 +35,7 @@ function Projects() {
       position: { top: "5%", left: "-5%" },
     },
     CS2: {
-      category: "CS",
+      category: "logical",
       image: "images/project/brain-CS2.png",
       thumbnail: "images/project/thumbnail-CS2.svg",
       title: "Hand Pose Estimation",
@@ -44,7 +46,7 @@ function Projects() {
       position: { top: "25%", left: "-5%" },
     },
     CS3: {
-      category: "CS",
+      category: "logical",
       image: "images/project/brain-CS3.png",
       thumbnail: "images/project/thumbnail-CS1.svg",
       title: "AI Research",
@@ -55,7 +57,7 @@ function Projects() {
       position: { top: "45%", left: "-5%" },
     },
     CS4: {
-      category: "CS",
+      category: "logical",
       image: "images/project/brain-CS4.png",
       thumbnail: "images/project/thumbnail-CS1.svg",
       title: "Cybersecurity",
@@ -67,7 +69,7 @@ function Projects() {
     },
 
     Art1: {
-      category: "Art",
+      category: "Visual",
       image: "images/project/brain-ART1.png",
       thumbnail: "images/project/thumbnail-Art1.svg",
       title: "Cogs and Gears",
@@ -78,7 +80,7 @@ function Projects() {
       position: { top: "5%", left: "75%" },
     },
     Art2: {
-      category: "Art",
+      category: "Visual",
       image: "images/project/brain-Art2.png",
       thumbnail: "images/project/thumbnail-Art2.svg",
       title: "Visual Art Portfolio",
@@ -88,7 +90,7 @@ function Projects() {
       position: { top: "25%", left: "75%" },
     },
     Art3: {
-      category: "Art",
+      category: "Visual",
       image: "images/project/brain-ART3.png",
       thumbnail: "images/project/thumbnail-Art3.svg",
       title: "Gill Sans",
@@ -99,7 +101,7 @@ function Projects() {
       position: { top: "45%", left: "75%" },
     },
     Art4: {
-      category: "Art",
+      category: "Visual",
       image: "images/project/brain-ART4.png",
       thumbnail: "images/project/thumbnail-Art4.svg",
       title: "Design Study",
@@ -149,7 +151,7 @@ function Projects() {
               >
                 <h2
                   className={`project-title ${
-                    projectData[activeProject].category === "Art"
+                    projectData[activeProject].category === "Visual"
                       ? "art-title"
                       : "cs-title"
                   }`}
