@@ -8,6 +8,7 @@
     "subcategory": "visual",
     "thumbnail": "images/project/thumbnail/designStudy.svg",
     "excerpt": "This is my first blog post!",
+    "description": "",
     "keywords": ["Graphic Design", "Book"]
   },
   {
@@ -19,6 +20,7 @@
     "subcategory": "visual",
     "thumbnail": "images/project/thumbnail/gillSans.svg",
     "excerpt": "This is my first blog post!",
+    "description": "",
     "keywords": ["Typography", "Stop Motion"]
   },
   {
@@ -30,6 +32,7 @@
     "subcategory": "visual",
     "thumbnail": "images/project/thumbnail/visualArtPortfolio.svg",
     "excerpt": "This is my first blog post!",
+    "description": "",
     "keywords": ["", ""]
   },
   {
@@ -41,6 +44,7 @@
     "subcategory": "logical",
     "thumbnail": "images/project/thumbnail-handpose.svg",
     "excerpt": "This is my first blog post!",
+    "description": "",
     "keywords": ["", ""]
   },
   {
@@ -52,6 +56,7 @@
     "subcategory": "logical",
     "thumbnail": "images/project/thumbnail-QuantumSimulator.svg",
     "excerpt": "The purpose of this project is to create a quantum simulator using Google's Tensor Network framework.",
+    "description": "",
     "keywords": ["", ""]
   },
   {
@@ -63,6 +68,7 @@
     "subcategory": "logical",
     "thumbnail": "images/project/thumbnail/handPose.svg",
     "excerpt": "This is my first blog post!",
+    "description": "",
     "keywords": ["Machine Learning", ""]
   },
   {
@@ -74,7 +80,13 @@
     "subcategory": "logical",
     "thumbnail": "images/project/thumbnail/quantumSimulator.svg",
     "excerpt": "The purpose of this project is to create a quantum simulator using Google's Tensor Network framework.",
-    "keywords": ["", ""]
+    "description": "",
+    "keywords": [
+      "Quantum Simulator",
+      "Tensor Network",
+      "Qiskit",
+      "Grover's Algorithm"
+    ]
   },
   {
     "id": "project-8",
@@ -84,8 +96,9 @@
     "category": "PROJECTS",
     "subcategory": "visual",
     "thumbnail": "images/project/thumbnail/cogsAndGears.svg",
-    "excerpt": "This is my first blog post!",
-    "keywords": ["", ""]
+    "excerpt": "I translated the poem’s central metaphor into an interactive experience—where each verse represents a small, moving gear, gradually assembling into a complete heart. ",
+    "description": "Ryn’s `COGS AND GEARS` explores the mechanical and emotional forces that drive human thought and devotion. Inspired by this, I translated the poem’s central metaphor into an interactive experience—where each verse represents a small, moving gear, gradually assembling into a complete heart. As the poem progresses, scattered fragments come together, mirroring how emotions, like machinery, build toward something whole. This project brings the poem to life, transforming words into motion, showing how love and thought are intricate mechanisms constantly turning, always in motion toward something greater.",
+    "keywords": ["Digital Narrative", "", "Blender"]
   },
   {
     "id": "blog-1",

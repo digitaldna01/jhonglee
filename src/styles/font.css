@@ -1,0 +1,97 @@
+.tit-5xl {
+  font-size: 0.5em;
+}
+.tit-4xl {
+  font-size: 3.75em;
+}
+.tit-3xl {
+  font-size: 3em;
+}
+.tit-2xl {
+  font-size: 2.25em;
+}
+.tit-xl {
+  font-size: 1.5em;
+}
+.tit-lg {
+  font-size: 1.312em;
+}
+.tit-md {
+  font-size: 1.125em;
+}
+.tit-sm {
+  font-size: 1rem;
+}
+.tit-xs {
+  font-size: 0.875em;
+}
+.tit-2xs {
+  font-size: 0.75em;
+}
+.txt-3xl {
+  font-size: 1.5em;
+}
+.txt-2xl {
+  font-size: 1.375em;
+}
+.txt-xl {
+  font-size: 1.25em;
+}
+.txt-lg {
+  font-size: 1.125em;
+}
+.txt-md {
+  font-size: 1rem;
+}
+.txt-sm {
+  font-size: 0.875em;
+}
+.txt-xs {
+  font-size: 0.75em;
+}
+.txt-2xs {
+  font-size: 0.625em;
+}
+
+.avenir {
+  font-family: Avenir, Inter, Helvetica, Arial, sans-serif;
+}
+.montserrat {
+  font-family: Montserrat, Arial, sans-serif;
+}
+
+/* Font weights */
+.font-thin {
+  font-weight: 100;
+}
+.font-light {
+  font-weight: 300;
+}
+.font-normal {
+  font-weight: 400;
+}
+.font-medium {
+  font-weight: 500;
+}
+.font-semibold {
+  font-weight: 600;
+}
+.font-bold {
+  font-weight: 700;
+}
+
+/* Color  */
+.secondary-color {
+  color: var(--secondary-color);
+}
+
+.black-1 {
+  color: #333333;
+}
+.black-2 {
+  color: #666666;
+}
+
+.black-3 {
+  color: #999999;
+}

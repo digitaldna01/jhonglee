@@ -16,13 +16,17 @@
 }
 
 .blog-post {
+  max-width: 1024px;
+  margin: 0 auto;
+  align-items: center;
   margin-bottom: 6rem;
+  padding: 0 1rem;
 }
 
 .blog-title {
   font-size: var(--tit-2xl);
   text-align: center;
-  transition: color 0.3s ease;
+  transition: color 0.5s ease;
 }
 
 .blog-title:hover {
@@ -36,5 +40,15 @@
 }
 
 .blog-thumbnail {
-  width: 800px;
+  display: block;
+  width: 100%;
+  max-width: 1024px;
+  height: auto;
+  object-fit: cover;
+  border-radius: 12px;
+  margin: 0 auto;
+}
+
+.blog-description {
+  font-family: var(--font-family);
 }

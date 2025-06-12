@@ -9,6 +9,7 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 import "../styles/blog.css";
 import "../index.css";
+import "../styles/font.css";
 
 function Blog() {
   const [blogPosts, setBlogPosts] = useState([]);
@@ -45,16 +46,42 @@ function Blog() {
             >
               <div className="blog-post">
                 <div className="blog-title">{post.title}</div>
-                <p className="blog-meta">
+                <p className="blog-meta mb-4">
                   {post.category} | {post.date}
                 </p>
                 <img
                   src={post.thumbnail}
                   alt={post.title}
-                  className="blog-thumbnail xl:w-full lg:w-full md:w-full sm:w-full xs:w-full"
+                  className="blog-thumbnail text-center mb-4"
                 />
-                <p>{post.excerpt}</p>
-                <p>{post.keywords}</p>
+                {/* {post.description.filter((d) => d.trim() !== "")} */}
+                {post.description && post.description.trim() !== "" && (
+                  <>
+                    <p className="txt-lg font-semibold mt-4 mb-2">
+                      DESCRIPTION
+                    </p>
+                    <p className="blog-description">{post.description}</p>
+                  </>
+                )}
+                {/* <p className="txt-lg font-semibold">KEYWORDS</p> */}
+                {post.keywords &&
+                  post.keywords.filter((k) => k.trim() !== "").length > 0 && (
+                    <>
+                      <p className="txt-lg font-semibold mt-4 mb-2">KEYWORDS</p>
+                      <div className="flex flex-wrap gap-2">
+                        {post.keywords
+                          .filter((k) => k.trim() !== "")
+                          .map((keyword, index) => (
+                            <span
+                              key={index}
+                              className="px-3 py-1 mx-2 rounded-3 border black-2"
+                            >
+                              {keyword}
+                            </span>
+                          ))}
+                      </div>
+                    </>
+                  )}
               </div>
             </Link>
           ))}

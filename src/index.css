@@ -1,6 +1,18 @@
-@media screen and (min-width:1024px) {html{font-size: 16px}}
-@media all and (min-width:768px) and (max-width:1023px) {html{font-size:14px}}
-@media screen and (max-width:767px) {html{font-size: 12px}}
+@media screen and (min-width: 1024px) {
+  html {
+    font-size: 16px;
+  }
+}
+@media all and (min-width: 768px) and (max-width: 1023px) {
+  html {
+    font-size: 14px;
+  }
+}
+@media screen and (max-width: 767px) {
+  html {
+    font-size: 12px;
+  }
+}
 
 :root {
   --font-family: Avenir, Inter, Helvetica, Arial, sans-serif;
@@ -28,25 +40,25 @@
   --tit-sm: 1rem;
   --tit-xs: 0.875em;
   --tit-2xs: 0.75em;
-  
-  --txt-3xl: 1.5em; 
+
+  --txt-3xl: 1.5em;
   --txt-2xl: 1.375em;
   --txt-xl: 1.25em;
   --txt-lg: 1.125em;
   --txt-md: 1rem;
   --txt-sm: 0.875em;
   --txt-xs: 0.75em;
-  --txt-2xs:0.625em;
+  --txt-2xs: 0.625em;
 
-  --primary-color: #12406A;
-  --primary-dark: #0B263E;
-  --primary-light: #195A96;
+  --primary-color: #12406a;
+  --primary-dark: #0b263e;
+  --primary-light: #195a96;
 
-  --secondary-color: #FF8C00;
+  --secondary-color: #ff8c00;
   --secondary-dark: #cc7000;
   --secondary-light: #ffa333;
 
-  --system-color-red: #FF0000;
+  --system-color-red: #ff0000;
 
   --black: #000000;
   --black-1: #333333;
@@ -76,7 +88,7 @@ h1 {
   line-height: 1.1;
 }
 
-h2{
+h2 {
   font-family: var(--font-family);
 }
 
