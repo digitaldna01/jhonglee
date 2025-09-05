@@ -1,59 +1,59 @@
-name: Deploy jhonglee.com # 워크플로 이름
+name: Deploy jhonglee.com
 
 on:
   push:
-    branches: ["vite"] # vite 브랜치에 push될 때 실행
+    branches: ["vite"]
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1) 내 코드 체크아웃
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2) Node.js 설치 (버전은 필요에 맞게 조정)
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "23.11.0"
 
-      # 3) 의존성 설치 & 빌드
       - name: Install & Build
         run: |
           npm ci
           npm run build
 
-      # 🔑 시크릿 개인키를 파일로 저장 (개행/퍼미션 보존)
-      - name: Prepare SSH key
+      # 🔑 컨테이너에서도 보이는 위치(GITHUB_WORKSPACE)에 키 파일 생성
+      - name: Prepare SSH key (container-visible)
         shell: bash
         run: |
-          mkdir -p ~/.ssh
-          install -m 600 /dev/null ~/.ssh/id_deploy
-          # printf 로 개행/문자 그대로 저장
-          printf '%s' "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_deploy
-          # 호스트 키 등록(지문 경고 방지)
-          ssh-keyscan -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+          KEY_PATH="$GITHUB_WORKSPACE/id_deploy"
+          printf '%s' "${{ secrets.DEPLOY_KEY }}" > "$KEY_PATH"
+          chmod 600 "$KEY_PATH"
+          echo "KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
+          # (선택) 지문 체크를 피하려면 fingerprint를 쓰거나, 아래처럼 known_hosts도 배치 가능
+          ssh-keyscan -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_HOST }} >> "$GITHUB_WORKSPACE/known_hosts"
 
-      # 4) 빌드 결과물을 라즈베리파이에 복사
+      - name: Check key file exists
+        run: ls -l "$KEY_PATH"
+
       - name: Copy build to Raspberry Pi
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           port: ${{ secrets.DEPLOY_PORT }}
           username: ${{ secrets.DEPLOY_USER }}
-          key_path: ~/.ssh/id_deploy
+          key_path: ${{ env.KEY_PATH }} # ✅ 컨테이너가 볼 수 있는 경로
           source: "dist/*"
           target: "/var/www/jhonglee.com"
+          # (선택) host key 검증을 엄격히 하려면 fingerprint 입력 사용 가능
+          # fingerprint: "SHA256:xxxx..."
 
-      # 5) Pi에서 Nginx 리로드
       - name: Reload Nginx
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           port: ${{ secrets.DEPLOY_PORT }}
           username: ${{ secrets.DEPLOY_USER }}
-          key_path: ~/.ssh/id_deploy
+          key_path: ${{ env.KEY_PATH }} # ✅ 동일 파일 경로
           script: |
             sudo systemctl reload nginx || sudo systemctl restart nginx
