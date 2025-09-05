@@ -43,4 +43,4 @@ jobs:
 
       - name: Post-deploy health check
         run: |
-          curl -fsS https://jhonglee.com >/dev/null
+          curl -fsS --resolve jhonglee.com:443:127.0.0.1 https://jhonglee.com >/dev/null
