@@ -2,10 +2,10 @@ name: Deploy jhonglee.com
 
 on:
   push:
-    branches: ["vite"] # 배포 트리거 브랜치 이름
+    branches: ["vite"] # 배포 트리거 브랜치
 
 concurrency:
-  group: deploy-jhonglee # 중복 실행 방지
+  group: deploy-jhonglee
   cancel-in-progress: true
 
 jobs:
@@ -27,13 +27,20 @@ jobs:
           npm ci
           npm run build
 
-      # (선택) 빌드 산출물 확인
-      - name: List dist
+      - name: Sanity check build output
+        run: |
+          test -f dist/index.html
+
+      - name: List dist (for debugging)
+        if: always()
         run: ls -lah dist || true
 
       - name: Deploy to Nginx root
         run: |
           mkdir -p /var/www/jhonglee.com
-          # 안전 배포: 임시 디렉토리에 복사 후 원자적 교체
           rsync -a --delete dist/ /var/www/jhonglee.com/
           sudo systemctl reload nginx || sudo systemctl restart nginx
+
+      - name: Post-deploy health check
+        run: |
+          curl -fsS https://jhonglee.com >/dev/null
