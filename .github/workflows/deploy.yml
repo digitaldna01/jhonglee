@@ -1,8 +1,8 @@
-name: Deploy jhonglee.com   # 워크플로 이름
+name: Deploy jhonglee.com # 워크플로 이름
 
 on:
   push:
-    branches: [ "vite" ]    # vite 브랜치에 push될 때 실행
+    branches: ["vite"] # vite 브랜치에 push될 때 실행
 
 jobs:
   build-and-deploy:
@@ -17,7 +17,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "23.11.0"
 
       # 3) 의존성 설치 & 빌드
       - name: Install & Build
