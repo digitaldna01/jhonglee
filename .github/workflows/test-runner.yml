@@ -1,8 +1,0 @@
-name: Test Runner
-on: [push]
-
-jobs:
-  ping:
-    runs-on: self-hosted
-    steps:
-      - run: echo "✅ Runner is alive on $(hostname) ($(uname -m))"

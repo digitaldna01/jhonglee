@@ -2,58 +2,38 @@ name: Deploy jhonglee.com
 
 on:
   push:
-    branches: ["vite"]
+    branches: ["vite"] # 배포 트리거 브랜치 이름
+
+concurrency:
+  group: deploy-jhonglee # 중복 실행 방지
+  cancel-in-progress: true
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted # ✅ Pi 러너에서 실행
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node (LTS)
         uses: actions/setup-node@v4
         with:
-          node-version: "23.11.0"
+          node-version: "20"
+          cache: "npm"
 
       - name: Install & Build
         run: |
           npm ci
           npm run build
 
-      # 🔑 컨테이너에서도 보이는 위치(GITHUB_WORKSPACE)에 키 파일 생성
-      - name: Prepare SSH key (container-visible)
-        shell: bash
+      # (선택) 빌드 산출물 확인
+      - name: List dist
+        run: ls -lah dist || true
+
+      - name: Deploy to Nginx root
         run: |
-          KEY_PATH="$GITHUB_WORKSPACE/id_deploy"
-          printf '%s' "${{ secrets.DEPLOY_KEY }}" > "$KEY_PATH"
-          chmod 600 "$KEY_PATH"
-          echo "KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
-          # (선택) 지문 체크를 피하려면 fingerprint를 쓰거나, 아래처럼 known_hosts도 배치 가능
-          ssh-keyscan -p ${{ secrets.DEPLOY_PORT }} ${{ secrets.DEPLOY_HOST }} >> "$GITHUB_WORKSPACE/known_hosts"
-
-      - name: Check key file exists
-        run: ls -l "$KEY_PATH"
-
-      - name: Copy build to Raspberry Pi
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          port: ${{ secrets.DEPLOY_PORT }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key_path: ${{ env.KEY_PATH }} # ✅ 컨테이너가 볼 수 있는 경로
-          source: "dist/*"
-          target: "/var/www/jhonglee.com"
-          # (선택) host key 검증을 엄격히 하려면 fingerprint 입력 사용 가능
-          # fingerprint: "SHA256:xxxx..."
-
-      - name: Reload Nginx
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          port: ${{ secrets.DEPLOY_PORT }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key_path: ${{ env.KEY_PATH }} # ✅ 동일 파일 경로
-          script: |
-            sudo systemctl reload nginx || sudo systemctl restart nginx
+          mkdir -p /var/www/jhonglee.com
+          # 안전 배포: 임시 디렉토리에 복사 후 원자적 교체
+          rsync -a --delete dist/ /var/www/jhonglee.com/
+          sudo systemctl reload nginx || sudo systemctl restart nginx
