@@ -43,7 +43,7 @@ jobs:
           host: ${{ secrets.DEPLOY_HOST }}
           port: ${{ secrets.DEPLOY_PORT }}
           username: ${{ secrets.DEPLOY_USER }}
-          key: ~/.ssh/id_deploy
+          key_path: ~/.ssh/id_deploy
           source: "dist/*"
           target: "/var/www/jhonglee.com"
 
@@ -54,6 +54,6 @@ jobs:
           host: ${{ secrets.DEPLOY_HOST }}
           port: ${{ secrets.DEPLOY_PORT }}
           username: ${{ secrets.DEPLOY_USER }}
-          key: ~/.ssh/id_deploy
+          key_path: ~/.ssh/id_deploy
           script: |
             sudo systemctl reload nginx || sudo systemctl restart nginx
