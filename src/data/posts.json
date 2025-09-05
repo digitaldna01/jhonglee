@@ -19,7 +19,7 @@
     "category": "PROJECTS",
     "subcategory": "visual",
     "thumbnail": "images/project/thumbnail/gillSans.svg",
-    "excerpt": "This is my first blog post!",
+    "excerpt": "Gill Sans Typography Video",
     "description": "",
     "keywords": ["Typography", "Stop Motion"]
   },
@@ -69,7 +69,7 @@
     "thumbnail": "images/project/thumbnail/handPose.svg",
     "excerpt": "This is my first blog post!",
     "description": "",
-    "keywords": ["Machine Learning", ""]
+    "keywords": ["Machine Learning", "XGBoost"]
   },
   {
     "id": "project-7",
@@ -98,7 +98,7 @@
     "thumbnail": "images/project/thumbnail/cogsAndGears.svg",
     "excerpt": "I translated the poem’s central metaphor into an interactive experience—where each verse represents a small, moving gear, gradually assembling into a complete heart. ",
     "description": "Ryn’s `COGS AND GEARS` explores the mechanical and emotional forces that drive human thought and devotion. Inspired by this, I translated the poem’s central metaphor into an interactive experience—where each verse represents a small, moving gear, gradually assembling into a complete heart. As the poem progresses, scattered fragments come together, mirroring how emotions, like machinery, build toward something whole. This project brings the poem to life, transforming words into motion, showing how love and thought are intricate mechanisms constantly turning, always in motion toward something greater.",
-    "keywords": ["Digital Narrative", "", "Blender"]
+    "keywords": ["Digital Narrative", "UX/UI Design", "Blender"]
   },
   {
     "id": "blog-1",

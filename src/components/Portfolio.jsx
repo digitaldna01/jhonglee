@@ -3,14 +3,14 @@ import "../styles/portfolio.css";
 import "../index.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
-import WOW from "wowjs";
+
 import "animate.css";
 
 const portfolioData = [
   {
     title: "Quantum Simulator",
     description: "TensorNetwork Quantum Simulator",
-    imageUrl: "images/quantum.png",
+    imageUrl: "/images/quantum.png",
     demoLink: "404.html",
     detailsLink: "https://github.com/digitaldna01/quantum-simulator",
     wowDelay: "0ms",
@@ -18,21 +18,21 @@ const portfolioData = [
   {
     title: "Handpose Predict",
     description: "AI-Driven Hand-pose estimation model",
-    imageUrl: "images/handpose.png",
+    imageUrl: "/images/handpose.png",
     readLink: "https://www.mdpi.com/2079-9292/13/10/1970",
     wowDelay: "300ms",
   },
   {
     title: "Visual Art Portfolio",
     description: "Visual Arts Minor Portfolio",
-    imageUrl: "images/art.jpg",
+    imageUrl: "/images/art.jpg",
     detailsLink: "artgallery.html",
     wowDelay: "300ms",
   },
   {
     title: "Gill Sans",
     description: "Gill Sans Typography Video",
-    imageUrl: "images/typography.png",
+    imageUrl: "/images/typography.png",
     watchLink: "#",
     wowDelay: "600ms",
   },
@@ -122,7 +122,18 @@ function Portfolio() {
 
   useEffect(() => {
     // Initialize WOW.js when the component mounts
-    new WOW.WOW().init();
+    // new WOW.WOW().init();
+    let cancel = false;
+    (async () => {
+      const WOWNS = await import("wowjs");
+      const WowCtor = WOWNS.WOW || WOWNS.default?.WOW || WOWNS.default || WOWNS;
+      if (!cancel && typeof WowCtor === "function") {
+        new WowCtor().init();
+      }
+    })();
+    return () => {
+      cancel = true;
+    };
   }, []);
 
   return (

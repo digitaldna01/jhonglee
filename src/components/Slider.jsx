@@ -6,7 +6,6 @@ import "bootstrap/dist/css/bootstrap.min.css";
 // Import Bootstrap JavaScript
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
-import WOW from "wowjs";
 import "animate.css";
 import "hover.css";
 
@@ -16,11 +15,19 @@ function Slider() {
   const headlineRef = useRef(null);
 
   useEffect(() => {
-    // Initialize WOW.js when the component mounts
-    new WOW.WOW().init();
-    const interval = setInterval(() => {
-      setCurrentWordIndex((prevIndex) => (prevIndex + 1) % words.length);
-    }, 3000); // Change word every 3 seconds
+    let interval;
+
+    (async () => {
+      const WOWNS = await import("wowjs");
+
+      const WowCtor = WOWNS.WOW || WOWNS.default?.WOW || WOWNS.default || WOWNS;
+      if (typeof WowCtor === "function") {
+        new WowCtor().init();
+      }
+      interval = setInterval(() => {
+        setCurrentWordIndex((prev) => (prev + 1) % words.length);
+      }, 3000);
+    })();
 
     return () => clearInterval(interval); // Clean up interval on component unmount
   }, []);
@@ -31,7 +38,7 @@ function Slider() {
         <div className="container">
           <div className="row">
             <div className="col-md-12 text-center">
-              <div className="block wow fadeInup" data-wow-delay=".3s">
+              <div className="block wow fadeInUp" data-wow-delay=".3s">
                 <section className="cd-intro">
                   <h1
                     className="wow fadeInUp animated cd-headline slide"

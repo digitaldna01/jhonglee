@@ -7,13 +7,21 @@ import "bootstrap/dist/css/bootstrap.min.css";
 // Import Bootstrap JavaScript
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
-import WOW from "wowjs";
+// import WOW from "wowjs";
 import "animate.css";
 
 function About() {
   useEffect(() => {
     // Initialize WOW.js when the component mounts
-    new WOW.WOW().init();
+    let cancel = false;
+    (async () => {
+      const WOWNS = await import("wowjs");
+      const WowCtor = WOWNS.WOW || WOWNS.default?.WOW || WOWNS.default || WOWNS;
+      if (!cancel && typeof WowCtor === "function") new WowCtor().init();
+    })();
+    return () => {
+      cancel = true;
+    };
   }, []);
 
   return (
