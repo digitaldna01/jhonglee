@@ -2,7 +2,7 @@ name: Deploy jhonglee.com
 
 on:
   push:
-    branches: ["vite"]
+    branches: ["main"]
   workflow_dispatch:
 
 concurrency:
