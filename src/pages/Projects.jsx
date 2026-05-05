@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/brain.css";
-import blogData from "../data/posts.json";
-
-/* Pull real thumbnails and excerpts from posts.json by id */
-const postById = Object.fromEntries(blogData.map((p) => [p.id, p]));
+const _mdxModules = import.meta.glob("../posts/*.mdx", { eager: true });
+const postBySlug = Object.fromEntries(
+  Object.entries(_mdxModules).map(([path, mod]) => [
+    path.replace("../posts/", "").replace(".mdx", ""),
+    mod.metadata ?? {},
+  ])
+);
 
 const LOGICAL = [
   {
@@ -13,9 +16,9 @@ const LOGICAL = [
     title: "Quantum Simulator",
     date: "2024-08-15",
     subcategory: "logical",
-    thumbnail: postById["project-7"]?.thumbnail || "",
+    thumbnail: postBySlug["quantumSimulator"]?.thumbnail || "",
     excerpt:
-      postById["project-7"]?.excerpt ||
+      postBySlug["quantumSimulator"]?.excerpt ||
       "A quantum simulator built on Google's Tensor Network framework.",
     image: "images/project/brain/brain-logical-1.png",
     pos: { x: 36, y: 22 },
@@ -26,9 +29,9 @@ const LOGICAL = [
     title: "Hand Pose Estimation",
     date: "2024-05-15",
     subcategory: "logical",
-    thumbnail: postById["project-6"]?.thumbnail || "",
+    thumbnail: postBySlug["handPoseEstimation"]?.thumbnail || "",
     excerpt:
-      postById["project-6"]?.excerpt ||
+      postBySlug["handPoseEstimation"]?.excerpt ||
       "Machine-learning-driven hand pose estimation from real-time keypoint streams.",
     image: "images/project/brain/brain-logical-2.png",
     pos: { x: 28, y: 40 },
@@ -66,9 +69,9 @@ const VISUAL = [
     title: "Cogs and Gears",
     date: "2025-03-09",
     subcategory: "visual",
-    thumbnail: postById["project-8"]?.thumbnail || "",
+    thumbnail: postBySlug["cogsAndGears"]?.thumbnail || "",
     excerpt:
-      postById["project-8"]?.excerpt ||
+      postBySlug["cogsAndGears"]?.excerpt ||
       "I translated the poem's central metaphor into an interactive experience — each verse a small, moving gear.",
     image: "images/project/brain/brain-visual-1.png",
     pos: { x: 64, y: 22 },
@@ -79,9 +82,9 @@ const VISUAL = [
     title: "Design Study",
     date: "2023-11-30",
     subcategory: "visual",
-    thumbnail: postById["project-1"]?.thumbnail || "",
+    thumbnail: postBySlug["designStudy"]?.thumbnail || "",
     excerpt:
-      postById["project-1"]?.excerpt ||
+      postBySlug["designStudy"]?.excerpt ||
       "An exploration of editorial layout, grid, and book design — published as a small bound volume.",
     image: "images/project/brain/brain-visual-2.png",
     pos: { x: 72, y: 40 },
@@ -92,9 +95,9 @@ const VISUAL = [
     title: "Gill Sans",
     date: "2023-12-15",
     subcategory: "visual",
-    thumbnail: postById["project-2"]?.thumbnail || "",
+    thumbnail: postBySlug["gillSans"]?.thumbnail || "",
     excerpt:
-      postById["project-2"]?.excerpt ||
+      postBySlug["gillSans"]?.excerpt ||
       "A stop-motion typography study on the history and proportions of Eric Gill's Gill Sans.",
     image: "images/project/brain/brain-visual-3.png",
     pos: { x: 72, y: 58 },
@@ -105,9 +108,9 @@ const VISUAL = [
     title: "Visual Art Portfolio",
     date: "2023-08-15",
     subcategory: "visual",
-    thumbnail: postById["project-3"]?.thumbnail || "",
+    thumbnail: postBySlug["visualArtPortfolio"]?.thumbnail || "",
     excerpt:
-      postById["project-3"]?.excerpt ||
+      postBySlug["visualArtPortfolio"]?.excerpt ||
       "Selected paintings, drawings, and prints from my Visual Arts minor at Boston University.",
     image: "images/project/brain/brain-visual-4.png",
     pos: { x: 64, y: 76 },

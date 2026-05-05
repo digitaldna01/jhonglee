@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 const NAV = [
@@ -7,17 +7,11 @@ const NAV = [
   { label: 'BLOG', path: '/blog' },
 ];
 
-const BLOG_CATS = ['BLOG', 'PROJECTS', 'GALLERY', 'MUSIC'];
-
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
 
   const isActive = (path) => location.pathname === path;
-
-  const currentCategory = useMemo(() => {
-    return new URLSearchParams(location.search).get('category') || 'ALL';
-  }, [location.search]);
 
   return (
     <>
@@ -98,27 +92,6 @@ export default function Navbar() {
         )}
       </nav>
 
-      {/* Blog category sub-bar */}
-      {isActive('/blog') && (
-        <div className="fixed top-[60px] z-40 w-full bg-white">
-          <ul className="flex flex-wrap justify-center list-none m-0 p-0">
-            {BLOG_CATS.map((cat) => (
-              <li key={cat}>
-                <Link
-                  to={`/blog?category=${cat}`}
-                  className={`block px-4 py-1 text-[length:var(--caption)] font-semibold no-underline transition-colors duration-300 ${
-                    currentCategory === cat
-                      ? 'text-secondary-dark border-b-2 border-secondary-dark'
-                      : 'text-black-2 hover:text-secondary-dark'
-                  }`}
-                >
-                  {cat}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </>
   );
 }
