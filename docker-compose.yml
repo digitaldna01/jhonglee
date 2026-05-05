@@ -1,0 +1,7 @@
+services:
+  web:
+    image: ghcr.io/digitaldna01/jhonglee:latest
+    container_name: jhonglee-web
+    ports:
+      - "8080:80"
+    restart: unless-stopped

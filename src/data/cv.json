@@ -1,0 +1,88 @@
+{
+  "education": [
+    {
+      "degree": "Boston University / Bachelor of Computer Science / Minor in Visual Arts",
+      "date": "September 2019 - May 2025 / Boston, MA",
+      "link": "https://www.bu.edu"
+    },
+    {
+      "degree": "Korea University / Department of Computer Science and Engineering / Visiting Student",
+      "date": "September 2022 - June 2022 / Seoul, KR",
+      "link": "https://www.korea.ac.kr"
+    },
+    {
+      "degree": "Aquinas Institute of Rochester / High School ",
+      "date": "September 2016 - June 2019 / Rochester, NY",
+      "link": "https://www.aquinasinstitute.com/"
+    },
+    {
+      "degree": "Bowie High School / High School ",
+      "date": "September 2015 - June 2016 / Austin, TX"
+    }
+  ],
+  "experience": [
+    {
+      "degree": "LSAT Demon LLC / Machine Learning Specialist / LLM Development",
+      "date": "June 2025 - September 2025 / Remote",
+      "link": "https://lsatdemon.com/"
+    },
+    {
+      "degree": "Boston University (IVC Group) / Undergraduate Research / Computer Vision",
+      "date": "April 2024 - May 2025 / Boston, MA",
+      "link": "https://www.bu.edu/cs/research-groups/ivc/"
+    },
+    {
+      "degree": "Korea Electronics Technology Institute / Research Intern / Quantum Computing",
+      "date": "June 2024 - August 2024 / Seongnam, KR",
+      "link": "https://www.keti.re.kr/eng/main/main.php"
+    },
+    {
+      "degree": "AI-driven Hand Pose estimation / Undergraduate Research / Machine Learning ",
+      "date": "September 2023 - May 2024 / Tucson, AZ",
+      "link": "https://www.mdpi.com/2079-9292/13/10/1970"
+    },
+    {
+      "degree": "Korea Electronics Technology Institute / Research Intern / Computer Vision ",
+      "date": "June 2022 - August 2022 / Seongnam, KR",
+      "link": "https://www.keti.re.kr/eng/main/main.php"
+    },
+    {
+      "degree": "Xenix Studio / Software Engineer Intern / Blockchain and Frontend Develop",
+      "date": "July 2020 - November 2020 / Seoul, KR"
+    }
+  ],
+  "publication": [
+    {
+      "degree": "Machine Learning-Based Hand Pose Generation Using a Haptic Controller ",
+      "date": "May 2024 / Eung Joo Lee, Jongin Choi",
+      "link": "https://www.mdpi.com/2079-9292/13/10/1970"
+    }
+  ],
+  "project": [
+    {
+      "degree": "Cogs and Gears",
+      "date": "January 2025 - March 2025 / Boston, MA",
+      "link": "https://digitaldna01.github.io/digital-narrative/"
+    },
+    {
+      "degree": "Quantum Simulator",
+      "date": "June 2024 - August 2024 / Seungnam, KOR",
+      "link": "https://github.com/digitaldna01/quantum-simulator"
+    },
+    {
+      "degree": "TO-DO Calendar Web",
+      "date": "January 2024 - May 2024 / Boston, MA",
+      "link": "https://github.com/CS-411-To-Do-Calendar/cs411-to-do-calendar"
+    },
+    {
+      "degree": "Gill Sans Typeface Stop Motion",
+      "date": "December 2023 / Boston, MA",
+      "link": ""
+    },
+    {
+      "degree": "One Call Away",
+      "date": "December 2023 / Boston, MA",
+      "link": "public/pdf/OneCallAway.pdf"
+    }
+  ]
+}

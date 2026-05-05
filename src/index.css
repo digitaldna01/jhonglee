@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+/* ── Design tokens → Tailwind utilities ──────────────────
+   text-primary, bg-secondary, border-black-5, font-sans …  */
+@theme {
+  --color-primary:          #12406a;
+  --color-primary-dark:     #0b263e;
+  --color-primary-light:    #195a96;
+  --color-secondary:        #ff8c00;
+  --color-secondary-dark:   #cc7000;
+  --color-secondary-light:  #ffa333;
+  --color-black-1:          #000000;
+  --color-black-2:          #333333;
+  --color-black-3:          #666666;
+  --color-black-4:          #999999;
+  --color-black-5:          #cccccc;
+
+  --font-sans:  Avenir, Inter, Helvetica, Arial, sans-serif;
+  --font-noto:  "Noto Sans KR", Arial, sans-serif;
+}
+
+/* ── Responsive type & layout tokens ─────────────────────
+   These change per breakpoint; reference with var(--h1) etc. */
+:root {
+  --d1: 48px;  --h1: 36px;  --h2: 30px;  --h3: 24px;  --h4: 20px;
+  --body-lg: 18px;  --body-md: 16px;  --body-sm: 14px;  --caption: 12px;
+  --layout-width: 375px;  --layout-margin: 16px;  --layout-gutter: 16px;
+}
+@media (min-width: 376px) and (max-width: 1279px) {
+  :root {
+    --d1: 60px;  --h1: 48px;  --h2: 36px;  --h3: 30px;  --h4: 24px;
+    --layout-width: 800px;  --layout-margin: 32px;  --layout-gutter: 24px;
+  }
+}
+@media (min-width: 1280px) {
+  :root {
+    --d1: 72px;  --h1: 60px;  --h2: 48px;  --h3: 36px;  --h4: 30px;
+    --layout-width: 1280px;  --layout-margin: 80px;  --layout-gutter: 24px;
+  }
+}
+
+/* ── Semantic aliases (used by brain view and other components) ── */
+:root {
+  --fg-1: #000000;
+  --fg-2: #333333;
+  --fg-3: #666666;
+  --fg-4: #999999;
+  --hairline: #cccccc;
+  --accent:        #ff8c00;
+  --accent-strong: #cc7000;
+  --accent-soft:   #ffa333;
+  --color-bg:     #ffffff;
+  --color-bg-alt: #fcfcfc;
+  --shadow-card:  0 0 8px rgba(0,0,0,0.08);
+  --dur-fast:     250ms;
+  --dur-base:     300ms;
+  --dur-slow:     400ms;
+  --ease-out:     cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* ── Global base ──────────────────────────────────────── */
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: light) {
+  body {
+    color: #213547;
+    background-color: #ffffff;
+  }
+}
