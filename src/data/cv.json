@@ -22,6 +22,16 @@
   ],
   "experience": [
     {
+      "degree": "LG CNS / Software Engineer / Smart Factory",
+      "date": "Jan 2026 - Present / Seoul, KR",
+      "link": "https://www.lgcns.com/en"
+    },
+    {
+      "degree": "LSAT LAB / Machine Learning Specialist / Time Series DL",
+      "date": "September 2025 - December 2025 / Remote",
+      "link": "https://www.lsatlab.com/"
+    },
+    {
       "degree": "LSAT Demon LLC / Machine Learning Specialist / LLM Development",
       "date": "June 2025 - September 2025 / Remote",
       "link": "https://lsatdemon.com/"
@@ -32,18 +42,8 @@
       "link": "https://www.bu.edu/cs/research-groups/ivc/"
     },
     {
-      "degree": "Korea Electronics Technology Institute / Research Intern / Quantum Computing",
-      "date": "June 2024 - August 2024 / Seongnam, KR",
-      "link": "https://www.keti.re.kr/eng/main/main.php"
-    },
-    {
-      "degree": "AI-driven Hand Pose estimation / Undergraduate Research / Machine Learning ",
-      "date": "September 2023 - May 2024 / Tucson, AZ",
-      "link": "https://www.mdpi.com/2079-9292/13/10/1970"
-    },
-    {
-      "degree": "Korea Electronics Technology Institute / Research Intern / Computer Vision ",
-      "date": "June 2022 - August 2022 / Seongnam, KR",
+      "degree": "Korea Electronics Technology Institute / Research Intern / Quantum Computing and Computer Vision",
+      "date": "June 2022 - August 2022, June 2024 - August 2024 / Seongnam, KR",
       "link": "https://www.keti.re.kr/eng/main/main.php"
     },
     {
@@ -66,7 +66,7 @@
     },
     {
       "degree": "Quantum Simulator",
-      "date": "June 2024 - August 2024 / Seungnam, KOR",
+      "date": "June 2024 - August 2024 / Seungnam, KR",
       "link": "https://github.com/digitaldna01/quantum-simulator"
     },
     {

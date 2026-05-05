@@ -1,34 +1,36 @@
 import { useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import posts from '../data/posts.json';
 
 const postModules = import.meta.glob('../posts/*.mdx');
 
 export default function Post() {
   const { slug } = useParams();
-  const [PostComponent, setPostComponent] = useState(null);
-  const postMeta = posts.find((p) => p.slug === slug);
+  const [state, setState] = useState({ status: 'loading', meta: null, Component: null });
 
   useEffect(() => {
     const loader = postModules[`../posts/${slug}.mdx`];
-    if (loader) {
-      loader().then((mod) => setPostComponent(() => mod.default));
-    } else {
-      console.warn('Post not found:', slug);
+    if (!loader) {
+      setState({ status: '404', meta: null, Component: null });
+      return;
     }
+    loader().then((mod) => {
+      setState({ status: 'ok', meta: mod.metadata ?? {}, Component: mod.default });
+    });
   }, [slug]);
 
-  if (!postMeta) return <p className="pt-24 text-center">404 - Post Not Found</p>;
-  if (!PostComponent) return <p className="pt-24 text-center">Loading…</p>;
+  const { status, meta, Component } = state;
+
+  if (status === 'loading') return <p className="pt-24 text-center">Loading…</p>;
+  if (status === '404' || !meta) return <p className="pt-24 text-center">404 - Post Not Found</p>;
 
   return (
     <section className="w-full pt-20 md:pt-24 font-sans">
       <div className="max-w-3xl mx-auto px-[var(--layout-margin)]">
-        <div className="text-[length:var(--h2)] text-center mb-2">{postMeta.title}</div>
+        <div className="text-[length:var(--h2)] text-center mb-2">{meta.title}</div>
         <p className="text-[length:var(--caption)] text-center mb-8">
-          {postMeta.category} | {postMeta.date}
+          {meta.category} | {meta.date}
         </p>
-        <PostComponent />
+        {Component && <div className="prose"><Component /></div>}
       </div>
     </section>
   );
