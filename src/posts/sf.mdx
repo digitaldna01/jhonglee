@@ -1,0 +1,237 @@
+export const metadata = {
+  title:
+    "Building a Smart Factory Dashboard with Claude: From Design System to Running Code",
+  date: "2024-05-06",
+  category: "POST",
+  subcategory: "blog",
+  excerpt:
+    "How I used Claude Design, Claude Chat, and Claude Code together to go from a design system prompt to a fully working smart factory dashboard — no Figma, no handoff friction.",
+  keywords: [
+    "claude",
+    "design system",
+    "smart factory",
+    "claude design",
+    "SaaS dashboard",
+  ],
+};
+
+# Building a Smart Factory Dashboard with Claude
+
+## From design system prompt → Claude Design → Claude Code → live demo
+
+I wanted to see how far I could push the new Claude toolchain — Claude Chat, Claude Design, and Claude Code — as an end-to-end product design and engineering workflow. No Figma. No separate handoff. Just prompts, a design system, and code.
+
+The result: a fully working **Smart Factory OS dashboard** for display panel manufacturing (OLED/LCD), with an interactive process map, AI agent workflow panel, and a Notion-style schedule calendar.
+
+You can see the live demo here: [factory-dashboard-demo](https://digitaldna01.github.io/factory-dashboard-demo/)
+
+Here's exactly how I built it, step by step.
+
+---
+
+## The idea
+
+Modern semiconductor and display fabs run on MES (Manufacturing Execution Systems) — dense, often ugly enterprise software. I wanted to explore what a premium, calm, SaaS-quality factory control interface could look like if you designed it the way you'd design a great B2B product.
+
+The concept: **FabOS** — a smart factory intelligence platform for display panel production. Three panels, one canvas:
+
+- A central interactive **process map** (glass substrate → cleaning → deposition → lithography → inspection → cell assembly → QC)
+- A left **AI agent / workflow panel** with draggable job cards
+- A right **Notion-style schedule calendar** for orchestrating agent runs
+  The visual inspiration came from aircraft freight dashboards and clean-room control panels — light gray backgrounds, rounded cards, pill tabs, minimal black accents. Industrial, but calm.
+
+---
+
+## Step 1 — Building the design system in Claude Chat
+
+Before touching Claude Design, I used Claude Chat to define the design system itself. I shared three reference images (an air freight logistics dashboard, a BIM construction tool, and a dark data card) and wrote a detailed concept prompt describing the factory dashboard vision.
+
+Claude generated a full design system reference — color palette, typography scale, status language, spacing tokens, and mood board — rendered as an interactive widget in the chat.
+
+![Design System Reference](/images/blog/smart-factory/design-system-reference.png)
+
+The key decisions that came out of this step:
+
+**Fonts:**
+
+- `Inter` (300/400/500/600) — all UI, headings, labels
+- `DM Mono` (400/500) — lot IDs, timestamps, sensor values, recipe codes
+  **Color system:**
+
+| Role              | Color      | Hex       |
+| ----------------- | ---------- | --------- |
+| Page background   | Mist White | `#F5F5F2` |
+| Card surface      | Pure White | `#FFFFFF` |
+| Primary text      | Graphite   | `#1A1A1A` |
+| Running / Pass    | Green      | `#10B981` |
+| Hold / Warning    | Amber      | `#F59E0B` |
+| Alarm / Fault     | Red        | `#EF4444` |
+| Processing / Info | Blue       | `#3B82F6` |
+| AI agents only    | Violet     | `#7C3AED` |
+
+The violet color was a deliberate choice — reserved exclusively for AI agents and orchestration actions, so operators always know at a glance when the system is suggesting something versus when it's a human-initiated workflow.
+
+**Style rules:**
+
+- No dark backgrounds. No gradients. No neon.
+- Black pill tabs (`#1A1A1A` fill, white text) for active navigation
+- Cards: `1px solid #E8E8E4`, `border-radius: 12–16px`
+- Chips: colored dot + pastel background + dark matching text
+- Section labels: `10px`, uppercase, `#888`, `letter-spacing: 0.1em`
+  The mood: _Clean Room Precision._ Like aircraft avionics — zero noise, total operational clarity.
+
+---
+
+## Step 2 — Setting up the design system in Claude Design
+
+With the system defined, I opened **Claude Design** and filled in the design system tab.
+
+**Company name / Design system name:**
+
+```
+FabOS Design System — Smart Factory Intelligence Platform
+A light industrial SaaS design language for display panel manufacturing operations.
+Inspired by aircraft freight control and clean-room precision interfaces.
+```
+
+**Notes field** (this persists across all generations in the tab):
+
+```
+Fonts: Inter (300/400/500/600) + DM Mono (400/500) via Google Fonts.
+
+Colors: Page bg #F5F5F2, card surface #FFFFFF, primary text #1A1A1A,
+secondary #888888. Status — Green #10B981 (pass/run), Amber #F59E0B (hold/warn),
+Red #EF4444 (alarm/fault), Blue #3B82F6 (processing/info).
+Violet #7C3AED reserved exclusively for AI agents and orchestration.
+
+Style rules: No dark backgrounds. No gradients. No neon.
+Cards use 1px solid #E8E8E4 border, 12–16px radius.
+Navigation tabs are black pill (#1A1A1A fill, white text) on off-white page.
+All data values (lot IDs, timestamps, sensor readings) use DM Mono.
+Section labels are 10px uppercase #888 with 0.1em letter-spacing.
+Black fill (#1A1A1A) is reserved for primary action buttons only.
+Chips always use: colored dot + pastel background + dark matching text.
+
+Mood: Clean-room precision. Calm, trusted, technical.
+Like aircraft avionics — zero noise, total operational clarity.
+```
+
+Having this in the notes field means Claude Design already understands the visual language before I write a single generation prompt. Every component it produces automatically inherits the fonts, colors, and spacing rules.
+
+![Claude Design tab setup](/images/blog/smart-factory/claude-design-setup.png)
+
+---
+
+## Step 3 — Generating the dashboard design
+
+With the design system loaded, I prompted Claude Design to generate the three-panel dashboard layout. The key to getting a good result was being specific about each panel's behavior, not just its appearance.
+
+The prompt described:
+
+- The **center process map** as an interactive operational canvas — not a static illustration — with selectable equipment modules, lot-count badges, alarm chips, and status indicators
+- The **left agent panel** with draggable workflow cards (defect analysis agent, recipe validation, equipment health check, WIP delay prediction, etc.)
+- The **right schedule panel** as a Notion Calendar-style orchestration view with day/week controls, color-coded event blocks, and drag-and-drop scheduling
+  Claude Design generated a high-fidelity mockup reflecting the FabOS design language — pill navigation, off-white background, rounded process modules in the center map, violet-accented agent cards on the left, and clean calendar event blocks on the right.
+
+![Dashboard design mockup](/images/blog/smart-factory/dashboard-mockup.png)
+
+The iteration cycle here was fast. When a component didn't look right — say, the calendar grid was too dense — I could describe the change in plain language ("make the time slots taller, reduce grid line weight, soften the event block typography") and get an updated version in seconds.
+
+---
+
+## Step 4 — Iterating on components
+
+A few specific components needed extra passes:
+
+**Process map modules** — The first version rendered the process steps as simple labeled boxes. I pushed for more: each module needed a status indicator dot, a WIP lot count badge, and a subtle selection highlight state. After two iterations the modules felt like real equipment cells — selectable, scannable, information-dense without being cluttered.
+
+**AI agent cards** — Getting the violet accent right took a couple of tries. The goal was that violet cards should feel distinctly different from regular workflow cards without breaking the overall light palette. The solution was a soft `#EDE9FE` background with `#7C3AED` text and a violet left-border accent — unmistakably AI, but still calm.
+
+**Schedule calendar** — The hardest panel to get right. Early versions looked too much like a Gantt chart. The fix was removing most of the grid lines, increasing vertical padding on time slots, and treating each scheduled workflow as a rounded card rather than a bar — much closer to how Notion Calendar handles events.
+
+---
+
+## Step 5 — Sharing to Claude Code
+
+Once the design was solid, I used Claude Design's **Share to Claude Code** function. This exports the design context — component structure, spacing, color values, font choices — directly into a Claude Code session.
+
+From there, the implementation prompt was straightforward:
+
+```
+Implement this smart factory dashboard as a React application.
+Use the FabOS design system (Inter + DM Mono, #F5F5F2 background,
+card system as specified). The center process map should be interactive —
+clicking a process module opens a detail panel. The left agent panel
+cards should be draggable. The right calendar panel should support
+day/week view toggle. Use Tailwind CSS for styling.
+```
+
+Claude Code scaffolded the component structure, wired up the interactive state (selected module, panel detail view, calendar view toggle), and applied the design tokens directly from the exported design context. The color variables, border radii, font weights — all carried over cleanly.
+
+The drag-and-drop from the agent panel to the calendar required a bit of extra prompting to get the UX right, but Claude Code handled the underlying logic well once I described the interaction precisely: "dragging a card from the left panel and dropping it onto a calendar time slot should create a new scheduled event block with the card's title, category color, and a default 30-minute duration."
+
+---
+
+## What the final dashboard looks like
+
+The live demo at [digitaldna01.github.io/factory-dashboard-demo](https://digitaldna01.github.io/factory-dashboard-demo/) shows the full three-panel layout in action:
+
+- **Center**: The display panel production flow from glass substrate input through final QC, with clickable process modules showing WIP counts, equipment status, and active alarms
+- **Left**: AI agent and workflow cards with violet accents for agent-driven actions, blue for standard workflows
+- **Right**: A Notion-style calendar with scheduled runs displayed as clean event blocks, color-coded by workflow category
+  The interface feels exactly like the reference inspiration — the aircraft freight dashboard aesthetic applied to factory operations. Light, calm, technical, trustworthy.
+
+---
+
+## What worked well
+
+**The design system notes field is the real unlock.** Once that's set up correctly in Claude Design, every subsequent generation starts from the right place. You don't re-explain fonts and colors every time — Claude already knows.
+
+**Claude Design → Claude Code handoff is surprisingly tight.** The exported design context carries enough information that Claude Code doesn't have to guess at colors or spacing. The gap between "this is what it should look like" and "this is the code" is much smaller than a traditional Figma-to-developer handoff.
+
+**Specificity in prompts beats verbosity.** Long prompts describing the general vibe produce mediocre results. Short, precise prompts describing specific interactions ("clicking a process module shows a slide-in detail panel with lot status, active recipe, and assigned agent") produce good ones.
+
+---
+
+## What I'd do differently
+
+The process map is still more illustrative than truly data-driven. In a real implementation you'd want the process module states (running, alarm, idle) driven by live WebSocket data from the MES backend. That's a Claude Code conversation for another day.
+
+The drag-and-drop scheduling also has edge cases — overlapping events, multi-day workflows — that would need more careful product thinking before shipping to actual factory operators.
+
+---
+
+## The workflow, summarized
+
+```
+1. Claude Chat
+   → Define design system (colors, fonts, tokens, mood)
+   → Get design system reference widget
+
+2. Claude Design — Design System Tab
+   → Paste company name + notes
+   → Design system now persists across all generations
+
+3. Claude Design — Generate
+   → Prompt each panel with specific interaction detail
+   → Iterate on components (process map, agent cards, calendar)
+
+4. Claude Design — Share to Claude Code
+   → Export design context to Claude Code session
+
+5. Claude Code
+   → Scaffold React component structure
+   → Implement interactive state (selection, drag-drop, view toggle)
+   → Apply design tokens from exported context
+
+6. Deploy
+   → Live demo
+```
+
+Total time from first prompt to working demo: roughly one afternoon.
+
+---
+
+The toolchain is genuinely useful for this kind of work — complex, data-rich B2B interfaces where the design language needs to be precise and the component interactions need to be carefully specified. The Claude Chat → Claude Design → Claude Code pipeline removes most of the translation friction that usually lives between design and engineering.
+
+If you're building something similar — MES dashboards, logistics control panels, any kind of operational SaaS — the approach above is a solid starting point.

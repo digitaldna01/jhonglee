@@ -20,7 +20,8 @@
       "Bash(curl -L -s \"https://api.anthropic.com/v1/design/h/wweJxqExGEo64O16Y0IyNw?open_file=Projects+Redesign.html\" -o /tmp/projects_redesign.bin --max-time 30)",
       "Bash(mkdir -p /tmp/projects_extract)",
       "Bash(tar -xf /tmp/projects_redesign.bin -C /tmp/projects_extract)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(grep *)"
     ]
   }
 }
