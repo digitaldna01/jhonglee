@@ -71,25 +71,33 @@ export default function Navbar() {
         </div>
 
         {/* Mobile dropdown */}
-        {open && (
-          <ul className="md:hidden flex flex-col list-none m-0 p-0 bg-white border-t border-black-5">
+        <div
+          className={`md:hidden overflow-hidden transition-all duration-[250ms] ${
+            open ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
+          }`}
+          style={{ transitionTimingFunction: 'cubic-bezier(0.22,0.61,0.36,1)' }}
+        >
+          <ul className="flex flex-col list-none m-0 p-0 bg-white border-t border-black-5 py-1">
             {NAV.map(({ label, path }) => (
               <li key={path}>
                 <Link
                   to={path}
-                  className={`block px-[var(--layout-margin)] py-4 text-[length:var(--body-md)] no-underline transition-colors duration-300 ${
+                  className={`flex items-center gap-2 px-[var(--layout-margin)] py-[10px] text-[11px] font-semibold tracking-[0.12em] uppercase no-underline transition-colors duration-200 ${
                     isActive(path)
-                      ? 'text-secondary-dark font-semibold'
-                      : 'text-black-2'
+                      ? 'text-secondary-dark'
+                      : 'text-black-3 hover:text-black-1'
                   }`}
                   onClick={() => setOpen(false)}
                 >
+                  {isActive(path) && (
+                    <span className="w-1 h-1 rounded-full bg-secondary-dark flex-shrink-0" />
+                  )}
                   {label}
                 </Link>
               </li>
             ))}
           </ul>
-        )}
+        </div>
       </nav>
 
     </>

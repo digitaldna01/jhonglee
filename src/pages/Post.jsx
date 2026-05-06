@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import '../styles/blog.css';
 
 const postModules = import.meta.glob('../posts/*.mdx');
 
@@ -25,8 +26,12 @@ export default function Post() {
 
   return (
     <section className="w-full pt-20 md:pt-24 font-sans">
-      <div className="max-w-3xl mx-auto px-[var(--layout-margin)]">
-        <div className="text-[length:var(--h2)] text-center mb-2">{meta.title}</div>
+      <div className="max-w-4xl mx-auto px-[var(--layout-margin)]">
+        <div className="text-[length:var(--h2)] text-center mb-2">
+          {(meta.displayTitle ?? meta.title).split('\n').map((line, i, arr) => (
+            <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
+          ))}
+        </div>
         <p className="text-[length:var(--caption)] text-center mb-8">
           {meta.category} | {meta.date}
         </p>

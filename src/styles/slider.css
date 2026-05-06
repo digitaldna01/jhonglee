@@ -8,6 +8,7 @@
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
   position: relative;
 }
+@media (max-width: 767px)  { #slider-area { background-attachment: scroll; } }
 @media (min-width: 768px)  { #slider-area { padding: 160px 0; } }
 @media (min-width: 1280px) { #slider-area { padding: 230px 0; } }
 
