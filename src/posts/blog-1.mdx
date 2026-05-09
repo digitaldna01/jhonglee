@@ -1,3 +1,5 @@
+import { Lang } from "../utils/lang";
+
 export const metadata = {
   title: "My First Blog Post",
   date: "2025-04-10",
@@ -6,8 +8,20 @@ export const metadata = {
   excerpt:
     "Here are some songs I'm enjoying lately — a short playlist for focused work and late-night sessions.",
   keywords: ["playlist", "chill"],
+  locales: ["en", "ko"],
+  defaultLocale: "en",
 };
 
 # My First Blog Post
 
+<Lang locale="en">
+
 Here are some songs I'm enjoying lately.
+
+</Lang>
+
+<Lang locale="ko">
+
+요즘 즐겨 듣는 곡들이에요.
+
+</Lang>

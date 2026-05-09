@@ -21,7 +21,9 @@
       "Bash(mkdir -p /tmp/projects_extract)",
       "Bash(tar -xf /tmp/projects_redesign.bin -C /tmp/projects_extract)",
       "Bash(npm install *)",
-      "Bash(grep *)"
+      "Bash(grep *)",
+      "Bash(npx --no-install eslint src/pages/Blog.jsx)",
+      "Bash(npx --no-install vite build)"
     ]
   }
 }

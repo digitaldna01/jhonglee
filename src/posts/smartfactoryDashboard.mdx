@@ -1,12 +1,17 @@
+import { Lang } from "../utils/lang";
+
 export const metadata = {
-  title: "스마트 팩토리 대시보드",
-  displayTitle: "Claude로 스마트 팩토리\n대시보드 만들기",
+  title: "Smart Factory Dashboard",
+  displayTitle: {
+    ko: "Claude로 만드는 스마트 팩토리 대시보드",
+    en: "Building a Smart Factory Dashboard with Claude",
+  },
   date: "2026-05-06",
   category: "POST",
   subcategory: "blog",
   thumbnail: "/images/posts/smartfactory-dashboard/smartfactory-dashboard.png",
   excerpt:
-    "Claude Design, Claude Chat, Claude Code를 함께 활용해 디자인 시스템 프롬프트에서 실제로 동작하는 스마트 팩토리 대시보드까지 구현한 과정 — Figma도, 별도의 핸드오프 과정도 없이.",
+    "How I used Claude Design, Claude Chat, and Claude Code together to go from a design system prompt to a fully working smart factory dashboard — no Figma, no handoff friction.",
   keywords: [
     "smart factory",
     "claude design",
@@ -14,6 +19,8 @@ export const metadata = {
     "OLED manufacturing",
     "display panel",
   ],
+  locales: ["en", "ko"],
+  defaultLocale: "en",
 };
 
 <img
@@ -22,8 +29,15 @@ export const metadata = {
 />
 
 <p className="not-prose text-sm tracking-widest uppercase text-center text-gray-400 my-4">
-  디자인 시스템 프롬프트 → Claude Design → Claude Code → 라이브 데모까지
+  <Lang locale="ko">
+    디자인 시스템 프롬프트 → Claude Design → Claude Code → 라이브 데모까지
+  </Lang>
+  <Lang locale="en">
+    From design system prompt → Claude Design → Claude Code → live demo
+  </Lang>
 </p>
+
+<Lang locale="ko">
 
 이번에는 새롭게 출시된 Claude 툴체인 — Claude Chat, Claude Design, Claude Code — 만으로
 제품 디자인부터 실제 구현까지 하나의 엔드투엔드 워크플로우를 어디까지 밀어붙일 수 있는지
@@ -37,7 +51,23 @@ Claude Design, 그리고 Claude Code만으로 진행했다.
 
 아래는 이 대시보드를 어떤 과정으로 만들었는지 단계별로 정리한 내용이다.
 
+</Lang>
+
+<Lang locale="en">
+
+I wanted to see how far I could push the new Claude toolchain — Claude Chat, Claude Design, and Claude Code — as an end-to-end product design and engineering workflow. No Figma. No separate handoff. Just prompts, a design system, and code.
+
+The result: a fully working **Smart Factory OS dashboard** for display panel manufacturing (OLED/LCD), with an interactive process map, AI agent workflow panel, and a Notion-style schedule calendar.
+
+You can see the live demo here: [factory-dashboard-demo](https://digitaldna01.github.io/factory-dashboard-demo/)
+
+Here's exactly how I built it, step by step.
+
+</Lang>
+
 ---
+
+<Lang locale="ko">
 
 ### Ideas
 
@@ -51,18 +81,40 @@ Claude Design, 그리고 Claude Code만으로 진행했다.
 
 시각적 레퍼런스는 항공 화물 대시보드와 클린룸 제어 패널에서 가져왔다. 밝은 회색 배경, 둥근 카드, pill 형태의 탭, 최소한의 검정 포인트. 산업적이지만 차분한 느낌을 목표로 했다.
 
-<div className="grid grid-cols-2 gap-4 not-prose">
+</Lang>
+
+<Lang locale="en">
+
+### The idea
+
+Modern semiconductor and display fabs run on MES (Manufacturing Execution Systems) — dense, often ugly enterprise software. I wanted to explore what a premium, calm, SaaS-quality factory control interface could look like if you designed it the way you'd design a great B2B product.
+
+The concept: **FabOS** — a smart factory intelligence platform for display panel production. Three panels, one canvas:
+
+- A central interactive **process map** (glass substrate → cleaning → deposition → lithography → inspection → cell assembly → QC)
+- A left **AI agent / workflow panel** with draggable job cards
+- A right **Notion-style schedule calendar** for orchestrating agent runs
+
+The visual inspiration came from aircraft freight dashboards and clean-room control panels — light gray backgrounds, rounded cards, pill tabs, minimal black accents. Industrial, but calm.
+
+</Lang>
+
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 not-prose">
   <img
     src="/images/posts/smartfactory-dashboard/airplane-cargo-dashboard.jpg"
     alt="airplane-cargo-dashboard.jpg"
+    className="w-full h-auto"
   />
   <img
     src="/images/posts/smartfactory-dashboard/cleanroom-dashboard.jpg"
     alt="cleanroom-dashboard.jpg"
+    className="w-full h-auto"
   />
 </div>
 
 ---
+
+<Lang locale="ko">
 
 ### Step 1 — Claude Chat에서 디자인 시스템 만들기
 
@@ -70,9 +122,22 @@ Claude Design으로 바로 들어가기 전에, 먼저 Claude Chat을 통해 디
 
 Claude는 컬러 팔레트, 타이포그래피 스케일, 상태 표현 방식, spacing token, mood board까지 포함된 디자인 시스템 레퍼런스를 통째로 생성해주었다. 이 결과는 채팅 안에서 인터랙티브 위젯 형태로 바로 확인할 수 있었다.
 
+</Lang>
+
+<Lang locale="en">
+
+### Step 1 — Building the design system in Claude Chat
+
+Before touching Claude Design, I used Claude Chat to define the design system itself. I shared three reference images — an air freight logistics dashboard, a BIM construction tool, and a dark data card — and wrote a detailed concept prompt describing the factory dashboard vision.
+
+Claude generated a full design system reference — color palette, typography scale, status language, spacing tokens, and mood board — rendered as an interactive widget right in the chat.
+
+</Lang>
+
 <details className="not-prose mb-6">
   <summary className="cursor-pointer font-semibold text-gray-700">
-    📐 Design System Reference (클릭해서 보기)
+    <Lang locale="ko">📐 Design System Reference (클릭해서 보기)</Lang>
+    <Lang locale="en">📐 Design System Reference (click to expand)</Lang>
   </summary>
   <div className="mt-4 overflow-x-auto">
     <img
@@ -83,9 +148,21 @@ Claude는 컬러 팔레트, 타이포그래피 스케일, 상태 표현 방식, 
   </div>
 </details>
 
+<Lang locale="ko">
+
 이 단계에서 결정된 핵심 방향은 다음과 같았다.
 
 **FabOS 디자인 토큰**
+
+</Lang>
+
+<Lang locale="en">
+
+The key decisions that came out of this step:
+
+**FabOS Design Tokens**
+
+</Lang>
 
 <div className="not-prose space-y-6 my-6">
   {/* Fonts */}
@@ -96,7 +173,10 @@ Claude는 컬러 팔레트, 타이포그래피 스케일, 상태 표현 방식, 
     <div className="space-y-3">
       <div>
         <div className="font-semibold text-gray-800 mb-1">Inter</div>
-        <div className="text-sm text-gray-600">300/400/500/600 — 전체 UI, 제목, 라벨</div>
+        <div className="text-sm text-gray-600">
+          <Lang locale="ko">300/400/500/600 — 전체 UI, 제목, 라벨</Lang>
+          <Lang locale="en">300/400/500/600 — all UI, headings, labels</Lang>
+        </div>
       </div>
       <div>
         <div className="font-semibold text-gray-800 mb-1">DM Mono</div>
@@ -179,7 +259,10 @@ Claude는 컬러 팔레트, 타이포그래피 스케일, 상태 표현 방식, 
       <div className="text-xs">
         <div className="font-semibold text-gray-900">AI Agents Only</div>
         <div className="text-gray-500 text-xs">
-          #7C3AED — AI 에이전트와 orchestration 전용
+          <Lang locale="ko">#7C3AED — AI 에이전트와 orchestration 전용</Lang>
+          <Lang locale="en">
+            #7C3AED — Reserved for AI agents and orchestration
+          </Lang>
         </div>
       </div>
     </div>
@@ -194,15 +277,30 @@ Claude는 컬러 팔레트, 타이포그래피 스케일, 상태 표현 방식, 
     </h4>
     <div className="grid md:grid-cols-2 gap-6">
       <div>
-        <div className="font-semibold text-red-700 text-sm mb-3 uppercase">금지 사항</div>
+        <div className="font-semibold text-red-700 text-sm mb-3 uppercase">
+          <Lang locale="ko">금지 사항</Lang>
+          <Lang locale="en">Forbidden</Lang>
+        </div>
         <ul className="text-sm text-gray-700 space-y-2">
-          <li>❌ 어두운 배경</li>
-          <li>❌ 그라데이션</li>
-          <li>❌ 네온 효과</li>
+          <li>
+            <Lang locale="ko">❌ 어두운 배경</Lang>
+            <Lang locale="en">❌ Dark backgrounds</Lang>
+          </li>
+          <li>
+            <Lang locale="ko">❌ 그라데이션</Lang>
+            <Lang locale="en">❌ Gradients</Lang>
+          </li>
+          <li>
+            <Lang locale="ko">❌ 네온 효과</Lang>
+            <Lang locale="en">❌ Neon effects</Lang>
+          </li>
         </ul>
       </div>
       <div>
-        <div className="font-semibold text-green-700 text-sm mb-3 uppercase">필수 요소</div>
+        <div className="font-semibold text-green-700 text-sm mb-3 uppercase">
+          <Lang locale="ko">필수 요소</Lang>
+          <Lang locale="en">Required</Lang>
+        </div>
         <ul className="text-sm text-gray-700 space-y-2 font-mono text-xs">
           <li><strong>Pill tab:</strong> #1A1A1A + white</li>
           <li><strong>Card:</strong> 1px #E8E8E4, 12–16px radius</li>
@@ -213,7 +311,12 @@ Claude는 컬러 팔레트, 타이포그래피 스케일, 상태 표현 방식, 
     </div>
     <div className="mt-4 pt-4 border-t border-gray-200">
       <div className="text-sm text-gray-700">
-        <strong className="text-gray-900">무드:</strong> <em>Clean Room Precision</em> — 항공기 avionics처럼 불필요한 시각적 노이즈는 줄이고, 운영 상황을 명확하게 보여주는 방향.
+        <Lang locale="ko">
+          <strong className="text-gray-900">무드:</strong> <em>Clean Room Precision</em> — 항공기 avionics처럼 불필요한 시각적 노이즈는 줄이고, 운영 상황을 명확하게 보여주는 방향.
+        </Lang>
+        <Lang locale="en">
+          <strong className="text-gray-900">Mood:</strong> <em>Clean Room Precision</em> — like aircraft avionics, zero noise, total operational clarity.
+        </Lang>
       </div>
     </div>
   </div>
@@ -221,11 +324,25 @@ Claude는 컬러 팔레트, 타이포그래피 스케일, 상태 표현 방식, 
 
 ---
 
+<Lang locale="ko">
+
 ### Step 2 — Claude Design에 디자인 시스템 설정하기
 
 디자인 시스템을 정의한 뒤, Claude Design을 열고 Design System 탭에 내용을 입력했다.
 
 **Company name / Design system name:**
+
+</Lang>
+
+<Lang locale="en">
+
+### Step 2 — Setting up the design system in Claude Design
+
+With the system defined, I opened Claude Design and filled in the Design System tab.
+
+**Company name / Design system name:**
+
+</Lang>
 
 ```text
 FabOS Design System — Smart Factory Intelligence Platform
@@ -233,10 +350,21 @@ A light industrial SaaS design language for display panel manufacturing operatio
 Inspired by aircraft freight control and clean-room precision interfaces.
 ```
 
+<Lang locale="ko">
+
 Notes field
 이 내용은 해당 탭에서 생성되는 모든 결과에 계속 적용된다.
 
-```text Fonts: Inter (300/400/500/600) + DM Mono (400/500) via Google Fonts.
+</Lang>
+
+<Lang locale="en">
+
+**Notes field** (this persists across every generation in the tab):
+
+</Lang>
+
+```text
+Fonts: Inter (300/400/500/600) + DM Mono (400/500) via Google Fonts.
 Colors: Page bg #F5F5F2, card surface #FFFFFF, primary text #1A1A1A, secondary
 #888888. Status — Green #10B981 (pass/run), Amber #F59E0B (hold/warn), Red
 #EF4444 (alarm/fault), Blue #3B82F6 (processing/info). Violet #7C3AED reserved
@@ -252,12 +380,23 @@ Chips always use: colored dot + pastel background + dark matching text.
 
 Mood: Clean-room precision. Calm, trusted, technical.
 Like aircraft avionics — zero noise, total operational clarity.
-
 ```
+
+<Lang locale="ko">
 
 Notes field에 디자인 시스템을 한 번 넣어두면, Claude Design은 개별 프롬프트를 받기도 전에 전체 시각 언어를 이해한 상태로 출발한다. 이후 생성되는 모든 컴포넌트가 폰트, 컬러, spacing 규칙을 자연스럽게 상속받는다.
 
+</Lang>
+
+<Lang locale="en">
+
+Once the notes field is set, Claude Design already understands the visual language before I write a single generation prompt. Every component it produces automatically inherits the fonts, colors, and spacing rules.
+
+</Lang>
+
 ---
+
+<Lang locale="ko">
 
 ### Step 3 — 대시보드 디자인 생성하기
 
@@ -265,13 +404,35 @@ Notes field에 디자인 시스템을 한 번 넣어두면, Claude Design은 개
 
 프롬프트에는 다음 내용을 포함했다.
 
+</Lang>
+
+<Lang locale="en">
+
+### Step 3 — Generating the dashboard design
+
+With the design system loaded, I prompted Claude Design to generate the three-panel dashboard layout. The key to a good result was being specific about each panel's _behavior_, not just its appearance.
+
+The prompt described:
+
+</Lang>
+
 ```text
 - 중앙 공정 맵은 정적인 일러스트가 아니라 인터랙티브 운영 캔버스여야 한다. 설비 모듈 선택, lot count badge, alarm chip, status indicator를 포함한다.
 - 왼쪽 에이전트 패널은 defect analysis agent, recipe validation, equipment health check, WIP delay prediction 등 드래그 가능한 workflow card를 포함한다.
 - 오른쪽 일정 패널은 Notion Calendar 스타일의 orchestration view로 구성한다. day/week control, color-coded event block, drag-and-drop scheduling을 지원한다.
 ```
 
+<Lang locale="ko">
+
 4~5분 뒤, Claude Design은 FabOS 디자인 언어를 충실히 반영한 고충실도 mockup을 뱉어냈다. pill navigation, off-white background, 중앙의 둥근 process module, 왼쪽의 violet accent agent card, 오른쪽의 깔끔한 calendar event block까지 모두 갖춰진 형태였다.
+
+</Lang>
+
+<Lang locale="en">
+
+A few minutes later, Claude Design produced a high-fidelity mockup that faithfully reflected the FabOS design language — pill navigation, off-white background, rounded process modules in the center, violet-accented agent cards on the left, clean calendar event blocks on the right.
+
+</Lang>
 
 <div className="grid grid-cols-1 gap-4 not-prose">
   <img
@@ -280,9 +441,21 @@ Notes field에 디자인 시스템을 한 번 넣어두면, Claude Design은 개
   />
 </div>
 
+<Lang locale="ko">
+
 이 과정에서의 반복 속도는 정말 빨랐다. calendar grid가 너무 빽빽해 보이면, "time slot을 더 높이고, grid line weight를 줄이고, event block typography를 부드럽게 해줘"처럼 자연어로 방향만 일러주면 몇 초 안에 업데이트된 버전이 돌아왔다.
 
+</Lang>
+
+<Lang locale="en">
+
+The iteration cycle here was genuinely fast. When a component didn't look right — say, the calendar grid was too dense — I described the change in plain language ("make the time slots taller, reduce grid line weight, soften the event block typography") and got an updated version in seconds.
+
+</Lang>
+
 ---
+
+<Lang locale="ko">
 
 ### Step 4 — 컴포넌트 디테일 다듬기
 
@@ -297,6 +470,22 @@ Violet accent의 톤을 잡는 데에는 몇 번의 시도가 필요했다. 목�
 **Schedule calendar**
 가장 까다로웠던 패널은 calendar였다. 초기 버전은 영락없는 Gantt chart 모양이었다. 대부분의 grid line을 제거하고, time slot의 vertical padding을 늘리고, scheduled workflow를 bar가 아니라 둥근 card 형태로 바꿨다. 그제서야 Notion Calendar의 event 표현 방식에 가까워졌다.
 
+</Lang>
+
+<Lang locale="en">
+
+### Step 4 — Iterating on components
+
+A few specific components needed extra passes.
+
+**Process map modules** — The first version rendered process steps as simple labeled boxes. I pushed for more: each module needed a status indicator dot, a WIP lot count badge, and a subtle selection highlight state. After two iterations the modules felt like real equipment cells — selectable, scannable, information-dense without being cluttered.
+
+**AI agent cards** — Getting the violet accent right took a couple of tries. The goal was that violet cards should feel distinctly different from regular workflow cards without breaking the overall light palette. The solution was a soft `#EDE9FE` background with `#7C3AED` text and a violet left-border accent — unmistakably AI, but still calm.
+
+**Schedule calendar** — The hardest panel to get right. Early versions looked like a Gantt chart. The fix was removing most of the grid lines, increasing vertical padding on time slots, and treating each scheduled workflow as a rounded card rather than a bar — much closer to how Notion Calendar handles events.
+
+</Lang>
+
 <div className="grid grid-cols-1 gap-4 not-prose">
   <img
     src="/images/posts/smartfactory-dashboard/smartfactory-dashboard.png"
@@ -306,9 +495,21 @@ Violet accent의 톤을 잡는 데에는 몇 번의 시도가 필요했다. 목�
 
 ---
 
+<Lang locale="ko">
+
 ### Step 5 — Claude Code로 넘기기
 
 디자인이 어느 정도 완성된 뒤, Claude Design의 Share to Claude Code 기능을 사용했다. 이 기능은 design context — component structure, spacing, color values, font choices 등 — 를 Claude Code 세션으로 그대로 넘겨준다.
+
+</Lang>
+
+<Lang locale="en">
+
+### Step 5 — Sharing to Claude Code
+
+Once the design was solid, I used Claude Design's Share to Claude Code function. It exports the design context — component structure, spacing, color values, font choices — directly into a Claude Code session.
+
+</Lang>
 
 <div className="grid grid-cols-1 gap-4 not-prose">
   <img
@@ -317,12 +518,24 @@ Violet accent의 톤을 잡는 데에는 몇 번의 시도가 필요했다. 목�
   />
 </div>
 
+<Lang locale="ko">
+
 실제 구현 프롬프트는 비교적 단순했다. *Copy Command*로 Claude Code CLI에 붙여넣기만 하면 된다!
+
+</Lang>
+
+<Lang locale="en">
+
+The implementation prompt was straightforward — just _Copy Command_ and paste into the Claude Code CLI:
+
+</Lang>
 
 ```text
 Fetch this design file, read its readme, and implement the relevant aspects of the design. https://api.anthropic.com/v1/ design/h/v2DIWzOGP2iBDp_4djgL_w?open_file=Smart+Factory+0S.html
 Implement: Smart Factory OS.html
 ```
+
+<Lang locale="ko">
 
 Claude Design에서 디자인 파일을 임시로 올리고 Claude Code가 읽어와 구현하는 방식이다.
 
@@ -332,15 +545,39 @@ Claude Code는 컴포넌트 구조를 scaffold하고, selected module, detail pa
 
 예를 들어 다음과 같이 설명했다.
 
+</Lang>
+
+<Lang locale="en">
+
+Claude Design temporarily hosts the design file, and Claude Code fetches and implements it.
+
+Claude Code scaffolded the component structure and wired up interactive state — selected module, detail panel view, calendar view toggle — and applied the design tokens directly from the exported context. The color variables, border radii, and font weights all carried over more cleanly than I expected.
+
+The drag-and-drop from the agent panel onto the calendar required a bit of extra prompting to nail the UX. Once I described the interaction precisely, Claude Code handled the underlying logic well. For example:
+
+</Lang>
+
 ```text
 dragging a card from the left panel and dropping it onto a calendar time slot
 should create a new scheduled event block with the card's title, category color,
 and a default 30-minute duration.
 ```
 
+<Lang locale="ko">
+
 이렇게 원하는 동작을 구체적으로 설명하면, Claude Code는 그에 맞는 상태 관리와 이벤트 처리 로직을 알아서 구성해주었다.
 
+</Lang>
+
+<Lang locale="en">
+
+When the desired behavior is described concretely, Claude Code wires up the matching state management and event handling on its own.
+
+</Lang>
+
 ---
+
+<Lang locale="ko">
 
 ### 최종 대시보드 모습
 
@@ -352,7 +589,25 @@ and a default 30-minute duration.
 
 전체 인터페이스는 처음 레퍼런스로 삼았던 항공 화물 대시보드의 감성을 공장 운영 화면에 옮겨놓은 형태에 가깝다. 밝고, 차분하고, 기술적이며, 신뢰감 있는 화면을 목표로 했다.
 
+</Lang>
+
+<Lang locale="en">
+
+### What the final dashboard looks like
+
+The live demo at [factory-dashboard-demo](https://digitaldna01.github.io/factory-dashboard-demo/) shows the full three-panel layout in action. Even the GitHub Pages deploy was a single Claude Code command.
+
+- **Center (process map)** — Display panel production flow from glass substrate input through final QC. Each process module is clickable, surfacing WIP count, equipment status, and active alarms.
+- **Left (AI agent panel)** — Agent and workflow cards. Violet accents mark agent-driven actions; blues mark standard workflows.
+- **Right (Schedule)** — A Notion-style calendar. Scheduled runs render as clean event blocks, color-coded by workflow category.
+
+The interface ends up feeling like the original aircraft freight dashboard inspiration applied to factory operations — light, calm, technical, trustworthy.
+
+</Lang>
+
 ---
+
+<Lang locale="ko">
 
 ### 잘 작동했던 점
 
@@ -365,7 +620,23 @@ Export된 design context에는 color와 spacing 정보가 충분히 담겨 있�
 **긴 프롬프트보다 구체적인 프롬프트가 더 효과적이었다.**
 전체 분위기만 장황하게 설명한 프롬프트는 애매한 결과를 만들 가능성이 높았다. 반면, "공정 모듈을 클릭하면 lot status, active recipe, assigned agent가 포함된 slide-in detail panel이 열린다"처럼 구체적인 interaction을 짧게 설명한 프롬프트가 훨씬 좋은 결과를 만들었다.
 
+</Lang>
+
+<Lang locale="en">
+
+### What worked well
+
+**The design system notes field is the real unlock.** Once it's set up correctly, every subsequent generation starts from the right place. You don't re-explain fonts and colors every time — Claude already knows.
+
+**Claude Design → Claude Code handoff is surprisingly tight.** The exported design context carries enough information that Claude Code doesn't have to guess at colors or spacing. The gap between "this is what it should look like" and "this is the code" is much smaller than a traditional Figma-to-developer handoff.
+
+**Specificity beats verbosity.** Long prompts describing the general vibe produce mediocre results. Short, precise prompts describing specific interactions ("clicking a process module shows a slide-in detail panel with lot status, active recipe, and assigned agent") produce good ones.
+
+</Lang>
+
 ---
+
+<Lang locale="ko">
 
 ### 다르게 해보고 싶은 점
 
@@ -373,39 +644,83 @@ Export된 design context에는 color와 spacing 정보가 충분히 담겨 있�
 
 Drag-and-drop scheduling에도 아직 edge case가 남아 있다. event overlap이나 multi-day workflow 같은 케이스는 실제 공장 운영자에게 배포하기 전에 좀 더 세밀한 product thinking이 필요해 보인다.
 
+</Lang>
+
+<Lang locale="en">
+
+### What I'd do differently
+
+The process map is still more illustrative than truly data-driven. In a real implementation you'd want the process module states (running, alarm, idle) driven by live WebSocket data from the MES backend. That's a Claude Code conversation for another day.
+
+The drag-and-drop scheduling also has edge cases — overlapping events, multi-day workflows — that would need more careful product thinking before shipping to actual factory operators.
+
+</Lang>
+
 ---
+
+<Lang locale="ko">
 
 ### 전체 워크플로우 요약
 
+</Lang>
+
+<Lang locale="en">
+
+### The workflow, summarized
+
+</Lang>
+
 ```text
 1. Claude Chat
-   → 디자인 시스템 정의: colors, fonts, tokens, mood
-   → 디자인 시스템 reference widget 생성
+   → Define design system: colors, fonts, tokens, mood
+   → Generate design system reference widget
 
 2. Claude Design — Design System Tab
-   → company name + notes 입력
-   → 이후 모든 generation에 디자인 시스템 적용
+   → Enter company name + notes
+   → Design system now persists across all generations
 
 3. Claude Design — Generate
-   → 각 패널의 interaction detail을 구체적으로 prompt
-   → process map, agent cards, calendar를 반복적으로 개선
+   → Prompt each panel with specific interaction detail
+   → Iterate on process map, agent cards, calendar
 
 4. Claude Design — Share to Claude Code
-   → design context를 Claude Code session으로 export
+   → Export design context to Claude Code session
 
 5. Claude Code
-   → React component structure scaffold
-   → selection, drag-drop, view toggle 등 interactive state 구현
-   → exported context 기반 design token 적용
+   → Scaffold React component structure
+   → Implement interactive state (selection, drag-drop, view toggle)
+   → Apply design tokens from exported context
 
 6. Deploy
-   → Live demo 배포
+   → Ship live demo
 ```
+
+<Lang locale="ko">
 
 첫 프롬프트부터 동작하는 데모까지, 걸린 시간은 대략 반나절.
 
+</Lang>
+
+<Lang locale="en">
+
+Total time from first prompt to working demo: roughly half a day.
+
+</Lang>
+
 ---
+
+<Lang locale="ko">
 
 이 툴체인은 이런 유형의 작업에 꽤 실용적이었다. 특히 복잡하고 데이터가 많은 B2B 인터페이스, 디자인 언어가 정교해야 하고 컴포넌트 interaction이 명확해야 하는 운영형 SaaS 화면에서 강점이 두드러졌다. Claude Chat → Claude Design → Claude Code로 이어지는 흐름은 디자인과 엔지니어링 사이에서 흔히 발생하는 소통 비용을 상당히 줄여줄 것 같다 <span className="line-through">다만 Claude에 쓴 $110은 별도다.</span>
 
 MES 대시보드, 물류 control panel, 혹은 운영 중심의 SaaS 제품을 만들고 있다면, 위와 같은 접근 방식이 꽤 괜찮은 출발점이 될 수 있다.
+
+</Lang>
+
+<Lang locale="en">
+
+The toolchain is genuinely useful for this kind of work — complex, data-rich B2B interfaces where the design language needs to be precise and component interactions need to be carefully specified. The Claude Chat → Claude Design → Claude Code pipeline removes most of the translation friction that usually lives between design and engineering. <span className="line-through">The $110 I spent on Claude is a separate matter.</span>
+
+If you're building MES dashboards, logistics control panels, or any operations-centric SaaS, the approach above is a solid starting point.
+
+</Lang>
