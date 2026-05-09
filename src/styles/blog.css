@@ -104,25 +104,67 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 16px;
-  padding: 16px 0;
+  padding: 12px 0;
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--hairline);
 }
+@media (min-width: 768px) {
+  .proj-toolbar { padding: 16px 0; }
+}
 .proj-toolbar-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 16px;
+  flex-wrap: nowrap;
+  gap: 12px;
   width: 100%;
+}
+@media (min-width: 768px) {
+  .proj-toolbar-inner { flex-wrap: wrap; gap: 16px; }
 }
 
 .proj-filters {
-  display: flex;
+  display: none;
   gap: 4px;
   flex-wrap: wrap;
+}
+@media (min-width: 768px) {
+  .proj-filters { display: flex; }
+}
+
+/* Mobile filter select — mirrors .proj-sort */
+.proj-filter-mobile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  min-width: 0;
+}
+.proj-filter-mobile-select {
+  font-family: inherit;
+  font-size: var(--body-sm);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--fg-1);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 4px 18px 4px 4px;
+  appearance: none;
+  max-width: 100%;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%23333' stroke-width='1.2' fill='none' stroke-linecap='square'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 2px center;
+}
+@media (min-width: 768px) {
+  .proj-filter-mobile { display: none; }
 }
 
 .proj-filter {
@@ -178,11 +220,14 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--fg-3);
+}
+@media (min-width: 768px) {
+  .proj-sort { font-size: 11px; }
 }
 .proj-sort-select {
   font-family: inherit;

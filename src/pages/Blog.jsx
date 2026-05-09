@@ -98,6 +98,20 @@ function Toolbar({ filter, sort, view, counts, onFilter, onSort, onView }) {
               );
             })}
           </div>
+          <label className="proj-filter-mobile">
+            <select
+              className="proj-filter-mobile-select"
+              value={filter}
+              onChange={(e) => onFilter(e.target.value)}
+              aria-label="Filter posts"
+            >
+              {FILTERS.map(({ key, label }) => (
+                <option key={key} value={key}>
+                  {label} / {pad2(counts[key] ?? 0)}
+                </option>
+              ))}
+            </select>
+          </label>
           <div className="proj-tools">
             <label className="proj-sort">
               <span>Sort</span>
