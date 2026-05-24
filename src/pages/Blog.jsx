@@ -13,10 +13,10 @@ const blogData = Object.entries(mdxModules)
 const pad2 = (n) => String(n).padStart(2, "0");
 
 const FILTERS = [
-  { key: "all",     label: "All Posts" },
-  { key: "blog",    label: "Blog" },
+  { key: "all", label: "All Posts" },
+  { key: "blog", label: "Blog" },
   { key: "logical", label: "Logical" },
-  { key: "visual",  label: "Visual" },
+  { key: "visual", label: "Visual" },
   { key: "gallery", label: "Gallery" },
 ];
 
@@ -36,9 +36,8 @@ function Header({ counts }) {
               WORKING ARCHIVE · 2023 — 2026
             </p>
             <h1 className="proj-title">
-              <em>Ideas</em>, builds <span className="ampersand">&amp;</span>
-              <br />
-              visual logs.
+              <em>Ideas</em>, builds <br />
+              <span className="ampersand">&amp;</span> visual logs.
             </h1>
             <p className="proj-lede">
               A working archive of ideas, builds, and observations — from
@@ -219,8 +218,21 @@ function PostCard({ post, index, onPick }) {
           <div className="proj-card-overlay">
             <span className="proj-card-cta">
               Read Post
-              <svg className="proj-card-cta-arrow" width="24" height="8" viewBox="0 0 24 8" fill="none" aria-hidden="true">
-                <path d="M0 4h20M16 1l4 3-4 3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              <svg
+                className="proj-card-cta-arrow"
+                width="24"
+                height="8"
+                viewBox="0 0 24 8"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M0 4h20M16 1l4 3-4 3"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </span>
           </div>
@@ -302,21 +314,27 @@ export default function Blog() {
   const [sort, setSort] = useState("newest");
   const [view, setView] = useState("grid");
 
-  const counts = useMemo(() => ({
-    all:      blogData.length,
-    blog:     blogData.filter((p) => p.subcategory === "blog").length,
-    logical:  blogData.filter((p) => p.subcategory === "logical").length,
-    visual:   blogData.filter((p) => p.subcategory === "visual").length,
-    gallery:  blogData.filter((p) => p.subcategory === "gallery").length,
-    projects: blogData.filter((p) => p.category === "PROJECTS").length,
-    posts:    blogData.filter((p) => p.category === "POST").length,
-  }), []);
+  const counts = useMemo(
+    () => ({
+      all: blogData.length,
+      blog: blogData.filter((p) => p.subcategory === "blog").length,
+      logical: blogData.filter((p) => p.subcategory === "logical").length,
+      visual: blogData.filter((p) => p.subcategory === "visual").length,
+      gallery: blogData.filter((p) => p.subcategory === "gallery").length,
+      projects: blogData.filter((p) => p.category === "PROJECTS").length,
+      posts: blogData.filter((p) => p.category === "POST").length,
+    }),
+    [],
+  );
 
   const filtered = useMemo(() => {
     const list = filter === "all" ? blogData : filterPosts(blogData, filter);
-    if (sort === "newest") return [...list].sort((a, b) => new Date(b.date) - new Date(a.date));
-    if (sort === "oldest") return [...list].sort((a, b) => new Date(a.date) - new Date(b.date));
-    if (sort === "title")  return [...list].sort((a, b) => a.title.localeCompare(b.title));
+    if (sort === "newest")
+      return [...list].sort((a, b) => new Date(b.date) - new Date(a.date));
+    if (sort === "oldest")
+      return [...list].sort((a, b) => new Date(a.date) - new Date(b.date));
+    if (sort === "title")
+      return [...list].sort((a, b) => a.title.localeCompare(b.title));
     return list;
   }, [filter, sort]);
 
