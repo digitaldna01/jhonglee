@@ -5,3 +5,12 @@ services:
     ports:
       - "8080:80"
     restart: unless-stopped
+    depends_on:
+      - backend
+
+  backend:
+    image: ghcr.io/digitaldna01/jhonglee-backend:latest
+    container_name: jhonglee-backend
+    restart: unless-stopped
+    environment:
+      - CORS_ORIGINS=https://jhonglee.com
