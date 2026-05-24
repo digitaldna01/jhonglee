@@ -23,8 +23,13 @@ export default defineConfig({
   ],
   server: {
     proxy: {
-      // Dev: forward API calls to the be_src backend (uvicorn on :8000).
-      "/api": "http://localhost:8000",
+      // Dev: forward API calls to the be_src backend. Host dev defaults to
+      // uvicorn on :8000; inside docker-compose.dev.yml it points at the
+      // `backend` service via VITE_API_PROXY.
+      "/api": process.env.VITE_API_PROXY ?? "http://localhost:8000",
     },
+    // macOS Docker bind mounts don't emit native fs events, so HMR needs
+    // polling to notice edits. Opt-in via env so host dev is unaffected.
+    ...(process.env.VITE_USE_POLLING ? { watch: { usePolling: true } } : {}),
   },
 });

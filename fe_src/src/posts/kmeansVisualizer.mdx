@@ -2,10 +2,10 @@ import { Lang } from "../utils/lang";
 import KMeansDemo from "../components/KMeansDemo";
 
 export const metadata = {
-  title: "KMeans Visualizer",
+  title: "KMeans Clustering",
   displayTitle: {
-    ko: "인터랙티브 KMeans 클러스터링 시각화 만들기",
-    en: "Building an Interactive KMeans Visualizer",
+    ko: "인터랙티브 KMeans 클러스터링",
+    en: "Interactive KMeans Clustering",
   },
   date: "2024-09-27",
   category: "POST",
@@ -18,7 +18,6 @@ export const metadata = {
     "clustering",
     "machine learning",
     "lloyd's algorithm",
-    "fastapi",
     "data visualization",
   ],
   locales: ["en", "ko"],
@@ -26,138 +25,37 @@ export const metadata = {
 };
 
 <p className="not-prose text-sm tracking-widest uppercase text-center text-gray-400 my-4">
-  numpy · FastAPI · React canvas
+  assign · update · repeat
 </p>
 
 <Lang locale="en">
 
-One of the fastest ways to actually understand a machine-learning algorithm is to build it
-from scratch and then *watch it run*. So I wrote KMeans clustering in plain NumPy — no
-scikit-learn — and wrapped it in a visualizer where you can drop the centroids, step through
-Lloyd's iterations one at a time, and see the clusters snap into place.
+_Clustering_ asks a simple question of unlabeled data: which points belong together?
+**KMeans** is the classic first answer. You give it the number of groups you want — _k_ — and
+it splits the points into _k_ clusters, each gathered around its own center, or _centroid_.
+There are no labels and no training signal; it works purely from how close the points are to
+one another.
 
-This started as a course assignment (a Flask app that rendered matplotlib frames). For this
-post I pulled the algorithm out, rebuilt it as a small **stateless JSON API** in this site's
-backend, and render the whole thing on an HTML canvas — so the demo below is the *real*
-algorithm running live, not a recording.
-
-</Lang>
-
-<Lang locale="ko">
-
-머신러닝 알고리즘을 제대로 이해하는 가장 빠른 방법 중 하나는 직접 처음부터 구현하고 *돌아가는 걸
-눈으로 보는 것*이다. 그래서 KMeans 클러스터링을 scikit-learn 없이 순수 NumPy로 짜고, 센트로이드를
-직접 찍고 Lloyd 반복을 한 스텝씩 밟아가며 클러스터가 자리를 잡는 걸 볼 수 있는 시각화 도구로 감쌌다.
-
-원래는 수업 과제(matplotlib 프레임을 그려 주는 Flask 앱)였는데, 이 글을 위해 알고리즘만 떼어내서
-이 사이트 백엔드에 **무상태 JSON API**로 다시 만들고, 전체를 HTML 캔버스에 직접 그렸다. 그래서 아래
-데모는 녹화가 아니라 *실제* 알고리즘이 실시간으로 도는 것이다.
-
-</Lang>
-
----
-
-<Lang locale="en">
-
-### The algorithm — Lloyd's iteration
-
-KMeans splits points into _k_ clusters by repeating two steps until nothing moves. **Assign**
-every point to its nearest centroid:
+The algorithm is short enough to keep in your head: drop _k_ centroids, assign every point to
+its nearest one, move each centroid to the mean of the points it captured, and repeat until
+nothing moves. That loop is **Lloyd's algorithm** — and the fastest way to understand it is to
+watch it run. Pick a dataset and an init method, then **Step** through the iterations or **Run
+to convergence**; in manual mode, click the canvas to drop your _k_ centroids first.
 
 </Lang>
 
 <Lang locale="ko">
 
-### 알고리즘 — Lloyd 반복
+_클러스터링_ 은 레이블 없는 데이터에 던지는 단순한 질문이다 — 어떤 점들이 한 무리인가? **KMeans**는
+그 고전적인 첫 답이다. 원하는 그룹 수 *k*를 알려주면 점들을 *k*개의 클러스터로 나누고, 각 클러스터를
+그 중심(_센트로이드_) 주위로 모은다. 레이블도 학습도 필요 없다. 오직 점들이 서로 얼마나 가까운지,
+그 거리 하나만 본다.
 
-KMeans는 두 단계를 아무것도 안 움직일 때까지 반복하며 점들을 _k_개의 클러스터로 나눈다. 먼저 모든
-점을 가장 가까운 센트로이드에 **할당(assign)**:
-
-</Lang>
-
-$$
-c_i = \arg\min_j \lVert x_i - \mu_j \rVert^2
-$$
-
-<Lang locale="en">
-
-then **update** each centroid to the mean of the points assigned to it:
-
-</Lang>
-
-<Lang locale="ko">
-
-그다음 각 센트로이드를 자기에게 할당된 점들의 평균으로 **갱신(update)**:
-
-</Lang>
-
-$$
-\mu_j = \frac{1}{|C_j|} \sum_{x \in C_j} x
-$$
-
-<Lang locale="en">
-
-That's it. Assign, update, assign, update — it always converges, though _where_ it converges
-depends entirely on where the centroids start. Which is the interesting part.
-
-</Lang>
-
-<Lang locale="ko">
-
-그게 전부다. 할당, 갱신, 할당, 갱신 — 항상 수렴한다. 다만 _어디로_ 수렴하느냐는 센트로이드가 어디서
-출발했느냐에 전적으로 달려 있다. 그게 재미있는 지점이다.
-
-</Lang>
-
----
-
-<Lang locale="en">
-
-### Four ways to start
-
-Initialization is where KMeans lives or dies, so the demo lets you pick among four:
-
-- **Random** — pick _k_ data points at random. Simple, but unlucky picks give bad clusters.
-- **Farthest First** — pick the point farthest from the ones chosen so far. Spreads centroids
-  out, but chases outliers.
-- **KMeans++** — pick the next centroid with probability proportional to its squared distance
-  from the nearest existing one. The sweet spot: spread out, but robust to outliers.
-- **Manual** — click _k_ points yourself and watch how your choice steers the result.
-
-</Lang>
-
-<Lang locale="ko">
-
-### 시작하는 네 가지 방법
-
-KMeans는 초기화에서 성패가 갈린다. 그래서 데모에서 네 가지 중 고를 수 있게 했다:
-
-- **Random** — _k_개의 데이터 점을 무작위로 고른다. 단순하지만 운 나쁘면 클러스터가 엉망이 된다.
-- **Farthest First** — 지금까지 고른 점들에서 가장 먼 점을 고른다. 센트로이드를 넓게 퍼뜨리지만
-  이상치(outlier)를 쫓아간다.
-- **KMeans++** — 가장 가까운 기존 센트로이드와의 거리 제곱에 비례하는 확률로 다음 센트로이드를
-  고른다. 넓게 퍼지면서도 이상치에 강한, 가장 균형 잡힌 방법.
-- **Manual** — _k_개의 점을 직접 클릭해서, 그 선택이 결과를 어떻게 끌고 가는지 본다.
-
-</Lang>
-
----
-
-<Lang locale="en">
-
-### Try it
-
-Pick an init method, then **Step** through the iterations or **Run to convergence**. In manual
-mode, click the canvas to drop your _k_ centroids first.
-
-</Lang>
-
-<Lang locale="ko">
-
-### 직접 해보기
-
+알고리즘은 머릿속에 담아둘 만큼 짧다: *k*개의 센트로이드를 찍고, 모든 점을 가장 가까운 센트로이드에
+할당하고, 각 센트로이드를 자기가 모은 점들의 평균으로 옮기고, 아무것도 안 움직일 때까지 반복한다.
+이 반복이 **Lloyd 알고리즘**이고 — 이해하기 가장 좋은 방법은 직접 돌아가는 걸 보는 것이다. 데이터셋과
 초기화 방법을 고르고 **Step**으로 반복을 한 단계씩 밟거나 **Run to convergence**로 끝까지 돌려보자.
-manual 모드에서는 캔버스를 클릭해서 _k_개의 센트로이드를 먼저 찍으면 된다.
+manual 모드에서는 캔버스를 클릭해서 *k*개의 센트로이드를 먼저 찍으면 된다.
 
 </Lang>
 
@@ -167,43 +65,95 @@ manual 모드에서는 캔버스를 클릭해서 _k_개의 센트로이드를 �
 
 <Lang locale="en">
 
-### How it's wired
+### Lloyd's iteration algorithm
 
-The original assignment computed each frame on the server with matplotlib and returned PNGs,
-leaning on global state and files on disk — fine for one person, but it would fall apart with
-two people clicking at once. For this site I rewired it:
-
-- **`be_src/` (FastAPI)** — the NumPy algorithm, exposed as two stateless endpoints:
-  `GET /api/kmeans/dataset` and `POST /api/kmeans/run`. A single `run` call computes the
-  *whole* Lloyd's sequence and returns it as JSON — no server state, no disk, safe for many
-  visitors at once.
-- **React canvas** — the component fetches that step list and draws each frame itself, so
-  stepping and animating are instant and the server does the math exactly once.
-- **nginx** proxies `/api` to the backend container; in dev, Vite does the same. The demo above
-  is talking to that backend right now.
-
-`be_src/` is the general backend for this site, so this is just its first feature — adding the
-next one is a new router.
+KMeans repeats two steps until nothing moves. Write $x_i$ for each data point and $\mu_j$ for
+each cluster's center, its centroid. The first step — **assign** — assigns every point to its
+nearest centroid: point $x_i$'s cluster label $c_i$ is whichever centroid index _j_ makes the
+squared distance $\lVert x_i - \mu_j \rVert^2$ smallest — that's all $\arg\min_j$ means, "the
+_j_ that minimizes it":
 
 </Lang>
 
 <Lang locale="ko">
 
-### 어떻게 연결돼 있나
+### Lloyd 반복 알고리즘
 
-원래 과제는 매 프레임을 서버에서 matplotlib로 그려 PNG로 돌려줬고, 전역 상태와 디스크 파일에
-의존했다. 혼자 쓸 땐 괜찮지만 두 명이 동시에 클릭하면 무너진다. 이 사이트에 올리면서 다시 배선했다:
+KMeans는 더 이상 변화가 없을 때까지 두 단계를 반복한다. 각 데이터 점을 $x_i$, 각 클러스터의
+중심(센트로이드)을 $\mu_j$라고 하자. 첫 단계 **할당(assign)** 은 모든 점을 가장 가까운 센트로이드에
+넘긴다: 점 $x_i$의 클러스터 라벨 $c_i$는 제곱 거리 $\lVert x_i - \mu_j \rVert^2$를 가장 작게 만드는
+센트로이드 번호 *j*다 — $\arg\min_j$는 그저 "그 값을 최소로 만드는 _j_"라는 뜻이다:
 
-- **`be_src/` (FastAPI)** — NumPy 알고리즘을 두 개의 무상태 엔드포인트로 노출:
-  `GET /api/kmeans/dataset`, `POST /api/kmeans/run`. `run` 한 번이 *전체* Lloyd 시퀀스를 계산해서
-  JSON으로 반환한다 — 서버 상태도, 디스크도 없어서 여러 명이 동시에 써도 안전하다.
-- **React 캔버스** — 컴포넌트가 그 스텝 리스트를 받아서 프레임을 직접 그린다. 그래서 스텝/애니메이션이
-  즉각적이고, 서버는 계산을 딱 한 번만 한다.
-- **nginx**가 `/api`를 백엔드 컨테이너로 프록시한다(개발 땐 Vite가 같은 일을 한다). 위 데모는 지금
-  바로 그 백엔드와 통신하고 있다.
+</Lang>
 
-`be_src/`는 이 사이트의 범용 백엔드라, KMeans는 그 첫 번째 기능일 뿐이다 — 다음 기능은 라우터 하나를
-더 붙이면 된다.
+$$
+c_i = \arg\min_j \lVert x_i - \mu_j \rVert^2
+$$
+
+<Lang locale="en">
+
+then **update** moves each centroid to the mean of the points now assigned to it. Writing
+$C_j$ for the set of points now assigned to cluster _j_ and $|C_j|$ for how many there are, the
+centroid becomes their average position:
+
+</Lang>
+
+<Lang locale="ko">
+
+그다음 **갱신(update)** 은 각 센트로이드를 방금 자기에게 들어온 점들의 평균으로 옮긴다. 클러스터
+*j*에 할당된 점들의 집합을 $C_j$, 그 개수를 $|C_j|$라 하면, 센트로이드는 그 점들의 평균 자리로 간다:
+
+</Lang>
+
+$$
+\mu_j = \frac{1}{|C_j|} \sum_{x \in C_j} x
+$$
+
+<Lang locale="en">
+
+Why those two steps in particular? Because each one chips away at the same quantity — the
+**within-cluster sum of squares**, written $J$. For every cluster _j_, add up the squared
+distance from each of its points $x$ to that cluster's centroid $\mu_j$, then sum over all _k_
+clusters:
+
+</Lang>
+
+<Lang locale="ko">
+
+왜 하필 이 두 단계일까? 둘 다 같은 값을 깎아내기 때문이다 — **클러스터 내 제곱합(within-cluster
+sum of squares)** $J$다. 각 클러스터 *j*마다 그 안의 점 $x$들에서 센트로이드 $\mu_j$까지의
+제곱 거리를 모두 더하고, 그것을 *k*개 클러스터 전체에 합한 값이다:
+
+</Lang>
+
+$$
+J = \sum_{j=1}^{k} \sum_{x \in C_j} \lVert x - \mu_j \rVert^2
+$$
+
+<Lang locale="en">
+
+**Assign** lowers $J$ with the centroids fixed; **update** lowers $J$ with the assignments
+fixed. Neither step can ever raise $J$, and there are only finitely many ways to split the
+points into clusters — so the cost can't keep falling forever. It drops until a full pass
+changes nothing, then stops. That's why it _always_ converges. (Watch the **cost** in the demo
+tick down and flatten out.)
+
+But _where_ it lands depends entirely on where the centroids start: KMeans only ever walks
+downhill, so a bad start settles into a bad local minimum. That's the interesting part — and
+why the next section is about initialization.
+
+</Lang>
+
+<Lang locale="ko">
+
+**할당**은 센트로이드를 고정한 채 $J$를 낮추고, **갱신**은 할당을 고정한 채 $J$를 낮춘다. 어느
+단계도 $J$를 키우지 않고, 점을 클러스터로 나누는 경우의 수는 유한하므로 $J$가 영원히 떨어질 순
+없다. 더 이상 바뀌는 게 없을 때까지 줄다가 멈춘다. 그래서 _항상_ 수렴한다. (데모에서
+**cost**가 줄다가 평평해지는 걸 지켜보자.)
+
+다만 _어디에_ 안착하느냐는 센트로이드가 어디서 출발했느냐에 전적으로 달려 있다. KMeans는 $J$를 낮추는 쪽으로만
+움직이기 때문에, 잘못 출발하면 나쁜 지역 최솟값(local minimum)에 빠진다. 그게 흥미로운
+대목이고 — 그래서 다음 섹션이 초기화 이야기다.
 
 </Lang>
 
@@ -211,25 +161,130 @@ next one is a new router.
 
 <Lang locale="en">
 
-### What I'd do differently
+### Four ways to start
 
-The clustering is exact, but the visuals are deliberately minimal. Next I'd add a live
-"inertia" (within-cluster sum of squares) readout so you can _see_ KMeans++ converge faster,
-overlay Voronoi regions, and let you scrub the iteration timeline instead of only stepping
-forward. The algorithm code is on GitHub:
+Lloyd's algorithm only ever walks downhill, so the starting centroids decide which local minimum
+you settle into — initialization is the single biggest lever on the result. There are many ways to
+seed it; here are four of the most common:
 
-- **GitHub:** [the original assignment repo](https://github.com/digitaldna01/jhonglee-assignment-2)
+- **Random.** Pick _k_ of the actual data points at random and call them the starting
+  centroids. The catch is variance:
+  every run can land differently, and an unlucky draw (two seeds inside the same true cluster)
+  leaves a centroid with nothing to claim, so it splits a real cluster in half. The usual fix is
+  brute force — re-run with fresh seeds and keep the lowest-cost result.
+- **Farthest First.** Pick the first centroid at random, then each next one is the point
+  farthest from every centroid chosen so far. After a few picks the seeds are spread across the
+  whole space — exactly what Random can't guarantee. The downside: the farthest point is almost
+  always an outlier, so this reliably spends a centroid on a lone speck of noise out at the
+  edge.
+- **KMeans++.** The probabilistic middle ground, and the one to actually use. The first centroid
+  is random; each next one is drawn with probability proportional to its squared distance to
+  the nearest already-chosen centroid ($P(x) \propto D(x)^2$, where $D(x)$ is that
+  nearest-centroid distance). Faraway points are far likelier to be picked, so the seeds spread
+  out — but because it's a draw and not a hard maximum, a single outlier no longer hijacks a
+  centroid. It's scikit-learn's default and comes with a guarantee that the expected cost is
+  within $O(\log k)$ of optimal.
+- **Manual.** Place the _k_ centroids yourself. Less a strategy than the teaching mode: pile all
+  the seeds into one corner and watch the run crawl outward, or drop one inside each visible blob
+  and watch it lock on in a single step — the fastest way to feel how much the start decides the
+  finish.
 
 </Lang>
 
 <Lang locale="ko">
 
-### 다르게 해보고 싶은 점
+### 초기 클러스터 설정의 네 가지 방법
 
-클러스터링 자체는 정확하지만 시각화는 의도적으로 최소한이다. 다음엔 클러스터 내 제곱합(inertia)을
-실시간으로 표시해서 KMeans++가 더 빨리 수렴하는 걸 _눈으로_ 보게 하고, Voronoi 영역을 겹쳐 그리고,
-앞으로만 스텝하는 대신 반복 타임라인을 자유롭게 오갈 수 있게 하고 싶다. 알고리즘 코드는 GitHub에 있다:
+Lloyd 알고리즘은 $J$를 낮추는 쪽으로만 움직이므로, 어느 지역 최솟값에 안착하느냐는
+시작 센트로이드에 달려 있다 — 초기화는 결과를 가장 크게 좌우하는 단 하나의 지렛대다. 시드를 잡는 방법은 여러 가지인데,
+그중 대표적인 네 가지를 살펴보자:
 
-- **GitHub:** [원본 과제 레포](https://github.com/digitaldna01/jhonglee-assignment-2)
+- **Random.** 실제 데이터 점 중 *k*개를 무작위로 골라 시작 센트로이드로 삼는다. 문제는 분산이다: 매번 결과가 달라지고, 운 나쁘게 두 시드가 같은
+  진짜 클러스터에 들어가면 가져갈 점이 없는 센트로이드가 생겨 진짜 클러스터 하나를 둘로 쪼갠다.
+  보통은 시드를 바꿔 여러 번 돌려 $J$가 가장 낮은 결과를 고르는 무식한 방법으로 때운다.
+
+- **Farthest First.** 첫 센트로이드만 무작위로 잡고, 그다음부터는 지금까지 고른 센트로이드들에서
+  가장 먼 점을 차례로 고른다. 몇 번만 고르면 시드가 공간 전체에 퍼지는데, 이게 바로 Random이
+  보장하지 못하는 점이다. 단점은 가장 먼 점이 거의 항상 이상치(outlier)라, 가장자리에 동떨어진
+  노이즈 한 점에 센트로이드를 꼬박꼬박 낭비한다는 것이다.
+
+- **KMeans++.** 그 둘 사이의 확률적 절충안이자, 실제로 써야 할 방법이다. 첫 센트로이드는 무작위,
+  그다음부터는 이미 고른 가장 가까운 센트로이드까지의 거리 제곱에 비례하는 확률로 추첨한다
+  ($P(x) \propto D(x)^2$, $D(x)$는 그 가장 가까운 센트로이드까지의 거리). 먼 점일수록 뽑힐 확률이
+  훨씬 높아 시드가 퍼지지만, 고정 최댓값이 아니라 추첨이라 이상치 하나가 센트로이드를 가로채지
+  못한다. scikit-learn의 기본값이고, 기대 비용이 최적의 $O(\log k)$ 배 안에 든다는 보장까지 딸려 있다.
+- **Manual.** *k*개의 센트로이드를 직접 클릭해서 찍는다. 전략이라기보다 학습용 모드다: 시드를 전부
+  한 구석에 몰아넣고 기어 나오는 걸 보거나, 눈에 보이는 덩어리마다 하나씩 떨어뜨려 단 한 스텝에 자리
+  잡는 걸 보자 — 시작이 끝을 얼마나 좌우하는지 가장 빠르게 체감하는 방법이다.
+
+</Lang>
+
+---
+
+<Lang locale="en">
+
+### Where KMeans breaks
+
+Good initialization cures bad luck — but two failure modes are baked into the algorithm
+itself, and no amount of restarting fixes them. Switch the dataset above to see each one:
+
+- **Clusters of very different sizes.** Pick **Uneven blobs**: the big, loosely spread cluster
+  gets carved up, because its outer points sit closer to a neighboring centroid than to their
+  own. KMeans balances _distances_, not membership, so it splits the large cluster to "help"
+  the small ones.
+- **Non-globular shapes.** KMeans assumes every cluster is a round blob sitting around its mean.
+  Pick **Two moons** and set _k_ = 2: you read the two interlocking crescents instantly, but
+  each point just goes to the nearest centroid, so KMeans can only draw a straight boundary — it
+  slices across both moons instead of following them.
+
+These aren't bugs you can re-run away; they're the price of assuming round, comparably sized
+clusters. When your data looks like that, KMeans is hard to beat. When it doesn't, you reach for
+something else — DBSCAN, spectral clustering, Gaussian mixtures.
+
+</Lang>
+
+<Lang locale="ko">
+
+### KMeans가 깨지는 곳
+
+좋은 초기화는 운을 고쳐줄 뿐, 알고리즘 자체에 박혀 있는 두 가지 실패 모드는 아무리 다시 돌려도
+사라지지 않는다. 위에서 데이터셋을 바꿔가며 직접 확인해보자:
+
+- **크기가 크게 다른 클러스터.** **Uneven blobs**를 골라보자: 크고 느슨하게 퍼진 클러스터가 쪼개진다.
+  그 외곽 점들이 자기 중심보다 옆 클러스터의 중심에 더 가깝기 때문이다. KMeans는 소속이 아니라
+  *거리*로 균형을 맞추므로, 큰 클러스터를 갈라 작은 쪽을 "돕는다".
+- **비구형(non-globular) 모양.** KMeans는 모든 클러스터가 평균 주위에 모인 둥근 덩어리라고 가정한다.
+  **Two moons**를 고르고 _k_ = 2로 두면 눈에는 맞물린 두 초승달이 바로 보이지만, 각 점은 그저 가장
+  가까운 중심으로 갈 뿐이라 KMeans는 직선 경계밖에 못 긋는다 — 두 달을 따라가지 못하고 가로질러
+  잘라버린다.
+
+이건 다시 돌려서 피할 수 있는 버그가 아니라 둥글고 비슷한 크기의 클러스터라는 가정의 대가다.
+데이터가 그런 모양이면 KMeans는 좀처럼 지지 않는다. 아니라면 다른 도구 — DBSCAN, 스펙트럴 클러스터링,
+가우시안 혼합 — 로 손을 뻗을 차례다.
+
+</Lang>
+
+---
+
+<Lang locale="en">
+
+### Assign, update, repeat
+
+That really is the whole algorithm. KMeans isn't the sharpest clustering method, but it's the one
+you can hold entirely in your head — and the one whose every move you just watched land on the
+canvas above. Once the loop feels obvious, the failure modes and the seeding tricks stop being
+trivia to memorize and turn into things you can see coming. Change the dataset, reseed, and run it
+again: it isn't a black box anymore.
+
+</Lang>
+
+<Lang locale="ko">
+
+### 할당, 갱신, 반복
+
+이게 알고리즘의 전부다. KMeans가 가장 똑똑한 클러스터링 방법은 아니지만, 머릿속에 통째로 담아둘 수
+있고 모든 동작을 방금 위 캔버스에서 눈으로 좇은 도구다. 이 반복이 당연해지면, 실패 모드도 초기화
+요령도 더는 외울 지식이 아니라 미리 눈에 들어온다. 데이터셋을 바꾸고, 시드를 새로 뽑고, 다시
+돌려보자. 이제 블랙박스가 아니다.
 
 </Lang>

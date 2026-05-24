@@ -1,0 +1,44 @@
+# Local development WITH hot reload — NOT used on the Raspberry Pi.
+# Frontend runs the Vite dev server (HMR); backend runs uvicorn --reload.
+# Source is bind-mounted, so edits reload live without rebuilding.
+#
+#   docker compose -f docker-compose.dev.yml up --build
+#
+# Open http://localhost:5173. Re-run with --build only after changing
+# dependencies (package-lock.json / requirements.txt).
+#
+# For production-parity (nginx serving the static build + /api proxy), use
+# docker-compose.local.yml instead.
+name: jhonglee-dev
+
+services:
+  web:
+    build:
+      context: ./fe_src
+      dockerfile: Dockerfile.dev
+    container_name: jhonglee-web-dev
+    environment:
+      # Vite proxies /api to the backend container, not localhost.
+      - VITE_API_PROXY=http://backend:8000
+      # macOS Docker bind mounts need polling for HMR to detect edits.
+      - VITE_USE_POLLING=1
+    volumes:
+      - ./fe_src:/app          # live source
+      - /app/node_modules      # keep the image's linux node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+  backend:
+    build: ./be_src
+    container_name: jhonglee-backend-dev
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    environment:
+      - CORS_ORIGINS=http://localhost:5173
+      # macOS Docker bind mounts need polling for --reload to detect edits.
+      - WATCHFILES_FORCE_POLLING=true
+    volumes:
+      - ./be_src/app:/app/app  # live source
+    ports:
+      - "8000:8000"

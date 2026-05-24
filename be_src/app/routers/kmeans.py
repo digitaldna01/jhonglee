@@ -4,16 +4,20 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Query
 
 from ..ml import kmeans as kmeans_ml
-from ..schemas.kmeans import DatasetResponse, RunRequest, RunResponse
+from ..schemas.kmeans import DatasetKind, DatasetResponse, RunRequest, RunResponse
 
 router = APIRouter(prefix="/kmeans", tags=["kmeans"])
 
 
 @router.get("/dataset", response_model=DatasetResponse)
-def dataset(n: int = Query(300, ge=1, le=2000), seed: int | None = None):
-    """A fresh random dataset. The frontend keeps it stable across init-method
-    switches and only calls this again when the user asks for a new dataset."""
-    return {"points": kmeans_ml.generate_dataset(n, seed).tolist()}
+def dataset(
+    n: int = Query(300, ge=1, le=2000),
+    seed: int | None = None,
+    kind: DatasetKind = "blobs",
+):
+    """A fresh dataset of the requested shape. The frontend keeps it stable across
+    init-method switches and only calls this again on a new dataset / shape."""
+    return {"points": kmeans_ml.generate_dataset(n, seed, kind).tolist()}
 
 
 @router.post("/run", response_model=RunResponse)

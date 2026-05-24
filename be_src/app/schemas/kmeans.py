@@ -6,6 +6,7 @@ from typing import Literal, Optional
 from pydantic import BaseModel, Field
 
 InitMethod = Literal["random", "farthest_first", "kmeans++", "manual"]
+DatasetKind = Literal["uniform", "blobs", "moons", "uneven"]
 
 
 class RunRequest(BaseModel):
@@ -19,6 +20,7 @@ class RunRequest(BaseModel):
 class Step(BaseModel):
     centroids: list[list[float]]
     assignments: list[int]
+    inertia: float
 
 
 class RunResponse(BaseModel):

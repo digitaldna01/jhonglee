@@ -13,9 +13,59 @@ import numpy as np
 RANGE = 10.0  # data points live in [0, RANGE] x [0, RANGE]
 
 
-def generate_dataset(num_points: int, seed: int | None = None) -> np.ndarray:
+DATASET_KINDS = ("uniform", "blobs", "moons", "uneven")
+
+
+def generate_dataset(
+    num_points: int, seed: int | None = None, kind: str = "blobs"
+) -> np.ndarray:
+    """Synthetic 2D data in [0, RANGE]^2.
+
+    kind:
+      blobs   — a few well-separated, similarly sized gaussian blobs (KMeans shines)
+      uneven  — one large spread-out blob beside small tight ones (size disparity)
+      moons   — two interleaving half-moons (non-globular; KMeans struggles)
+      uniform — uniform noise, no real clusters
+    """
     rng = np.random.default_rng(seed)
-    return rng.random((num_points, 2)) * RANGE
+
+    if kind == "uniform":
+        pts = rng.random((num_points, 2)) * RANGE
+
+    elif kind == "blobs":
+        centers = rng.uniform(0.18, 0.82, size=(4, 2)) * RANGE
+        labels = rng.integers(0, len(centers), size=num_points)
+        pts = centers[labels] + rng.normal(0, 0.55, size=(num_points, 2))
+
+    elif kind == "uneven":
+        centers = np.array([[0.32, 0.5], [0.78, 0.76], [0.78, 0.26]]) * RANGE
+        stds = np.array([1.7, 0.45, 0.45])
+        counts = (np.array([0.7, 0.15, 0.15]) * num_points).astype(int)
+        counts[0] += num_points - counts.sum()
+        pts = np.vstack(
+            [c + rng.normal(0, s, (n, 2)) for c, s, n in zip(centers, stds, counts)]
+        )
+
+    elif kind == "moons":
+        n_a = num_points // 2
+        t_a = np.linspace(0, np.pi, n_a)
+        t_b = np.linspace(0, np.pi, num_points - n_a)
+        moon_a = np.c_[np.cos(t_a), np.sin(t_a)]
+        moon_b = np.c_[1 - np.cos(t_b), 0.5 - np.sin(t_b)]
+        pts = np.vstack([moon_a, moon_b]) + rng.normal(0, 0.05, (num_points, 2))
+        lo, hi = pts.min(0), pts.max(0)  # normalize into a centered box
+        pts = (pts - lo) / (hi - lo) * (RANGE * 0.9) + RANGE * 0.05
+
+    else:
+        raise ValueError(f"unknown dataset kind: {kind!r}")
+
+    return np.clip(pts, 0.0, RANGE)
+
+
+def _inertia(data: np.ndarray, centers: np.ndarray, assignments: np.ndarray) -> float:
+    """Within-cluster sum of squares — the cost KMeans minimizes."""
+    diff = data - centers[assignments]
+    return float(np.einsum("ij,ij->", diff, diff))
 
 
 def _assign(data: np.ndarray, centers: np.ndarray) -> np.ndarray:
@@ -72,8 +122,8 @@ def run(
 ) -> dict:
     """Run Lloyd's algorithm and return every snapshot.
 
-    Returns {"steps": [{"centroids": [[x,y]...], "assignments": [int...]}, ...],
-             "converged": bool, "iterations": int}.
+    Returns {"steps": [{"centroids": [[x,y]...], "assignments": [int...],
+             "inertia": float}, ...], "converged": bool, "iterations": int}.
     """
     data = np.asarray(points, dtype=float)
     rng = np.random.default_rng(seed)
@@ -85,8 +135,15 @@ def run(
     else:
         centers = init_centers(data, k, init, rng)
 
+    def snapshot(centers, assignments):
+        return {
+            "centroids": centers.tolist(),
+            "assignments": assignments.tolist(),
+            "inertia": _inertia(data, centers, assignments),
+        }
+
     assignments = _assign(data, centers)
-    steps = [{"centroids": centers.tolist(), "assignments": assignments.tolist()}]
+    steps = [snapshot(centers, assignments)]
 
     converged = False
     for _ in range(max_iter):
@@ -94,9 +151,7 @@ def run(
         converged = bool(np.allclose(new_centers, centers))
         centers = new_centers
         assignments = _assign(data, centers)
-        steps.append(
-            {"centroids": centers.tolist(), "assignments": assignments.tolist()}
-        )
+        steps.append(snapshot(centers, assignments))
         if converged:
             break
 
