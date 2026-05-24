@@ -59,7 +59,7 @@
 }
 
 /* ── MDX prose content ───────────────────────────────── */
-.prose { color: var(--fg-2); line-height: 1.75; }
+.prose { color: var(--fg-2); line-height: 1.75; overflow-wrap: break-word; }
 .prose h1, .prose h2, .prose h3, .prose h4, .prose h5 {
   font-family: var(--font-sans);
   font-weight: 600;
@@ -74,7 +74,7 @@
 .prose p  { margin: 0 0 1em; }
 .prose a  { color: var(--color-primary); text-underline-offset: 3px; }
 .prose a:hover { color: var(--color-secondary); }
-.prose img { max-width: 100%; height: auto; border-radius: 4px; margin: 1.5em 0; }
+.prose img { display: block; max-width: 100%; height: auto; border-radius: 4px; margin: 1.5em auto; }
 .prose ul, .prose ol { padding-left: 1.5em; margin: 0 0 1em; }
 .prose li { margin-bottom: 0.4em; }
 .prose hr { border: none; border-top: 1px solid var(--hairline); margin: 2em 0; }
@@ -82,6 +82,23 @@
 .prose pre  { background: var(--color-bg-alt); border: 1px solid var(--hairline); border-radius: 6px; padding: 1em; overflow-x: auto; }
 .prose pre code { background: none; padding: 0; }
 .prose blockquote { border-left: 3px solid var(--hairline); margin: 1.5em 0; padding: 0.5em 0 0.5em 1em; color: var(--fg-3); }
+/* KaTeX display equations: centered (from katex.css) + scroll on small screens */
+.prose .katex-display { margin: 1.5em 0; padding: 0.25em 0; overflow-x: auto; overflow-y: hidden; }
+/* Shiki code blocks (rehype-pretty-code): dark theme bg comes inline; tune the frame */
+.prose figure[data-rehype-pretty-code-figure] { margin: 1.5em 0; }
+.prose pre[data-theme] {
+  border: none;
+  border-radius: 8px;
+  padding: 1em 1.15em;
+  overflow-x: auto;
+  font-size: 0.875em;
+  line-height: 1.6;
+}
+.prose pre[data-theme] code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+}
 
 /* ── Global base ──────────────────────────────────────── */
 body {

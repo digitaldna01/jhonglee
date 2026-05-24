@@ -1,28 +1,589 @@
+import { Lang } from "../utils/lang";
+
 export const metadata = {
   title: "Quantum Simulator",
-  date: "2024-08-15",
-  category: "PROJECTS",
-  subcategory: "logical",
-  thumbnail: "/images/projects/quantum-simulator/thumbnail.svg",
-  // thumbnail: "/images/projects/quantum-simulator/banner.svg",
+  displayTitle: {
+    ko: "세 가지 방식으로 만든 양자 시뮬레이터",
+    en: "Building a Quantum Simulator Three Different Ways",
+  },
+  date: "2024-08-12",
+  category: "POST",
+  subcategory: "blog",
+  thumbnail: "/images/projects/quantum-simulator/cover.png",
   excerpt:
-    "A quantum simulator built using Google's Tensor Network framework, implementing Grover's Algorithm and other quantum circuits.",
+    "Implementing the same quantum circuits three ways — Qiskit, a NumPy statevector engine, and Google's TensorNetwork — to actually understand what a quantum gate does under the hood.",
   keywords: [
-    "Quantum Simulator",
-    "Tensor Network",
-    "Qiskit",
-    "Grover's Algorithm",
+    "quantum computing",
+    "quantum simulator",
+    "tensor network",
+    "qiskit",
+    "statevector",
+    "grover algorithm",
   ],
+  locales: ["en", "ko"],
+  defaultLocale: "en",
 };
 
-<img
-  src="/images/projects/quantum-simulator/banner.svg"
-  className="img-wide not-prose"
-/>
+<p className="not-prose text-sm tracking-widest uppercase text-center text-gray-400 my-4">
+  Qiskit · NumPy Statevector · Google TensorNetwork
+</p>
 
-Built using Google's Tensor Network framework.
+<Lang locale="en">
 
-[Live Demo](https://quantum-simulator-production.up.railway.app/)
-[GitHub Repository](https://github.com/digitaldna01/quantum-simulator)
+Quantum computing isn't a far-future thing anymore. IBM, Google, and a handful of startups have actual quantum hardware you can run circuits on from the cloud. But the hardware is noisy and slow, and as soon as you go past a few qubits, you really need a **classical simulator** to develop and verify algorithms.
 
-More details and thoughts go here!
+I wanted to actually understand what those simulators do — not just call `circuit.run()` and trust the output. So I built the same quantum circuits three different ways: with IBM's Qiskit, with a NumPy-based statevector engine I wrote from scratch, and with Google's TensorNetwork library. Same gates, same algorithms, three completely different implementations underneath.
+
+The result is a small framework + a React/Three.js demo where you can drag gates onto qubits and run the circuit in your browser. You can try the live demo [here](https://quantum-simulator-production.up.railway.app/), and the full source is on [GitHub](https://github.com/digitaldna01/quantum-simulator).
+
+Here's what I learned building it.
+
+</Lang>
+
+<Lang locale="ko">
+
+양자 컴퓨터는 더 이상 먼 미래의 이야기가 아니다. IBM, Google, 그리고 여러 스타트업이 실제 양자 하드웨어를 운영하고 있고, 클라우드로 누구나 회로를 돌려볼 수 있다. 다만 실제 하드웨어는 노이즈가 많고 느리기 때문에, 알고리즘을 개발하고 검증하는 단계에서는 **고전 컴퓨터에서 돌아가는 시뮬레이터**가 사실상 필수다.
+
+그래서 시뮬레이터가 내부에서 정확히 무슨 일을 하는지 직접 들여다보고 싶었다. `circuit.run()` 한 줄로 끝나는 게 아니라, NumPy의 크로네커 곱, 텐서 수축 같은 저수준 연산까지 직접 구현해보면서. 그래서 같은 회로를 세 가지 방식 — IBM Qiskit, 직접 작성한 NumPy 기반 statevector 엔진, Google TensorNetwork — 으로 따로따로 만들어봤다. 같은 게이트, 같은 알고리즘, 완전히 다른 구현.
+
+결과물은 작은 시뮬레이터 프레임워크 + 브라우저에서 게이트를 드래그해서 회로를 만들어보는 React/Three.js 데모다. 라이브 데모는 [여기](https://quantum-simulator-production.up.railway.app/)에서 직접 돌려볼 수 있고, 전체 소스 코드는 [GitHub](https://github.com/digitaldna01/quantum-simulator)에 공개해뒀다.
+
+만들면서 배운 것들을 정리해본다.
+
+</Lang>
+
+---
+
+<Lang locale="en">
+
+### The idea
+
+Most quantum tutorials show you a single framework — usually Qiskit — and walk you through Bell states and Grover's algorithm. That's great for getting a feel for the API, but it leaves a black box where the simulator should be. What does it actually mean to "apply a Hadamard gate to qubit 0"? Is the simulator multiplying a giant matrix? Storing $2^n$ amplitudes? Doing something cleverer?
+
+The answer turns out to be _yes, all of the above_, depending on which simulator you pick. So I built three:
+
+- **Qiskit simulator** — IBM's framework. Used to implement Grover's algorithm and as the reference output.
+- **Statevector simulator** — Pure NumPy. Stores the full $2^n$ amplitude vector. Every gate becomes a Kronecker-expanded matrix multiplication. The textbook approach.
+- **Tensor network simulator** — Built on Google's [TensorNetwork](https://github.com/google/TensorNetwork). Represents the circuit as a graph of small tensors. The full state is never materialized until you contract.
+
+The whole thing is wrapped in a Flask API and a React frontend so you can build a circuit visually and see all three engines produce the same result.
+
+</Lang>
+
+<Lang locale="ko">
+
+### 아이디어
+
+양자 컴퓨팅 튜토리얼은 대부분 하나의 프레임워크 — 보통 Qiskit — 만 보여주고, 벨 상태와 Grover 알고리즘을 차례로 따라가게 한다. API 감을 잡기엔 좋지만, 정작 시뮬레이터 자체는 블랙박스로 남는다. "큐비트 0에 Hadamard 게이트를 적용한다"는 게 실제로 무슨 뜻일까? 거대한 행렬을 곱하는 걸까? $2^n$개의 진폭을 저장하는 걸까? 더 영리한 뭔가가 있는 걸까?
+
+답은 _세 가지 다 맞다_, 다만 어떤 시뮬레이터를 쓰느냐에 따라 다르다. 그래서 세 개를 다 만들어봤다.
+
+- **Qiskit simulator** — IBM의 프레임워크. Grover 알고리즘 구현과 기준 출력으로 사용.
+- **Statevector simulator** — 순수 NumPy. $2^n$ 크기의 진폭 벡터를 통째로 저장하고, 모든 게이트를 Kronecker 곱으로 확장해서 행렬 곱으로 계산. 교과서적인 방식.
+- **Tensor network simulator** — Google [TensorNetwork](https://github.com/google/TensorNetwork) 위에 구현. 회로를 작은 텐서들의 그래프로 표현하고, contraction 시점까지는 전체 상태를 만들지 않는다.
+
+전체는 Flask API + React 프론트엔드로 감싸서, 회로를 시각적으로 만들고 세 엔진이 모두 같은 결과를 내는지 확인할 수 있다.
+
+</Lang>
+
+---
+
+<Lang locale="en">
+
+### Step 1 — Wrapping Qiskit to build intuition
+
+I started with Qiskit because IBM's tooling makes it easy to draw circuits and see what you're doing. The goal here wasn't to reinvent anything — it was to implement **Grover's algorithm** as a reference and make sure I understood it well enough to reimplement it from scratch later.
+
+Grover's algorithm is a quantum search algorithm. Given an unstructured list of N items and a way to recognize the right one, classical search takes O(N) operations on average. Grover does it in **O(√N)**. It's not exponential speedup, but it's real and it generalizes.
+
+The algorithm has three parts:
+
+1. **Initialization** — Apply H to every qubit. Now all $2^n$ basis states have equal amplitude.
+2. **Oracle** — Flip the sign of the amplitude on the "answer" state.
+3. **Diffuser** — Reflect all amplitudes around the average. The negative one gets amplified.
+
+Repeat Oracle + Diffuser about √N times. Measure. With high probability, you get the answer.
+
+</Lang>
+
+<Lang locale="ko">
+
+### Step 1 — Qiskit으로 직관 잡기
+
+Qiskit부터 시작한 건 IBM 툴링이 회로를 그리고 동작을 확인하기에 가장 편하기 때문이다. 여기서의 목표는 뭔가를 새로 발명하는 게 아니라, **Grover 알고리즘**을 reference 구현으로 만들어두고 나중에 직접 처음부터 다시 구현할 수 있을 만큼 충분히 이해하는 것이었다.
+
+Grover 알고리즘은 양자 검색 알고리즘이다. 정렬되지 않은 N개의 항목과 정답을 인식하는 함수가 있을 때, 고전 검색은 평균 O(N)이 걸린다. Grover는 **O(√N)** 에 해낸다. 지수적 가속은 아니지만 실제로 동작하고 일반화도 잘 된다.
+
+알고리즘은 세 부분으로 구성된다.
+
+1. **Initialization** — 모든 큐비트에 H를 적용. $2^n$개의 모든 기저 상태가 같은 진폭이 된다.
+2. **Oracle** — "정답" 상태의 진폭 부호를 뒤집는다.
+3. **Diffuser** — 모든 진폭을 평균에 대해 반사시킨다. 부호가 뒤집힌 진폭이 증폭된다.
+
+Oracle + Diffuser를 √N번 정도 반복하고 측정한다. 높은 확률로 정답이 나온다.
+
+</Lang>
+
+<div className="grid grid-cols-1 gap-4 not-prose my-6">
+  <img
+    src="/images/projects/quantum-simulator/grover-circuit.png"
+    alt="Grover Circuit"
+  />
+</div>
+
+<Lang locale="en">
+
+That's the Grover circuit for a 3-qubit search. The left block is initialization, the middle is the oracle, the right is the diffuser. The MCX (multi-controlled X) gates are where most of the work happens — they're how the oracle "recognizes" the marked state.
+
+Implementing this in Qiskit was almost embarrassingly short:
+
+</Lang>
+
+<Lang locale="ko">
+
+위가 3큐비트 검색의 Grover 회로다. 왼쪽 블록이 initialization, 가운데가 oracle, 오른쪽이 diffuser다. MCX (multi-controlled X) 게이트가 대부분의 일을 처리한다 — oracle이 marked state를 "인식"하는 방식이 이 게이트다.
+
+Qiskit으로 구현하는 건 민망할 정도로 짧다.
+
+</Lang>
+
+```python
+from qiskit import QuantumCircuit
+
+qc = QuantumCircuit(3)
+qc.h([0, 1, 2])                # Initialization
+qc.append(oracle, [0, 1, 2])   # Oracle
+qc.append(diffuser, [0, 1, 2]) # Diffuser
+qc.measure_all()
+```
+
+<Lang locale="en">
+
+But that's the point — Qiskit hides everything interesting behind `.append()`. The next two simulators do the opposite.
+
+</Lang>
+
+<Lang locale="ko">
+
+하지만 그게 바로 핵심이다 — Qiskit은 흥미로운 모든 것을 `.append()` 뒤에 숨긴다. 다음 두 시뮬레이터는 정확히 그 반대를 한다.
+
+</Lang>
+
+---
+
+<Lang locale="en">
+
+### Step 2 — A statevector simulator in raw NumPy
+
+The statevector approach is the textbook way to simulate a quantum circuit. The state of n qubits is a complex vector of length $2^n$. Every gate is a unitary matrix. Applying a gate means matrix-multiplying:
+
+</Lang>
+
+<Lang locale="ko">
+
+### Step 2 — 순수 NumPy로 만든 statevector 시뮬레이터
+
+Statevector 방식은 양자 회로 시뮬레이션의 교과서적인 방법이다. n개 큐비트의 상태는 길이 $2^n$의 복소 벡터다. 모든 게이트는 unitary 행렬이다. 게이트를 적용한다는 건 그냥 행렬 곱이다.
+
+</Lang>
+
+$$
+|\psi_\text{new}\rangle = U \, |\psi\rangle
+$$
+
+<Lang locale="en">
+
+The catch is that U has to be the size of the whole system. If you want to apply a Hadamard to qubit 1 of a 3-qubit system, you can't just multiply by the 2×2 Hadamard matrix — you need an 8×8 matrix that acts as Hadamard on qubit 1 and identity on the others. That's where the **Kronecker product** comes in (with qubit 0 as the leftmost tensor factor):
+
+</Lang>
+
+<Lang locale="ko">
+
+문제는 U가 전체 시스템 크기여야 한다는 점이다. 3큐비트 시스템의 큐비트 1에 Hadamard를 적용하고 싶다고 2×2 Hadamard 행렬을 그냥 곱할 수는 없다 — 큐비트 1에는 Hadamard로, 다른 큐비트에는 identity로 작용하는 8×8 행렬이 필요하다. 여기서 **Kronecker 곱**이 등장한다 (큐비트 0을 가장 왼쪽 텐서 인자로 두는 컨벤션):
+
+</Lang>
+
+$$
+U_\text{full} = I \otimes H \otimes I
+$$
+
+<Lang locale="en">
+
+In NumPy:
+
+</Lang>
+
+<Lang locale="ko">
+
+NumPy로는 이렇게:
+
+</Lang>
+
+```python
+import numpy as np
+
+H = (1/np.sqrt(2)) * np.array([[1, 1], [1, -1]], dtype=complex)
+I = np.eye(2, dtype=complex)
+
+# Apply H to qubit 1 of a 3-qubit system
+U_full = np.kron(np.kron(I, H), I)
+new_state = U_full @ state
+```
+
+<Lang locale="en">
+
+That's the whole engine. Wrap it in a `StatevectorCircuit` class, add convenience methods for each gate, and you have a working simulator:
+
+</Lang>
+
+<Lang locale="ko">
+
+이게 엔진의 전부다. `StatevectorCircuit` 클래스로 감싸고, 각 게이트마다 편의 메서드를 추가하면 시뮬레이터가 완성된다.
+
+</Lang>
+
+```python
+from statevector_circuit import StatevectorCircuit
+
+sv = StatevectorCircuit(3)
+sv.h(0)          # Hadamard on qubit 0
+sv.cx(0, 1)      # CNOT: control 0, target 1
+sv.ccx([0,1], 2) # Toffoli: controls 0,1, target 2
+
+print(sv.top_possible_qubit_states())
+```
+
+<Lang locale="en">
+
+The controlled gates need slightly more care — a CNOT isn't just `kron(CX, I)`, because the control and target qubits might not be adjacent. You have to construct the right block-diagonal matrix that leaves $|0\rangle$ on the control alone and flips the target when the control is $|1\rangle$. Once you've written that helper, every other controlled gate (CZ, CCX, MCX) falls out as a special case.
+
+**What the gate matrices actually look like:**
+
+</Lang>
+
+<Lang locale="ko">
+
+Controlled 게이트는 조금 더 신경을 써야 한다 — CNOT은 `kron(CX, I)`로 끝나지 않는다. control과 target 큐비트가 인접하지 않을 수도 있기 때문이다. control이 $|0\rangle$일 땐 그대로 두고 $|1\rangle$일 땐 target을 뒤집는 block-diagonal 행렬을 직접 구성해야 한다. 이 helper만 한번 잘 짜두면 나머지 controlled 게이트(CZ, CCX, MCX)는 전부 특수 케이스로 처리된다.
+
+**게이트 행렬들이 실제로 어떻게 생겼나:**
+
+</Lang>
+
+```text
+X = [[0, 1],     Y = [[0, -i],    Z = [[1,  0],
+     [1, 0]]          [i,  0]]         [0, -1]]
+
+H = (1/√2) [[1,  1],
+            [1, -1]]
+
+S = [[1, 0],     T = [[1,        0     ],
+     [0, i]]          [0, exp(iπ/4)    ]]
+
+CNOT = [[1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 0, 1],
+        [0, 0, 1, 0]]
+```
+
+<Lang locale="en">
+
+A few things worth saying about specific gates, because writing them out by hand really did change how I think about them:
+
+**H is the gate that creates superposition.** $H|0\rangle = \tfrac{1}{\sqrt{2}}(|0\rangle + |1\rangle)$. Apply it to every qubit and you get a uniform superposition over all $2^n$ basis states. Every quantum algorithm I know of starts here.
+
+**Z and S and T look identical when you measure.** They only change phases on the $|1\rangle$ component. But phases matter the moment you put another H after them — that's how interference happens, and interference is the whole reason quantum is faster than classical for some problems.
+
+**CNOT is how you make entanglement.** $H \otimes I$ followed by CNOT turns $|00\rangle$ into the Bell state $\tfrac{1}{\sqrt{2}}(|00\rangle + |11\rangle)$. Two qubits that are perfectly correlated even though neither has a definite value on its own.
+
+**Toffoli (CCX) is universal.** Combined with H, you can build any quantum circuit. That's also where you encode classical logic (AND, NAND) into a quantum computer.
+
+The statevector simulator is clear, short, and fast for small systems. The problem shows up around 20–25 qubits, where $2^{25}$ complex numbers per state and $2^{50}$ entries per gate matrix start to actually hurt your laptop.
+
+</Lang>
+
+<Lang locale="ko">
+
+특정 게이트들에 대해 한마디씩 — 직접 손으로 써보고 나서 생각이 좀 바뀐 부분들이다.
+
+**H는 superposition을 만드는 게이트다.** $H|0\rangle = \tfrac{1}{\sqrt{2}}(|0\rangle + |1\rangle)$. 모든 큐비트에 적용하면 $2^n$개의 기저 상태에 균일한 중첩이 만들어진다. 내가 아는 모든 양자 알고리즘이 여기서 시작한다.
+
+**Z, S, T는 측정만 보면 똑같다.** $|1\rangle$ 성분의 위상만 바꾼다. 하지만 그 뒤에 H를 한 번 더 걸면 얘기가 달라진다 — 그게 바로 간섭(interference)이 일어나는 방식이고, 간섭은 양자가 특정 문제에서 고전보다 빠른 유일한 이유다.
+
+**CNOT은 얽힘(entanglement)을 만드는 게이트다.** $H \otimes I$를 먼저 걸고 CNOT을 걸면 $|00\rangle$이 벨 상태 $\tfrac{1}{\sqrt{2}}(|00\rangle + |11\rangle)$로 바뀐다. 각각의 큐비트는 확정된 값이 없는데도 완벽하게 상관관계를 갖는 두 큐비트.
+
+**Toffoli (CCX)는 universal하다.** H와 함께면 어떤 양자 회로든 만들 수 있다. 그리고 고전 논리(AND, NAND)를 양자 컴퓨터로 인코딩하는 곳도 여기다.
+
+Statevector 시뮬레이터는 작은 시스템에선 명확하고 짧고 빠르다. 문제는 20–25큐비트쯤에서 드러난다. 상태당 $2^{25}$개의 복소수, 게이트 행렬당 $2^{50}$개의 entry가 슬슬 노트북을 괴롭히기 시작한다.
+
+</Lang>
+
+---
+
+<Lang locale="en">
+
+### Step 3 — A tensor network simulator with Google TensorNetwork
+
+This is the part I was most excited about. Tensor networks are a way of representing high-dimensional tensors as graphs of small ones, and they map onto quantum circuits almost too neatly.
+
+</Lang>
+
+<Lang locale="ko">
+
+### Step 3 — Google TensorNetwork으로 만든 텐서 네트워크 시뮬레이터
+
+이 부분이 제일 만들고 싶었던 부분이다. 텐서 네트워크는 고차원 텐서를 작은 텐서들의 그래프로 표현하는 방식인데, 양자 회로에 거의 너무 깔끔하게 대응된다.
+
+</Lang>
+
+<div className="grid grid-cols-1 gap-4 not-prose my-6">
+  <img
+    src="/images/projects/quantum-simulator/tensor-network.png"
+    alt="Tensor Network Visualization"
+  />
+</div>
+
+<Lang locale="en">
+
+Each node in the picture is a small tensor — a qubit, or a gate. The lines between them are **edges**, which represent shared tensor indices. Applying a gate to a qubit means inserting a new node and connecting its input edge to the qubit's current output edge. That's it. No giant matrix.
+
+Running the circuit means **contracting** all the edges — summing over the shared indices until only the open ones remain. The result is the final state vector. The crucial difference from statevector: nothing is ever materialized to its full $2^n$ size during the build phase. The framework can choose a smart contraction order at the end.
+
+In code:
+
+</Lang>
+
+<Lang locale="ko">
+
+그림에서 각 노드는 작은 텐서 — 큐비트, 또는 게이트 — 다. 노드 사이의 선들은 **edge**로, 공유되는 텐서 인덱스를 나타낸다. 큐비트에 게이트를 적용한다는 건 새 노드를 끼워 넣고 그 입력 edge를 큐비트의 현재 출력 edge에 연결한다는 뜻이다. 그게 전부다. 거대한 행렬 없음.
+
+회로를 실행한다는 건 모든 edge를 **contract**한다는 의미다 — 공유 인덱스를 따라 합을 취해서 열린(open) edge만 남길 때까지. 결과가 최종 상태 벡터다. Statevector와의 결정적 차이: build 단계에서는 어떤 것도 전체 $2^n$ 크기로 만들어지지 않는다. 프레임워크가 마지막에 영리한 contraction 순서를 고를 수 있다.
+
+코드로는:
+
+</Lang>
+
+```python
+from tensornetwork_circuit import TensorNetworkCircuit
+
+tn = TensorNetworkCircuit(3)
+tn.h([0])
+tn.cx([0], 1)
+tn.ccx([0, 1], 2)
+
+tn.run()  # ← this is where contraction actually happens
+print(tn.top_possible_qubit_states())
+```
+
+<Lang locale="en">
+
+The API is intentionally identical to the statevector simulator — same method names, same semantics. The difference is entirely in what happens underneath. `tn.h([0])` adds a Hadamard tensor node to the network and rewires one edge. It doesn't compute anything. `tn.run()` is the moment of truth: TensorNetwork walks the graph, picks a contraction order, and produces the final state.
+
+For small circuits, statevector is actually faster — less overhead. But as the circuit gets deeper or wider, the tensor network version starts to win, because it can avoid constructing the giant intermediate matrices that statevector forces on itself.
+
+</Lang>
+
+<Lang locale="ko">
+
+API는 의도적으로 statevector 시뮬레이터와 완전히 동일하게 맞췄다 — 같은 메서드 이름, 같은 의미. 차이는 전부 내부에서 일어난다. `tn.h([0])`은 Hadamard 텐서 노드를 네트워크에 추가하고 edge 하나만 다시 연결한다. 아무것도 계산하지 않는다. `tn.run()`이 진실의 순간이다: TensorNetwork이 그래프를 따라 걸으며 contraction 순서를 정하고 최종 상태를 만든다.
+
+작은 회로에선 statevector가 오히려 더 빠르다 — 오버헤드가 더 적다. 하지만 회로가 깊어지거나 넓어지면 텐서 네트워크 버전이 이기기 시작한다. Statevector가 스스로에게 강요하는 거대한 중간 행렬을 만들지 않을 수 있기 때문이다.
+
+</Lang>
+
+---
+
+<Lang locale="en">
+
+### Step 4 — Wrapping it all in a browser
+
+Three Python engines aren't much fun unless you can actually play with them. So I built a React + react-three-fiber frontend and a Flask backend that exposes all three simulators over a single API.
+
+</Lang>
+
+<Lang locale="ko">
+
+### Step 4 — 브라우저로 감싸기
+
+Python 엔진 세 개만 있어선 갖고 놀 수가 없다. 그래서 React + react-three-fiber 프론트엔드와 세 시뮬레이터를 단일 API로 노출하는 Flask 백엔드를 만들었다.
+
+</Lang>
+
+```text
+frontend (React 19 + Vite + react-three-fiber)
+    │
+    ▼  POST /simulate { qubits, gates, engine }
+backend (Flask + Gunicorn)
+    │
+    ├── qiskit_simulator/
+    ├── statevector_simulator/
+    └── tensornetwork_simulator/
+```
+
+<Lang locale="en">
+
+The frontend lets you pick the number of qubits, drag gates onto a circuit, and run the whole thing. Three.js made the 3D circuit feel less like an enterprise tool and more like something you'd actually want to mess with.
+
+The whole thing is deployed on Railway. You can try the [live demo](https://quantum-simulator-production.up.railway.app/).
+
+</Lang>
+
+<Lang locale="ko">
+
+프론트엔드에선 큐비트 수를 고르고, 회로에 게이트를 드래그해서 올리고, 통째로 실행할 수 있다. Three.js 덕분에 3D 회로가 엔터프라이즈 툴 느낌이 아니라 실제로 만져보고 싶은 뭔가처럼 보인다.
+
+전체는 Railway에 배포되어 있다. [라이브 데모](https://quantum-simulator-production.up.railway.app/)
+
+</Lang>
+
+<div className="grid grid-cols-1 gap-4 not-prose my-6">
+  <img
+    src="/images/projects/quantum-simulator/demo-main.png"
+    alt="Quantum Simulator demo — main screen"
+  />
+</div>
+
+<Lang locale="en">
+
+**Trying a Bell state.** The simplest non-trivial circuit: H on qubit 0, then CNOT(0, 1). If everything is wired up correctly, you should see $|00\rangle$ and $|11\rangle$ each at ~50% probability, and $|01\rangle$ / $|10\rangle$ at zero. Two entangled qubits.
+
+</Lang>
+
+<Lang locale="ko">
+
+**벨 상태 실험.** 가장 단순한 non-trivial 회로다: 큐비트 0에 H, 그다음 CNOT(0, 1). 모든 게 잘 연결돼 있다면 $|00\rangle$과 $|11\rangle$이 각각 약 50% 확률, $|01\rangle$ / $|10\rangle$은 0이 나와야 한다. 얽힌 두 큐비트.
+
+</Lang>
+
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 not-prose">
+  <img
+    src="/images/projects/quantum-simulator/demo-bell-circuit.png"
+    alt="Bell state circuit"
+    className="w-full h-auto"
+  />
+  <img
+    src="/images/projects/quantum-simulator/demo-bell-result.png"
+    alt="Bell state result"
+    className="w-full h-auto"
+  />
+</div>
+
+<Lang locale="en">
+
+**Running Grover on 3 qubits with the marked state $|101\rangle$.** Initialize with H on all qubits, apply the oracle for $|101\rangle$, then the diffuser. After a single iteration the probability of measuring $|101\rangle$ should dominate.
+
+</Lang>
+
+<Lang locale="ko">
+
+**3큐비트에서 marked state를 $|101\rangle$로 두고 Grover 돌리기.** 모든 큐비트에 H로 초기화, $|101\rangle$에 대한 oracle 적용, 그다음 diffuser. 한 번의 iteration만으로 $|101\rangle$이 측정될 확률이 압도적이어야 한다.
+
+</Lang>
+
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 not-prose">
+  <img
+    src="/images/projects/quantum-simulator/demo-grover-circuit.png"
+    alt="Grover circuit"
+    className="w-full h-auto"
+  />
+  <img
+    src="/images/projects/quantum-simulator/demo-grover-result.png"
+    alt="Grover result"
+    className="w-full h-auto"
+  />
+</div>
+
+<Lang locale="en">
+
+What's nice is that you can flip the simulator backend in the UI and confirm all three engines produce the same distribution. They should, of course — they're all simulating the same math — but seeing it line up is the kind of validation you only get from owning the whole stack.
+
+</Lang>
+
+<Lang locale="ko">
+
+좋은 점은 UI에서 시뮬레이터 백엔드를 바꿔가며 세 엔진이 모두 같은 분포를 내는지 확인할 수 있다는 것이다. 당연히 그래야 한다 — 같은 수학을 시뮬레이션하는 거니까 — 하지만 결과가 실제로 일치하는 걸 눈으로 보는 검증은 전체 스택을 직접 만들었을 때만 얻을 수 있는 만족감이다.
+
+</Lang>
+
+---
+
+<Lang locale="en">
+
+### What worked well
+
+**Implementing the same gates three ways made them actually click.** Reading "H creates superposition" in a textbook is one thing. Writing `(1/sqrt(2)) * [[1,1],[1,-1]]`, Kronecker-expanding it to the full system, multiplying it into a state vector, and seeing the amplitudes split — that's when it sticks.
+
+**Identical APIs across the three simulators paid off.** Same method names, same shapes, same outputs. It let me write the frontend once and treat the choice of engine as just a backend flag. It also made debugging trivial: if statevector and tensornetwork disagreed on a circuit, one of them had a bug.
+
+**Tensor networks are surprisingly approachable.** I went in expecting the library to be intimidating, but TensorNetwork's API is small. Most of the conceptual weight is in understanding _which edges to contract when_ — and the library handles that for you.
+
+</Lang>
+
+<Lang locale="ko">
+
+### 잘 됐던 점
+
+**같은 게이트를 세 가지 방식으로 구현한 게 진짜 도움이 됐다.** 교과서에서 "H는 superposition을 만든다"고 읽는 것과, `(1/sqrt(2)) * [[1,1],[1,-1]]`을 직접 쓰고, 전체 시스템 크기로 Kronecker 확장하고, 상태 벡터에 곱하고, 진폭이 갈라지는 걸 눈으로 보는 건 완전히 다른 경험이다. 후자가 머리에 박힌다.
+
+**세 시뮬레이터의 API를 똑같이 맞춘 게 효과가 컸다.** 같은 메서드 이름, 같은 형태, 같은 출력. 덕분에 프론트엔드는 한 번만 만들고 엔진 선택을 단순히 백엔드 flag로 처리할 수 있었다. 디버깅도 쉬워졌다: statevector와 tensornetwork가 어떤 회로에서 다른 결과를 내면 둘 중 하나에 버그가 있다는 뜻이다.
+
+**텐서 네트워크는 의외로 접근하기 쉽다.** 라이브러리가 무서울 줄 알았는데, TensorNetwork의 API는 작다. 개념적인 무게는 대부분 _언제 어떤 edge를 contract할 것인가_ 에 있고, 그건 라이브러리가 대신 해준다.
+
+</Lang>
+
+---
+
+<Lang locale="en">
+
+### What I'd do differently
+
+**The performance comparison deserves a real benchmark.** I have a `run_time_comparison.py` script that runs the same circuit through statevector and tensornetwork at increasing qubit counts, but it's a single-machine, single-run measurement. A proper benchmark — multiple circuit topologies, repeated trials, memory profiling — would tell a much more honest story.
+
+**The 3D circuit is fun but not necessarily _better_.** I picked react-three-fiber because I wanted to see what it could do, not because the problem demanded 3D. A clean 2D circuit editor in the Qiskit style would probably be more usable for actual work. I'd keep the 3D as a toggle or an Easter egg.
+
+**No noise model.** All three simulators are ideal — they assume perfect gates and no decoherence. Real quantum hardware is dominated by noise. Adding a depolarizing channel or a T1/T2 model would make the simulator much closer to what you'd hit on actual IBM hardware.
+
+</Lang>
+
+<Lang locale="ko">
+
+### 다르게 해보고 싶은 점
+
+**성능 비교는 제대로 된 벤치마크가 필요하다.** 큐비트 수를 늘려가며 statevector와 tensornetwork에 같은 회로를 돌리는 `run_time_comparison.py`가 있긴 한데, 단일 머신에서 한 번 측정한 결과일 뿐이다. 여러 회로 구조, 반복 시행, 메모리 프로파일링까지 포함한 제대로 된 벤치마크라야 더 정직한 그림이 나올 것 같다.
+
+**3D 회로는 재밌지만 *더 낫다*고는 할 수 없다.** react-three-fiber를 쓴 건 뭐가 가능한지 보고 싶어서지, 문제가 3D를 요구해서가 아니었다. 실제 작업에는 Qiskit 스타일의 깔끔한 2D 회로 에디터가 더 쓸모 있을 거다. 3D는 토글이나 이스터에그 정도로 남겨두는 게 맞을 것 같다.
+
+**노이즈 모델이 없다.** 세 시뮬레이터 모두 ideal하다 — 완벽한 게이트, decoherence 없음. 실제 양자 하드웨어는 노이즈가 지배한다. Depolarizing channel이나 T1/T2 모델을 추가하면 실제 IBM 하드웨어에서 마주칠 결과에 훨씬 가까워질 거다.
+
+</Lang>
+
+---
+
+<Lang locale="en">
+
+### The takeaway
+
+If you're learning quantum computing and you've been bouncing between Qiskit tutorials without quite feeling like you _get_ it, I'd suggest implementing a statevector simulator yourself. It's about 200 lines of NumPy. By the time you've written the gate matrices and Kronecker-expanded your first CNOT, you'll have a much clearer mental model of what's actually happening than any number of `circuit.draw()` calls would give you.
+
+And once that clicks, tensor networks are the natural next step — same physics, different representation, much better scaling. Google's library does most of the heavy lifting.
+
+Source code and live demo:
+
+- **GitHub:** [Open the repo](https://github.com/digitaldna01/quantum-simulator)
+- **Live demo:** [Open the demo](https://quantum-simulator-production.up.railway.app/)
+
+</Lang>
+
+<Lang locale="ko">
+
+### 정리
+
+양자 컴퓨팅을 공부하면서 Qiskit 튜토리얼 사이를 왔다 갔다 하는데도 어쩐지 _감이 안 잡힌다_ 면, statevector 시뮬레이터를 직접 한 번 구현해보는 걸 추천한다. NumPy 200줄 정도다. 게이트 행렬을 직접 쓰고 첫 번째 CNOT을 Kronecker 확장할 때쯤이면, `circuit.draw()`를 백 번 호출하는 것보다 훨씬 명확한 mental model이 잡힌다.
+
+그게 잡히고 나면 텐서 네트워크가 자연스러운 다음 단계다 — 같은 물리, 다른 표현, 훨씬 좋은 scaling. Google 라이브러리가 무거운 일은 대부분 알아서 해준다.
+
+소스 코드와 라이브 데모:
+
+- **GitHub:** [Open the repo](https://github.com/digitaldna01/quantum-simulator)
+- **Live demo:** [Open the demo](https://quantum-simulator-production.up.railway.app/)
+
+</Lang>
