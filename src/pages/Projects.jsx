@@ -20,7 +20,7 @@ const LOGICAL = [
     excerpt:
       postBySlug["quantumSimulator"]?.excerpt ||
       "A quantum simulator built on Google's Tensor Network framework.",
-    image: "images/project/brain/brain-logical-1.png",
+    image: "/images/site/projects-page/brain/brain-logical-1.png",
     pos: { x: 36, y: 22 },
   },
   {
@@ -33,7 +33,7 @@ const LOGICAL = [
     excerpt:
       postBySlug["handPoseEstimation"]?.excerpt ||
       "Machine-learning-driven hand pose estimation from real-time keypoint streams.",
-    image: "images/project/brain/brain-logical-2.png",
+    image: "/images/site/projects-page/brain/brain-logical-2.png",
     pos: { x: 28, y: 40 },
   },
   {
@@ -45,7 +45,7 @@ const LOGICAL = [
     thumbnail: "",
     excerpt:
       "LLM development for an LSAT-prep platform — fine-tuned reasoning model with retrieval-augmented context.",
-    image: "images/project/brain/brain-logical-3.png",
+    image: "/images/site/projects-page/brain/brain-logical-3.png",
     pos: { x: 28, y: 58 },
   },
   {
@@ -57,7 +57,7 @@ const LOGICAL = [
     thumbnail: "",
     excerpt:
       "Computer-vision research at BU IVC group — evaluating diffusion-model artifacts in human-perceptual studies.",
-    image: "images/project/brain/brain-logical-4.png",
+    image: "/images/site/projects-page/brain/brain-logical-4.png",
     pos: { x: 36, y: 76 },
   },
 ];
@@ -73,7 +73,7 @@ const VISUAL = [
     excerpt:
       postBySlug["cogsAndGears"]?.excerpt ||
       "I translated the poem's central metaphor into an interactive experience — each verse a small, moving gear.",
-    image: "images/project/brain/brain-visual-1.png",
+    image: "/images/site/projects-page/brain/brain-visual-1.png",
     pos: { x: 64, y: 22 },
   },
   {
@@ -86,7 +86,7 @@ const VISUAL = [
     excerpt:
       postBySlug["designStudy"]?.excerpt ||
       "An exploration of editorial layout, grid, and book design — published as a small bound volume.",
-    image: "images/project/brain/brain-visual-2.png",
+    image: "/images/site/projects-page/brain/brain-visual-2.png",
     pos: { x: 72, y: 40 },
   },
   {
@@ -99,7 +99,7 @@ const VISUAL = [
     excerpt:
       postBySlug["gillSans"]?.excerpt ||
       "A stop-motion typography study on the history and proportions of Eric Gill's Gill Sans.",
-    image: "images/project/brain/brain-visual-3.png",
+    image: "/images/site/projects-page/brain/brain-visual-3.png",
     pos: { x: 72, y: 58 },
   },
   {
@@ -112,7 +112,7 @@ const VISUAL = [
     excerpt:
       postBySlug["visualArtPortfolio"]?.excerpt ||
       "Selected paintings, drawings, and prints from my Visual Arts minor at Boston University.",
-    image: "images/project/brain/brain-visual-4.png",
+    image: "/images/site/projects-page/brain/brain-visual-4.png",
     pos: { x: 64, y: 76 },
   },
 ];
@@ -407,7 +407,7 @@ function Projects() {
                 src={
                   active
                     ? active.image
-                    : "images/project/brain/default-brain.png"
+                    : "/images/site/projects-page/brain/default-brain.png"
                 }
                 alt={
                   active

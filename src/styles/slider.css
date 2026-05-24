@@ -1,6 +1,6 @@
 /* ── Slider section ─────────────────────────────────────── */
 #slider-area {
-  background: url(/images/slider.jpg) no-repeat 50%;
+  background: url(/images/site/home/slider.jpg) no-repeat 50%;
   background-attachment: fixed;
   background-size: cover;
   padding: 100px 0;

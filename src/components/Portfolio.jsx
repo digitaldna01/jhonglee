@@ -6,7 +6,7 @@ const portfolioData = [
   {
     title: 'Quantum Simulator',
     description: 'TensorNetwork Quantum Simulator',
-    imageUrl: '/images/quantum.png',
+    imageUrl: '/images/projects/quantum-simulator/cover.png',
     demoLink: '404.html',
     detailsLink: 'https://github.com/digitaldna01/quantum-simulator',
     wowDelay: '0ms',
@@ -14,21 +14,21 @@ const portfolioData = [
   {
     title: 'Handpose Predict',
     description: 'AI-Driven Hand-pose estimation model',
-    imageUrl: '/images/handpose.png',
+    imageUrl: '/images/projects/hand-pose-estimation/cover.png',
     readLink: 'https://www.mdpi.com/2079-9292/13/10/1970',
     wowDelay: '300ms',
   },
   {
     title: 'Visual Art Portfolio',
     description: 'Visual Arts Minor Portfolio',
-    imageUrl: '/images/art.jpg',
+    imageUrl: '/images/projects/visual-art-portfolio/cover.jpg',
     detailsLink: 'artgallery.html',
     wowDelay: '300ms',
   },
   {
     title: 'Gill Sans',
     description: 'Gill Sans Typography Video',
-    imageUrl: '/images/typography.png',
+    imageUrl: '/images/projects/gill-sans/cover.png',
     watchLink: '#',
     wowDelay: '600ms',
   },

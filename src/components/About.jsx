@@ -39,7 +39,7 @@ function About() {
             data-wow-delay=".3s"
             data-wow-duration="500ms"
           >
-            <img src="images/about.png" alt="" className="max-w-full h-auto" />
+            <img src="/images/site/about/about.png" alt="" className="max-w-full h-auto" />
           </div>
         </div>
       </div>
