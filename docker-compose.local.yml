@@ -1,0 +1,23 @@
+# Local development only — NOT used on the Raspberry Pi.
+# Builds the images from local source (fe_src/ + be_src/) instead of pulling
+# from GHCR, so you can test the full stack — including the nginx /api proxy —
+# exactly as it runs in production.
+#
+#   docker compose -f docker-compose.local.yml up --build
+#
+# Then open http://localhost:8080. The plain docker-compose.yml (which the Pi
+# uses) is left untouched.
+services:
+  web:
+    build: ./fe_src
+    container_name: jhonglee-web-local
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+  backend:
+    build: ./be_src
+    container_name: jhonglee-backend-local
+    environment:
+      - CORS_ORIGINS=http://localhost:8080

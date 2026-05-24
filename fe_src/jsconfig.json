@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "checkJs": false,
+    "jsx": "preserve"
+  },
+  "mdx": {
+    "plugins": ["remark-math"]
+  }
+}

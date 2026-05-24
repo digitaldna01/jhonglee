@@ -30,13 +30,25 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push image
+      - name: Build and push web image
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ./fe_src
           platforms: linux/arm64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=min
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./be_src
+          platforms: linux/arm64
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/jhonglee-backend:latest
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=min
 
   deploy-on-pi:
     needs: build-and-push

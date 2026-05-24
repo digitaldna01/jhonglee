@@ -23,3 +23,11 @@ dist-ssr
 *.sln
 *.sw?
 .vite/
+
+#  Claude
+.claude/
+
+# Python (be_src backend)
+__pycache__/
+*.pyc
+.venv/

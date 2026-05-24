@@ -1,0 +1,216 @@
+/* ── Print-atelier frame for the Design Study flip-book ───────────────────
+   The reader is staged like a press proof on a sheet of paper: trim marks at
+   the corners, a CMYK + brand colour bar, a registration target, and a
+   monospace spec line. System serif/mono stacks only — no web fonts. */
+
+.sb-atelier {
+  --sb-paper:    #f7f5ef;
+  --sb-ink:      #1b1a17;
+  --sb-ink-soft: #8c8678;
+  --sb-hair:     #dad6ca;
+  --sb-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  --sb-serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, ui-serif, serif;
+  --sb-ease: var(--ease-out, cubic-bezier(0.22, 0.61, 0.36, 1));
+
+  position: relative;
+  margin: 2.25rem 0;
+  padding: clamp(1rem, 4.5vw, 2.85rem);
+  background-color: var(--sb-paper);
+  border: 1px solid var(--sb-hair);
+  border-radius: 2px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset,
+              0 22px 48px -32px rgba(27, 26, 23, 0.55);
+  color: var(--sb-ink);
+}
+
+/* faint paper grain */
+.sb-atelier::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── running header (proof bar) ─────────────────────────────────────────── */
+.sb-masthead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  padding-bottom: 0.65rem;
+  margin-bottom: clamp(1.1rem, 3vw, 1.9rem);
+  border-bottom: 1px solid var(--sb-hair);
+  font-family: var(--sb-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--sb-ink-soft);
+}
+.sb-masthead b { color: var(--sb-ink); font-weight: 600; }
+.sb-masthead .sb-format { white-space: nowrap; }
+
+/* ── trim frame + book ──────────────────────────────────────────────────── */
+.sb-frame { position: relative; }
+
+.sb-stage { position: relative; display: flex; justify-content: center; }
+.sb-stage::after {            /* ambient shadow under the book */
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -1.5%;
+  transform: translateX(-50%);
+  width: 70%;
+  height: 26px;
+  background: rgba(27, 26, 23, 0.3);
+  filter: blur(17px);
+  border-radius: 50%;
+  z-index: 0;
+}
+.sb-bookwrap { position: relative; z-index: 1; width: 100%; max-width: 760px; }
+
+/* each leaf is a white page; the image fills it via object-cover */
+.sb-page { width: 100%; height: 100%; overflow: hidden; background: #fff; line-height: 0; }
+/* neutralise the post's leaked `.prose img` rule (margin/radius/height:auto)
+   that otherwise pushes each page down ~24px and rounds its corners. */
+.sb-atelier .sb-page img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  max-width: none;
+  border-radius: 0;
+  object-fit: cover;
+}
+
+/* crop marks */
+.sb-crop { position: absolute; width: 14px; height: 14px; color: var(--sb-ink); z-index: 2; }
+.sb-crop::before,
+.sb-crop::after { content: ""; position: absolute; background: currentColor; }
+.sb-crop::before { width: 14px; height: 1px; }
+.sb-crop::after  { width: 1px;  height: 14px; }
+.sb-crop.tl { top: -11px; left: -11px; }
+.sb-crop.tr { top: -11px; right: -11px; }
+.sb-crop.tr::before { right: 0; }
+.sb-crop.tr::after  { right: 0; }
+.sb-crop.bl { bottom: -11px; left: -11px; }
+.sb-crop.bl::before { bottom: 0; }
+.sb-crop.bl::after  { bottom: 0; }
+.sb-crop.br { bottom: -11px; right: -11px; }
+.sb-crop.br::before { right: 0; bottom: 0; }
+.sb-crop.br::after  { right: 0; bottom: 0; }
+
+/* ── press furniture: colour bar · registration · counter · nav ─────────── */
+.sb-furniture {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  flex-wrap: wrap;
+  margin-top: clamp(1.2rem, 3vw, 1.75rem);
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--sb-hair);
+  font-family: var(--sb-mono);
+}
+
+.sb-colorbar { display: flex; }
+.sb-colorbar i { display: block; width: 13px; height: 13px; }
+
+.sb-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--sb-ink-soft);
+}
+.sb-reg { display: block; width: 16px; height: 16px; color: var(--sb-ink); }
+.sb-counter { color: var(--sb-ink); font-variant-numeric: tabular-nums; }
+
+.sb-nav-group { display: flex; align-items: center; gap: 1.3rem; }
+.sb-nav {
+  font-family: var(--sb-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sb-ink);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  position: relative;
+  transition: opacity 0.2s;
+}
+.sb-nav[disabled] { opacity: 0.25; cursor: not-allowed; }
+.sb-nav::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -4px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.28s var(--sb-ease);
+}
+.sb-nav:not([disabled]):hover::after { transform: scaleX(1); }
+
+/* ── colophon + auxiliary links ─────────────────────────────────────────── */
+.sb-footer {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.9rem;
+  margin-top: 1.05rem;
+  color: var(--sb-ink-soft);
+}
+.sb-colophon { font-family: var(--sb-serif); font-size: 0.95rem; }
+.sb-colophon em { font-style: italic; color: var(--sb-ink); }
+.sb-dot { color: var(--sb-hair); }
+.sb-aux {
+  font-family: var(--sb-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--sb-ink-soft);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.sb-aux:hover { color: var(--sb-ink); }
+
+/* ── fullscreen ─────────────────────────────────────────────────────────── */
+.sb-atelier:fullscreen {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: auto;
+}
+.sb-atelier:fullscreen .sb-bookwrap { max-width: min(88vw, 1120px); }
+
+/* ── entrance choreography ──────────────────────────────────────────────── */
+@keyframes sb-up   { from { opacity: 0; transform: translateY(9px); }  to { opacity: 1; transform: none; } }
+@keyframes sb-mark { from { opacity: 0; transform: scale(0.5); }       to { opacity: 1; transform: none; } }
+@keyframes sb-book { from { opacity: 0; transform: translateY(14px) scale(0.985); } to { opacity: 1; transform: none; } }
+
+.sb-masthead  { animation: sb-up 0.6s var(--sb-ease) both; }
+.sb-bookwrap  { animation: sb-book 0.7s var(--sb-ease) 0.12s both; }
+.sb-crop      { animation: sb-mark 0.5s var(--sb-ease) both; }
+.sb-crop.tl   { animation-delay: 0.18s; }
+.sb-crop.tr   { animation-delay: 0.26s; }
+.sb-crop.bl   { animation-delay: 0.34s; }
+.sb-crop.br   { animation-delay: 0.42s; }
+.sb-furniture { animation: sb-up 0.6s var(--sb-ease) 0.4s both; }
+.sb-footer    { animation: sb-up 0.6s var(--sb-ease) 0.5s both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sb-masthead, .sb-bookwrap, .sb-crop, .sb-furniture, .sb-footer { animation: none; }
+}

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 230" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Quantum Simulator banner">
+  <!-- Background -->
+  <rect width="940" height="230" fill="#1a1a1a"/>
+
+  <!-- Orange logo square -->
+  <rect x="70" y="55" width="120" height="120" rx="2" ry="2" fill="#E8632B"/>
+
+  <!-- Letter H inside the square -->
+  <text x="130" y="138"
+        font-family="Helvetica, Arial, 'Helvetica Neue', sans-serif"
+        font-weight="900"
+        font-size="92"
+        fill="#111111"
+        text-anchor="middle">H</text>
+
+  <!-- Title: Quantum Simulator -->
+  <text x="230" y="110"
+        font-family="Helvetica, Arial, 'Helvetica Neue', sans-serif"
+        font-weight="800"
+        font-size="54"
+        fill="#FFFFFF"
+        letter-spacing="-0.5">Quantum Simulator</text>
+
+  <!-- Subtitle -->
+  <text x="232" y="155"
+        font-family="Helvetica, Arial, 'Helvetica Neue', sans-serif"
+        font-weight="500"
+        font-size="20"
+        fill="#9A9A9A"
+        letter-spacing="3.5">TENSOR NETWORK  ·  QISKIT  ·  STATEVECTOR</text>
+</svg>
