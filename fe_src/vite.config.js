@@ -21,4 +21,10 @@ export default defineConfig({
     }),
     tailwindcss(),
   ],
+  server: {
+    proxy: {
+      // Dev: forward API calls to the be_src backend (uvicorn on :8000).
+      "/api": "http://localhost:8000",
+    },
+  },
 });
