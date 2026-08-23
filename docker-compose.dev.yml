@@ -38,6 +38,8 @@ services:
       - CORS_ORIGINS=http://localhost:5173
       # macOS Docker bind mounts need polling for --reload to detect edits.
       - WATCHFILES_FORCE_POLLING=true
+      # optional: real chat answers in dev (put it in a local .env)
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
     volumes:
       - ./be_src/app:/app/app  # live source
     ports:

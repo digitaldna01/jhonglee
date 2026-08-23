@@ -32,5 +32,8 @@ __pycache__/
 *.pyc
 .venv/
 
+# Secrets (ANTHROPIC_API_KEY etc. — read by docker compose)
+.env
+
 # Design
 v2-design-handoff/

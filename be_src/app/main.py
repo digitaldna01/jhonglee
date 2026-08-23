@@ -7,12 +7,25 @@ register it below with `app.include_router(..., prefix="/api")`.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from contextlib import asynccontextmanager
+
+from starlette.concurrency import run_in_threadpool
+
 from .core.config import get_settings
-from .routers import kmeans
+from .ml import retrieval
+from .routers import chat, kmeans
 
 settings = get_settings()
 
-app = FastAPI(title="jhonglee backend", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # load the embedding model + corpus vectors before serving traffic
+    await run_in_threadpool(retrieval.warmup)
+    yield
+
+
+app = FastAPI(title="jhonglee backend", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -30,3 +43,4 @@ def health():
 
 # Feature routers — add new ones here as the portfolio backend grows.
 app.include_router(kmeans.router, prefix="/api")  # -> /api/kmeans/*
+app.include_router(chat.router, prefix="/api")  # -> /api/chat/*

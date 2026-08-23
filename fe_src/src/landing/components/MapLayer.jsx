@@ -1,11 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { createGraph } from '../graph/createGraph';
-import { PROJECTS } from '../data/corpus';
-import { EDGES } from '../data/retrieval';
 
-/* Owns the canvas graph's lifecycle. The imperative API (injectQuery,
-   focusNode, …) is exposed through `graphRef` for the page to drive. */
-export default function MapLayer({ theme, introActive, onHover, onSelect, graphRef }) {
+/* Owns the canvas graph's lifecycle. Node/edge data comes in as props
+   (server corpus, or the bundled fallback). The imperative API
+   (injectQuery, focusNode, …) is exposed through `graphRef`. */
+export default function MapLayer({ theme, introActive, projects, edges, onHover, onSelect, graphRef }) {
   const canvasRef = useRef(null);
   const onHoverRef = useRef(onHover);
   const onSelectRef = useRef(onSelect);
@@ -14,8 +13,8 @@ export default function MapLayer({ theme, introActive, onHover, onSelect, graphR
 
   useEffect(() => {
     const api = createGraph(canvasRef.current, {
-      projects: PROJECTS,
-      edges: EDGES,
+      projects,
+      edges,
       reduced: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
       quiet: window.matchMedia('(max-width: 720px)').matches,
       theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light',
@@ -31,7 +30,7 @@ export default function MapLayer({ theme, introActive, onHover, onSelect, graphR
       if (graphRef) graphRef.current = null;
       api.destroy();
     };
-  }, [graphRef]);
+  }, [graphRef, projects, edges]);
 
   useEffect(() => { graphRef?.current?.setTheme(theme); }, [theme, graphRef]);
   useEffect(() => { graphRef?.current?.setIntro(introActive); }, [introActive, graphRef]);

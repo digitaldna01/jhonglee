@@ -44,7 +44,15 @@ export default function Navbar() {
   return (
     <nav className="site-nav" aria-label="Main">
       <div className="site-nav-bar">
-        <Link to="/" className="wordmark" onClick={() => setOpen(false)}>
+        <Link
+          to="/"
+          className="wordmark"
+          onClick={() => {
+            setOpen(false);
+            // already home → the landing listens and resets its chat session
+            if (pathname === '/') window.dispatchEvent(new Event('jhl:home'));
+          }}
+        >
           JHL<span className="dot">.</span>
           <span className="home">ask me anything</span>
         </Link>

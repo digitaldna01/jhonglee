@@ -21,3 +21,4 @@ services:
     container_name: jhonglee-backend-local
     environment:
       - CORS_ORIGINS=http://localhost:8080
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
