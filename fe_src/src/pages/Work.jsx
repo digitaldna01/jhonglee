@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { pad2, fmtDate } from "../utils/format";
 import "../styles/work.css";
 
 const mdxModules = import.meta.glob("../posts/*.mdx", { eager: true });
@@ -9,15 +10,6 @@ const blogData = Object.entries(mdxModules)
     ...(mod.metadata ?? {}),
   }))
   .filter((p) => p.title);
-
-const pad2 = (n) => String(n).padStart(2, "0");
-
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-function fmtDate(iso) {
-  const d = new Date(iso);
-  if (isNaN(d)) return iso;
-  return `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-}
 
 const FILTERS = [
   { key: "all", label: "All" },

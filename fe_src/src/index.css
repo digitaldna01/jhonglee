@@ -31,6 +31,7 @@
   --text-wordmark: 15px;
   --text-ui: 13px;        /* nav links, seed chips */
   --text-label: 11px;     /* mono labels: node labels, cite chips, drawer links */
+  --text-meta: 11.5px;    /* mono meta: eyebrows, CV dates + section labels, contact corner */
   --text-hint: 10.5px;    /* wordmark home hint, chat foot */
   --gutter: 22px;
 }
