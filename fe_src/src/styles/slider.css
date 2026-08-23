@@ -43,7 +43,7 @@
 @media (min-width: 768px) { #slider-area h2 { font-size: var(--body-lg); } }
 
 #slider-area .btn {
-  background: var(--color-primary);
+  background: var(--color-secondary);
   border: none;
   color: #fff;
   padding: 16px 28px;
@@ -67,7 +67,7 @@
   white-space: nowrap;
   left: 0;
   top: 0;
-  color: var(--color-primary);
+  color: var(--color-secondary);
 }
 .cd-words-wrapper b.is-visible { position: relative; }
 
@@ -91,4 +91,4 @@
   100% { opacity: 0; transform: translateY(100%); }
 }
 
-.hvr-bounce-to-right::before { background: var(--color-primary-light) !important; }
+.hvr-bounce-to-right::before { background: var(--color-secondary-light) !important; }

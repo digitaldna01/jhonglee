@@ -73,8 +73,8 @@ function Segmented({ options, value, onChange, disabled }) {
             onClick={() => onChange(o.value)}
             className={`rounded px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-40 ${
               active
-                ? "bg-primary text-white"
-                : "text-black-3 hover:bg-black-5/30 hover:text-primary"
+                ? "bg-secondary text-white"
+                : "text-black-3 hover:bg-black-5/30 hover:text-secondary"
             }`}
           >
             {o.label}
@@ -112,7 +112,7 @@ function Chevron({ dir }) {
 function Stepper({ label, value, min, max, step = 1, onChange, disabled }) {
   const set = (v) => onChange(Math.max(min, Math.min(max, v)));
   const tick =
-    "flex h-6 w-6 items-center justify-center rounded text-black-3 transition-colors hover:bg-black-5/30 hover:text-primary disabled:opacity-30";
+    "flex h-6 w-6 items-center justify-center rounded text-black-3 transition-colors hover:bg-black-5/30 hover:text-secondary disabled:opacity-30";
   return (
     <div className="inline-flex items-center gap-1.5">
       <span className="text-[11px] uppercase tracking-wider text-black-4">{label}</span>
@@ -386,7 +386,7 @@ export default function KMeansDemo() {
         </span>
         <span className="font-mono text-xs tabular-nums text-black-4">
           cost{" "}
-          <span className={cost != null ? "font-semibold text-primary" : ""}>
+          <span className={cost != null ? "font-semibold text-secondary" : ""}>
             {cost != null ? cost.toFixed(1) : "—"}
           </span>
         </span>
@@ -427,7 +427,7 @@ export default function KMeansDemo() {
             type="button"
             onClick={() => fetchDataset(numPoints, dataset)}
             disabled={busy}
-            className={`${btn} border border-black-5 text-black-3 hover:border-primary hover:text-primary`}
+            className={`${btn} border border-black-5 text-black-3 hover:border-secondary hover:text-secondary`}
           >
             ↻ new data
           </button>
@@ -453,7 +453,7 @@ export default function KMeansDemo() {
           type="button"
           onClick={handleStep}
           disabled={busy || !points.length}
-          className={`${btn} border border-primary text-primary hover:bg-primary hover:text-white`}
+          className={`${btn} border border-secondary text-secondary hover:bg-secondary hover:text-white`}
         >
           ▸ Step
         </button>
@@ -461,7 +461,7 @@ export default function KMeansDemo() {
           type="button"
           onClick={handleRun}
           disabled={busy || !points.length}
-          className={`${btn} bg-primary text-white hover:bg-primary-dark`}
+          className={`${btn} bg-secondary text-white hover:bg-secondary-dark`}
         >
           ▸▸ Run
         </button>
@@ -469,7 +469,7 @@ export default function KMeansDemo() {
           type="button"
           onClick={resetRun}
           disabled={busy}
-          className={`${btn} text-black-3 hover:bg-black-5/30 hover:text-primary`}
+          className={`${btn} text-black-3 hover:bg-black-5/30 hover:text-secondary`}
         >
           Reset
         </button>

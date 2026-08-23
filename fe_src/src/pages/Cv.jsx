@@ -11,7 +11,7 @@ function CvList({ items }) {
         {item.link ? (
           <a
             href={item.link}
-            className="text-secondary no-underline text-[1.2em] cursor-pointer"
+            className="text-primary no-underline text-[1.2em] cursor-pointer"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -65,7 +65,7 @@ function Cv() {
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-secondary no-underline hover:text-secondary-dark transition-colors duration-300 font-sans"
+                className="text-primary no-underline hover:text-primary-dark transition-colors duration-300 font-sans"
               >
                 {label}
               </a>

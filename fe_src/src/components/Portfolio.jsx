@@ -93,7 +93,7 @@ function PortfolioItem({ title, description, imageUrl, demoLink, detailsLink, re
         <figcaption className="px-6 py-5 text-black-2">
           <h4 className="m-0">
             <a
-              className="text-[length:var(--body-lg)] text-[#24456b] no-underline hover:text-primary-dark"
+              className="text-[length:var(--body-lg)] text-[#24456b] no-underline hover:text-secondary-dark"
               href={linkHref}
             >
               {title}
@@ -139,8 +139,8 @@ function Portfolio() {
 
       <div className="text-center mt-4">
         <a
-          href="/projects"
-          className="text-[length:var(--body-md)] text-primary no-underline transition-colors duration-300 hover:text-secondary"
+          href="/work"
+          className="text-[length:var(--body-md)] text-secondary no-underline transition-colors duration-300 hover:text-primary"
         >
           Discover More
         </a>

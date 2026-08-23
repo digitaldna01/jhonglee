@@ -5,6 +5,18 @@
     <meta name="author" content="Jae Hong Lee" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>jhonglee</title>
+    <!-- Apply persisted theme before first paint to avoid a flash.
+         Default is light; prefers-color-scheme is deliberately not consulted. -->
+    <script>(function(){try{var t=localStorage.getItem('pf-theme');
+      document.documentElement.setAttribute('data-theme',(t==='light'||t==='dark')?t:'light');
+    }catch(e){}})();</script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
     <!-- <link rel="icon" type="image/svg+xml" href="/vite.svg" /> -->
     <!-- Browser tab favicons -->
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
