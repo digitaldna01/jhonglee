@@ -75,10 +75,7 @@
   --ease-out: cubic-bezier(0.22,0.61,0.36,1);
   --dur-fast: 250ms;  --dur-base: 300ms;  --dur-slow: 400ms;
 
-  /* Legacy aliases — remove once brain.css is deleted and blog.css is rebuilt (§4) */
-  --accent-strong: var(--accent-2);
-  --accent-soft:   #c4564c;
-  --shadow-card:   0 0 8px rgba(0,0,0,0.08);
+  --shadow-card: 0 0 8px rgba(0,0,0,0.08);
 }
 
 [data-theme="dark"] {

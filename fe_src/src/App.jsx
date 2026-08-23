@@ -4,7 +4,7 @@ import Navbar from './layout/Navbar';
 import Footer from './layout/Footer';
 
 import Info from './pages/Info';
-import Blog from './pages/Blog';
+import Work from './pages/Work';
 import Cv from './pages/Cv';
 import Post from './pages/Post';
 
@@ -15,7 +15,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Info />} />
         <Route path="/cv" element={<Cv />} />
-        <Route path="/work" element={<Blog />} />
+        <Route path="/work" element={<Work />} />
         <Route path="/blog" element={<Navigate to="/work" replace />} />
         <Route path="/posts/:slug" element={<Post />} />
       </Routes>

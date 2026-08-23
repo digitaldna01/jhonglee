@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { LangProvider, useLang } from '../utils/lang';
-import '../styles/blog.css';
+import '../styles/work.css';
 
 const postModules = import.meta.glob('../posts/*.mdx');
 

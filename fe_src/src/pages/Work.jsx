@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/blog.css";
+import "../styles/work.css";
 
 const mdxModules = import.meta.glob("../posts/*.mdx", { eager: true });
 const blogData = Object.entries(mdxModules)
@@ -12,8 +12,15 @@ const blogData = Object.entries(mdxModules)
 
 const pad2 = (n) => String(n).padStart(2, "0");
 
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+function fmtDate(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  return `${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+}
+
 const FILTERS = [
-  { key: "all", label: "All Posts" },
+  { key: "all", label: "All" },
   { key: "blog", label: "Blog" },
   { key: "logical", label: "Logical" },
   { key: "visual", label: "Visual" },
@@ -51,15 +58,11 @@ function Header({ counts }) {
               <span className="proj-stat-label">Total</span>
             </div>
             <div className="proj-stat">
-              <span className="proj-stat-num">
-                <span className="accent-l">{pad2(counts.projects)}</span>
-              </span>
+              <span className="proj-stat-num">{pad2(counts.projects)}</span>
               <span className="proj-stat-label">Projects</span>
             </div>
             <div className="proj-stat">
-              <span className="proj-stat-num">
-                <span className="accent-v">{pad2(counts.posts)}</span>
-              </span>
+              <span className="proj-stat-num">{pad2(counts.posts)}</span>
               <span className="proj-stat-label">Posts</span>
             </div>
           </div>
@@ -79,16 +82,18 @@ function Toolbar({ filter, sort, view, counts, onFilter, onSort, onView }) {
             role="tablist"
             aria-label="Filter posts"
           >
-            {FILTERS.map(({ key, label }) => {
+            {/* a filter with a count of 0 is a dead control leading to an empty page — hide it */}
+            {FILTERS.filter(
+              ({ key }) => key === "all" || (counts[key] ?? 0) > 0,
+            ).map(({ key, label }) => {
               const count = counts[key] ?? 0;
               const isActive = filter === key;
-              const catClass = key !== "all" ? `is-${key.toLowerCase()}` : "";
               return (
                 <button
                   key={key}
                   role="tab"
                   aria-selected={isActive}
-                  className={`proj-filter ${catClass} ${isActive ? "is-active" : ""}`}
+                  className={`proj-filter ${isActive ? "is-active" : ""}`}
                   onClick={() => onFilter(key)}
                 >
                   {label}
@@ -104,7 +109,9 @@ function Toolbar({ filter, sort, view, counts, onFilter, onSort, onView }) {
               onChange={(e) => onFilter(e.target.value)}
               aria-label="Filter posts"
             >
-              {FILTERS.map(({ key, label }) => (
+              {FILTERS.filter(
+                ({ key }) => key === "all" || (counts[key] ?? 0) > 0,
+              ).map(({ key, label }) => (
                 <option key={key} value={key}>
                   {label} / {pad2(counts[key] ?? 0)}
                 </option>
@@ -187,13 +194,15 @@ function Toolbar({ filter, sort, view, counts, onFilter, onSort, onView }) {
 }
 
 function PostCard({ post, index, onPick }) {
-  const catClass = `is-${post.subcategory ?? "blog"}`;
   const isFeatured = index === 0;
+  const cls =
+    `proj-card is-${post.subcategory ?? "blog"} is-${post.medium ?? "figure"}` +
+    `${post.thumbnail ? "" : " is-noimage"}${isFeatured ? " is-featured" : ""}`;
   const cleanKeywords = post.keywords?.filter((k) => k.trim()) ?? [];
 
   return (
     <article
-      className={`proj-card ${catClass}${isFeatured ? " is-featured" : ""}`}
+      className={cls}
       onClick={() => onPick(post.slug)}
       role="button"
       tabIndex={0}
@@ -208,9 +217,7 @@ function PostCard({ post, index, onPick }) {
               alt={post.title}
             />
           )}
-          <span className="proj-card-index">
-            {String(index + 1).padStart(2, "0")}
-          </span>
+          <span className="proj-card-index">— {pad2(index + 1)}</span>
           <span className="proj-card-hemi">
             <span className="proj-card-hemi-dot" />
             {post.category}
@@ -239,7 +246,7 @@ function PostCard({ post, index, onPick }) {
         </div>
         <div className="proj-card-meta-block">
           <p className="proj-card-meta">
-            {post.date}
+            {fmtDate(post.date)}
             <span className="proj-card-meta-divider" />
             {post.category}
           </p>
@@ -261,20 +268,20 @@ function PostCard({ post, index, onPick }) {
 }
 
 function PostRow({ post, index, onPick }) {
-  const catClass = `is-${post.subcategory ?? "blog"}`;
+  const cls =
+    `proj-row is-${post.subcategory ?? "blog"} is-${post.medium ?? "figure"}` +
+    `${post.thumbnail ? "" : " is-noimage"}`;
   const cleanKeywords = post.keywords?.filter((k) => k.trim()) ?? [];
 
   return (
     <div
-      className={`proj-row ${catClass}`}
+      className={cls}
       onClick={() => onPick(post.slug)}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && onPick(post.slug)}
     >
-      <span className="proj-row-index">
-        {String(index + 1).padStart(2, "0")}
-      </span>
+      <span className="proj-row-index">— {pad2(index + 1)}</span>
       <div className="proj-row-thumb">
         {post.thumbnail && <img src={post.thumbnail} alt={post.title} />}
       </div>
@@ -285,7 +292,7 @@ function PostRow({ post, index, onPick }) {
       <div className="proj-row-keywords">
         {cleanKeywords.slice(0, 2).join(" · ")}
       </div>
-      <div className="proj-row-date">{post.date}</div>
+      <div className="proj-row-date">{fmtDate(post.date)}</div>
       <div className="proj-row-arrow">
         <svg width="20" height="12" viewBox="0 0 20 12" fill="none">
           <line
@@ -308,11 +315,17 @@ function PostRow({ post, index, onPick }) {
   );
 }
 
-export default function Blog() {
+export default function Work() {
   const navigate = useNavigate();
   const [filter, setFilter] = useState("all");
   const [sort, setSort] = useState("newest");
   const [view, setView] = useState("grid");
+
+  // the navbar reads --nav-bg from this class so it sits on the page ground (§4.1)
+  useEffect(() => {
+    document.documentElement.classList.add("route-work");
+    return () => document.documentElement.classList.remove("route-work");
+  }, []);
 
   const counts = useMemo(
     () => ({
@@ -362,13 +375,13 @@ export default function Blog() {
           ) : view === "grid" ? (
             <div className="proj-grid">
               {filtered.map((post, i) => (
-                <PostCard key={post.id} post={post} index={i} onPick={onPick} />
+                <PostCard key={post.slug} post={post} index={i} onPick={onPick} />
               ))}
             </div>
           ) : (
             <div className="proj-list">
               {filtered.map((post, i) => (
-                <PostRow key={post.id} post={post} index={i} onPick={onPick} />
+                <PostRow key={post.slug} post={post} index={i} onPick={onPick} />
               ))}
             </div>
           )}

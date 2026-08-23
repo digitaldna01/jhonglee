@@ -5,8 +5,12 @@
 /* ── Page shell ────────────────────────────────────────── */
 .proj-page {
   min-height: 100vh;
-  background: var(--color-bg);
+  /* one step below the site's warm paper so white figure blocks read as blocks */
+  background: #efefec;
 }
+/* the navbar must sit on the same ground or a white band appears across the top */
+:root.route-work { --nav-bg: #efefec; }
+:root.route-work[data-theme="dark"] { --nav-bg: #0b0b0c; }
 .proj-container {
   max-width: 1280px;
   margin: 0 auto;
@@ -83,8 +87,6 @@
   line-height: 1;
   color: var(--fg-1);
 }
-.proj-stat-num .accent-l { color: var(--color-secondary); }
-.proj-stat-num .accent-v { color: var(--accent); }
 .proj-stat-label {
   font-size: 11px;
   font-weight: 600;
@@ -104,7 +106,7 @@
   flex-wrap: wrap;
   gap: 16px;
   padding: 12px 0;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(239, 239, 236, 0.92);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--hairline);
@@ -189,15 +191,8 @@
   position: absolute;
   left: 0; right: 0; bottom: 0;
   height: 2px;
-  background: var(--fg-1);
+  background: var(--accent);
 }
-/* Category-specific active colors */
-.proj-filter.is-active.is-logical          { color: var(--color-secondary); }
-.proj-filter.is-active.is-logical::after   { background: var(--color-secondary); }
-.proj-filter.is-active.is-visual           { color: var(--accent-strong); }
-.proj-filter.is-active.is-visual::after    { background: var(--accent); }
-.proj-filter.is-active.is-gallery             { color: var(--color-secondary-light); }
-.proj-filter.is-active.is-gallery::after      { background: var(--color-secondary-light); }
 
 .proj-filter-count {
   display: inline-block;
@@ -321,18 +316,22 @@
   overflow: hidden;
   transition: border-color var(--dur-base) var(--ease-out);
 }
-.proj-card.is-logical .proj-card-thumb { background: #f1f5fa; }
-.proj-card.is-visual  .proj-card-thumb { background: #fff7ec; }
+/* Figure = a plate: its own light ground, padded, NEVER cropped.
+   Artwork = the work itself: fills the frame edge to edge. */
+.proj-card.is-figure  .proj-card-thumb { background: #fff; border-color: transparent; }
+.proj-card.is-artwork .proj-card-thumb { background: #e6e6e2; border-color: transparent; }
+.proj-card.is-noimage .proj-card-thumb { background: var(--fg-1); border-color: transparent; }
 
 .proj-card-thumb-img {
   position: absolute;
   inset: 0;
   width: 100%; height: 100%;
   object-fit: contain;
-  padding: 14%;
+  padding: 9%;
   transition: transform 600ms var(--ease-out);
 }
-.proj-card.is-featured .proj-card-thumb-img { padding: 12%; }
+.proj-card.is-artwork .proj-card-thumb-img { object-fit: cover; padding: 0; }
+.proj-card.is-featured.is-figure .proj-card-thumb-img { padding: 7%; }
 .proj-card:hover .proj-card-thumb-img { transform: scale(1.06); }
 
 .proj-card-index {
@@ -364,12 +363,15 @@
   border-radius: 50%;
   background: var(--fg-3);
 }
-.proj-card.is-logical .proj-card-hemi-dot { background: var(--color-secondary); }
-.proj-card.is-visual  .proj-card-hemi-dot { background: var(--accent); }
-.proj-card.is-gallery    .proj-card-hemi-dot { background: var(--color-secondary-light); }
-.proj-card.is-logical .proj-card-hemi { color: var(--color-secondary); }
-.proj-card.is-visual  .proj-card-hemi { color: var(--accent-strong); }
-.proj-card.is-gallery    .proj-card-hemi { color: var(--color-secondary-light); }
+/* labels sit over the image on artwork cards — keep them legible with a top scrim */
+.proj-card.is-artwork .proj-card-hemi  { color: rgba(255,255,255,.88); text-shadow: 0 1px 3px rgba(0,0,0,.55); }
+.proj-card.is-artwork .proj-card-index { color: rgba(255,255,255,.88); mix-blend-mode: normal; text-shadow: 0 1px 3px rgba(0,0,0,.55); }
+.proj-card.is-artwork .proj-card-thumb::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 78px; z-index: 1;
+  background: linear-gradient(rgba(0,0,0,.32), transparent); pointer-events: none;
+}
+.proj-card.is-noimage .proj-card-index,
+.proj-card.is-noimage .proj-card-hemi { color: rgba(255,255,255,.7); text-shadow: none; mix-blend-mode: normal; }
 .proj-card.is-featured .proj-card-hemi { top: 24px; right: 24px; font-size: 11px; }
 
 .proj-card-overlay {
@@ -402,9 +404,7 @@
   transition-delay: 60ms;
 }
 .proj-card:hover .proj-card-cta { transform: translateY(0); opacity: 1; }
-.proj-card.is-logical .proj-card-cta:hover { background: var(--color-secondary); border-color: var(--color-secondary); }
-.proj-card.is-visual  .proj-card-cta:hover { background: var(--accent); border-color: var(--accent); }
-.proj-card.is-blog    .proj-card-cta:hover { background: var(--fg-1); border-color: var(--fg-1); }
+.proj-card-cta:hover { background: var(--fg-1); border-color: var(--fg-1); }
 
 .proj-card-cta-arrow {
   display: inline-block;
@@ -439,9 +439,7 @@
   transition: color var(--dur-base) var(--ease-out);
 }
 @media (min-width: 1024px) { .proj-card-title { font-size: var(--h4); } }
-.proj-card:hover .proj-card-title { color: var(--color-secondary); }
-.proj-card.is-visual:hover  .proj-card-title { color: var(--accent-strong); }
-.proj-card.is-gallery:hover    .proj-card-title { color: var(--color-secondary-light); }
+.proj-card:hover .proj-card-title { color: var(--accent-2); }
 
 .proj-card-excerpt {
   font-size: var(--body-sm);
@@ -505,13 +503,15 @@
   overflow: hidden;
   position: relative;
 }
-.proj-row.is-logical .proj-row-thumb { background: #f1f5fa; }
-.proj-row.is-visual  .proj-row-thumb { background: #fff7ec; }
+.proj-row.is-figure  .proj-row-thumb { background: #fff; }
+.proj-row.is-artwork .proj-row-thumb { background: #e6e6e2; }
+.proj-row.is-noimage .proj-row-thumb { background: var(--fg-1); }
 .proj-row-thumb img {
   position: absolute; inset: 0; width: 100%; height: 100%;
   object-fit: contain; padding: 12%;
   transition: transform var(--dur-slow) var(--ease-out);
 }
+.proj-row.is-artwork .proj-row-thumb img { object-fit: cover; padding: 0; }
 .proj-row:hover .proj-row-thumb img { transform: scale(1.08); }
 @media (min-width: 768px) { .proj-row-thumb { display: block; } }
 
@@ -523,9 +523,7 @@
   line-height: 1.25;
   transition: color var(--dur-base) var(--ease-out);
 }
-.proj-row:hover.is-logical .proj-row-title { color: var(--color-secondary); }
-.proj-row:hover.is-visual  .proj-row-title { color: var(--accent-strong); }
-.proj-row:hover.is-gallery    .proj-row-title { color: var(--color-secondary-light); }
+.proj-row:hover .proj-row-title { color: var(--accent-2); }
 .proj-row-sub {
   font-size: var(--body-sm); color: var(--fg-3); font-weight: 300; margin: 0;
   display: -webkit-box; -webkit-line-clamp: 1; line-clamp: 1;
@@ -553,14 +551,31 @@
   color: var(--fg-3);
   transition: color var(--dur-base), transform var(--dur-base) var(--ease-out);
 }
-.proj-row:hover .proj-row-arrow { color: var(--fg-1); transform: translateX(6px); }
-.proj-row:hover.is-logical .proj-row-arrow { color: var(--color-secondary); }
-.proj-row:hover.is-visual  .proj-row-arrow { color: var(--accent-strong); }
+.proj-row:hover .proj-row-arrow { color: var(--accent-2); transform: translateX(6px); }
 
 /* Empty state */
 .proj-empty { text-align: center; padding: 96px 0; color: var(--fg-3); }
 .proj-empty-title { font-size: var(--h4); font-weight: 400; color: var(--fg-2); margin: 0 0 8px; }
 .proj-empty p { margin: 0; font-size: var(--body-sm); }
+
+/* ── Dark mode is a gallery, not an inversion ───────────── */
+[data-theme="dark"] .proj-page    { background: #0b0b0c; }
+[data-theme="dark"] .proj-toolbar { background: rgba(11, 11, 12, 0.92); }
+
+/* every image hangs on the same neutral mat — light-ground and dark-ground alike */
+[data-theme="dark"] .proj-card.is-figure  .proj-card-thumb,
+[data-theme="dark"] .proj-card.is-artwork .proj-card-thumb,
+[data-theme="dark"] .proj-row.is-figure   .proj-row-thumb,
+[data-theme="dark"] .proj-row.is-artwork  .proj-row-thumb { background: #26262a; border-color: transparent; }
+[data-theme="dark"] .proj-card.is-noimage .proj-card-thumb { background: #161618; }
+
+/* figures are paper: keep them contained, take the glare off */
+[data-theme="dark"] .proj-card.is-figure  .proj-card-thumb-img { padding: 11%; filter: brightness(0.9); }
+[data-theme="dark"] .proj-card.is-artwork .proj-card-thumb-img { filter: brightness(0.94); }
+[data-theme="dark"] .proj-card:hover      .proj-card-thumb-img { filter: none; }
+
+[data-theme="dark"] .proj-card.is-figure .proj-card-index,
+[data-theme="dark"] .proj-card.is-figure .proj-card-hemi { color: rgba(255, 255, 255, 0.5); mix-blend-mode: normal; }
 
 /* ── Post image utilities ───────────────────────────────── */
 .img-wide {
