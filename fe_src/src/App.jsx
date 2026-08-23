@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 
 import Navbar from './layout/Navbar';
 import Footer from './layout/Footer';
@@ -8,9 +8,12 @@ import Work from './pages/Work';
 import Cv from './pages/Cv';
 import Post from './pages/Post';
 
-function App() {
+function Layout() {
+  // the landing is a fixed full-viewport page — a flow footer would
+  // surface right under the navbar there
+  const isLanding = useLocation().pathname === '/';
   return (
-    <Router>
+    <>
       <Navbar />
       <Routes>
         <Route path="/" element={<Info />} />
@@ -19,7 +22,15 @@ function App() {
         <Route path="/blog" element={<Navigate to="/work" replace />} />
         <Route path="/posts/:slug" element={<Post />} />
       </Routes>
-      <Footer />
+      {!isLanding && <Footer />}
+    </>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Layout />
     </Router>
   );
 }

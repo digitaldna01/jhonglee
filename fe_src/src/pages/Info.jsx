@@ -1,16 +1,26 @@
-import React from 'react';
-import Slider from '../components/Slider.jsx';
-import About from '../components/About.jsx';
-import Portfolio from '../components/Portfolio.jsx';
+import { useEffect, useRef } from 'react';
+import useTheme from '../hooks/useTheme';
+import MapLayer from '../landing/components/MapLayer';
+import Intro from '../landing/components/Intro';
+import ContactCorner from '../landing/components/ContactCorner';
+import '../styles/landing.css';
 
-function Info() {
+/* Landing — full-viewport similarity map (chat session lands next). */
+export default function Info() {
+  const { theme } = useTheme();
+  const graphRef = useRef(null);
+
+  // non-scrolling page + transparent navbar while this route is mounted
+  useEffect(() => {
+    document.documentElement.classList.add('route-landing');
+    return () => document.documentElement.classList.remove('route-landing');
+  }, []);
+
   return (
-    <>
-      <Slider />
-      <About />
-      <Portfolio />
-    </>
+    <div className="landing">
+      <MapLayer theme={theme} introActive graphRef={graphRef} />
+      <Intro />
+      <ContactCorner />
+    </div>
   );
 }
-
-export default Info;
