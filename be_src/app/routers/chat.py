@@ -19,7 +19,7 @@ from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
 from ..core.config import get_settings
-from ..data.corpus import BIO, PROJECTS, by_id
+from ..data.corpus import BIO, NODES, by_id
 from ..ml import retrieval
 from ..schemas.chat import ChatRequest, GraphResponse
 
@@ -38,41 +38,59 @@ SYSTEM_PROMPT = (
 )
 
 
-_PUBLIC_FIELDS = ("id", "title", "year", "lean", "tags", "stack", "desc", "url")
-
-
 @router.get("/graph", response_model=GraphResponse)
 def graph():
     """Everything the landing map needs, from the corpus's single source."""
     settings = get_settings()
     return {
-        "projects": [{k: p[k] for k in _PUBLIC_FIELDS} for p in PROJECTS],
+        "projects": [
+            {
+                "id": d["id"],
+                "title": d["title"],
+                "year": d["year"] or "",
+                "lean": d["lean"] or d["kind"],
+                "tags": d["tags"],
+                "stack": d["stack"] or "",
+                "desc": d["summary"],
+                "url": d["url"] or "#",
+            }
+            for d in NODES
+        ],
         "edges": retrieval.edges(),
         "retrieval_model": settings.embed_model.split("/")[-1] + ", server",
     }
 
 
+_EXCERPT_MAX = 1200  # chars of body chunk quoted into the model context
+
+
 def _build_context(retrieved: list[dict]) -> str:
+    """Summary per doc, plus the best-matching body excerpt when one won."""
     lines = []
     for r in retrieved:
         d = by_id(r["id"])
         if d is None:
             continue
         if d["kind"] == "bio":
-            lines.append(f"About Jae Hong Lee: {d['desc']}")
+            lines.append(f"About Jae Hong Lee: {d['summary']}")
         else:
-            lines.append(
-                f"Project — {d['title']} ({d['year']}, {', '.join(d['tags'])}): {d['desc']}"
-            )
+            label = "Project" if d["kind"] in ("project", "post") else d["kind"].capitalize()
+            tags = ", ".join(d["tags"])
+            meta = ", ".join(x for x in (d["year"], tags) if x)
+            lines.append(f"{label} — {d['title']} ({meta}): {d['summary']}")
+        chunk = r.get("chunk")
+        if chunk:
+            head = f" ({chunk['heading']})" if chunk.get("heading") else ""
+            lines.append(f'Excerpt from "{d["title"]}"{head}: {chunk["text"][:_EXCERPT_MAX]}')
     return "\n".join(lines)
 
 
 def _extractive_answer(retrieved: list[dict]) -> str:
     """Answer composed from the sources alone — used when no model is available."""
-    projects = [r for r in retrieved if r["kind"] == "project"]
+    projects = [r for r in retrieved if r["kind"] != "bio"]
     bio_hit = next((r for r in retrieved if r["kind"] == "bio"), None)
     if bio_hit and (not projects or bio_hit["score"] >= projects[0]["score"]):
-        return BIO["desc"]
+        return BIO["summary"]
     if not projects:
         return (
             "I'm not sure that's covered here — try asking about my machine-learning, "
@@ -80,7 +98,7 @@ def _extractive_answer(retrieved: list[dict]) -> str:
         )
     top = by_id(projects[0]["id"])
     also = [r["title"] for r in projects[1:]]
-    return f"Closest in my work is {top['title']} — {top['desc']}" + (
+    return f"Closest in my work is {top['title']} — {top['summary']}" + (
         f" Related: {', '.join(also)}." if also else ""
     )
 

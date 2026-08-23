@@ -1,29 +1,33 @@
+---
+title: KMeans Clustering
+displayTitle:
+  ko: 인터랙티브 KMeans 클러스터링
+  en: Interactive KMeans Clustering
+date: '2024-09-27'
+category: POST
+subcategory: blog
+medium: figure
+thumbnail: /images/projects/kmeans-visualizer/cover.png
+excerpt: >-
+  A from-scratch KMeans clustering visualizer — four init methods, step-by-step Lloyd's iterations —
+  rebuilt as a stateless JSON API and embedded as a live, interactive demo right in the post.
+keywords:
+  - kmeans
+  - clustering
+  - machine learning
+  - lloyd's algorithm
+  - data visualization
+locales:
+  - en
+  - ko
+defaultLocale: en
+lean: ml
+stack: FastAPI · React
+---
+
 import { Lang } from "../utils/lang";
 import KMeansDemo from "../components/KMeansDemo";
 
-export const metadata = {
-  title: "KMeans Clustering",
-  displayTitle: {
-    ko: "인터랙티브 KMeans 클러스터링",
-    en: "Interactive KMeans Clustering",
-  },
-  date: "2024-09-27",
-  category: "POST",
-  subcategory: "blog",
-  medium: "figure",
-  thumbnail: "/images/projects/kmeans-visualizer/cover.png",
-  excerpt:
-    "A from-scratch KMeans clustering visualizer — four init methods, step-by-step Lloyd's iterations — rebuilt as a stateless JSON API and embedded as a live, interactive demo right in the post.",
-  keywords: [
-    "kmeans",
-    "clustering",
-    "machine learning",
-    "lloyd's algorithm",
-    "data visualization",
-  ],
-  locales: ["en", "ko"],
-  defaultLocale: "en",
-};
 
 <p className="not-prose text-sm tracking-widest uppercase text-center text-gray-400 my-4">
   assign · update · repeat

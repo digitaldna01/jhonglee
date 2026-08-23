@@ -1,13 +1,17 @@
 """Semantic retrieval over the portfolio corpus — the "R" in RAG.
 
-Embeds every corpus document once at first use (fastembed / ONNX — no
-torch, Raspberry-Pi friendly) and answers nearest-neighbour queries with
-real cosine similarity. Also derives the similarity edges the landing
-graph draws between projects.
+Chunk-level retrieval with contextual embedding (Anthropic-style, but
+template-generated — the frontmatter is rich enough that no LLM is
+needed to write the chunk context):
 
-Swapping the embedding model is a config change (EMBED_MODEL); the
-Docker image pre-downloads it at build time so the Pi never needs to
-pull model weights at runtime.
+  passage = "From {title} ({kind}; {tags}): {chunk text}"
+
+Every doc also gets a synthetic summary chunk, so a doc is findable
+even when its body is thin. A document's score is the max over its
+chunks; the best chunk rides along for the answer context.
+
+Embeddings come from fastembed (ONNX, no torch — Raspberry-Pi
+friendly); the Docker image pre-downloads the model at build time.
 """
 from __future__ import annotations
 
@@ -16,15 +20,15 @@ import threading
 import numpy as np
 
 from ..core.config import get_settings
-from ..data.corpus import KNOWLEDGE, PROJECTS
+from ..data.corpus import KNOWLEDGE, NODES
 
-# Each project links to its top-MAX most similar peers. Real-embedding
-# cosines cluster high, so raw scores are rescaled to spread [0, 1]-ish
-# weights for the graph's spring lengths / line widths.
+# Each graph node links to its top-MAX most similar peers. Real-embedding
+# cosines cluster high, so raw scores are rescaled into the weight band
+# the force layout was tuned for.
 _EDGE_MAX_PER_NODE = 2
 
 _lock = threading.Lock()
-_state: dict | None = None  # {model, doc_vecs: {id: vec}, edges: [...]}
+_state: dict | None = None  # {model, chunks, chunk_vecs, doc_vecs, edges}
 
 
 def _cosine(a: np.ndarray, b: np.ndarray) -> float:
@@ -32,20 +36,27 @@ def _cosine(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.dot(a, b)) / denom
 
 
-def _passage_text(doc: dict) -> str:
+def _passage_text(doc: dict, text: str) -> str:
     if doc["kind"] == "bio":
         # question-shaped surface so "who are you?"-style queries land here
-        return f"Who are you? Who is Jae Hong Lee? About me: {doc['desc']} {doc['blurb']}"
-    return f"{doc['title']} ({', '.join(doc['tags'])}): {doc['desc']} {doc['blurb']}"
+        return f"Who are you? Who is Jae Hong Lee? About me: {text}"
+    tags = ", ".join(doc["tags"])
+    return f"From {doc['title']} ({doc['kind']}; {tags}): {text}"
+
+
+def _doc_chunks(doc: dict) -> list[dict]:
+    """Body chunks plus a synthetic summary chunk."""
+    summary = {"id": f"{doc['id']}#summary", "heading": None, "text": doc["summary"]}
+    return [summary, *doc["chunks"]]
 
 
 def _build_edges(doc_vecs: dict[str, np.ndarray]) -> list[dict]:
     raw: dict[tuple[int, int], float] = {}
-    for ai, a in enumerate(PROJECTS):
+    for ai, a in enumerate(NODES):
         sims = sorted(
             (
                 (bi, _cosine(doc_vecs[a["id"]], doc_vecs[b["id"]]))
-                for bi, b in enumerate(PROJECTS)
+                for bi, b in enumerate(NODES)
                 if bi != ai
             ),
             key=lambda x: x[1],
@@ -61,9 +72,8 @@ def _build_edges(doc_vecs: dict[str, np.ndarray]) -> list[dict]:
     span = (hi - lo) or 1.0
     return [
         {
-            "a": PROJECTS[ai]["id"],
-            "b": PROJECTS[bi]["id"],
-            # keep weights in the band the force layout was tuned for
+            "a": NODES[ai]["id"],
+            "b": NODES[bi]["id"],
             "w": round(0.15 + 0.7 * ((s - lo) / span), 3),
         }
         for (ai, bi), s in sorted(raw.items())
@@ -81,12 +91,24 @@ def _ensure_ready() -> dict:
 
         settings = get_settings()
         model = TextEmbedding(settings.embed_model)
-        docs = list(KNOWLEDGE)
-        vecs = list(model.passage_embed([_passage_text(d) for d in docs]))
-        doc_vecs = {d["id"]: np.asarray(v) for d, v in zip(docs, vecs)}
+
+        chunks: list[tuple[dict, dict]] = [  # (doc, chunk)
+            (doc, chunk) for doc in KNOWLEDGE for chunk in _doc_chunks(doc)
+        ]
+        passages = [_passage_text(doc, chunk["text"]) for doc, chunk in chunks]
+        chunk_vecs = np.stack([np.asarray(v) for v in model.passage_embed(passages)])
+
+        # doc-level vectors (for graph edges): the summary chunk's vector
+        doc_vecs = {
+            doc["id"]: chunk_vecs[i]
+            for i, (doc, chunk) in enumerate(chunks)
+            if chunk["id"].endswith("#summary")
+        }
+
         _state = {
             "model": model,
-            "doc_vecs": doc_vecs,
+            "chunks": chunks,
+            "chunk_vecs": chunk_vecs,
             "edges": _build_edges(doc_vecs),
         }
         return _state
@@ -102,17 +124,27 @@ def edges() -> list[dict]:
 
 
 def retrieve(question: str, k: int = 4) -> list[dict]:
-    """Top-k corpus documents for a question: [{id, kind, title, score}]."""
+    """Top-k documents for a question, scored by their best chunk.
+
+    Returns [{id, kind, title, score, chunk: {id, heading, text}}] where
+    `chunk` is the best-matching body chunk (None if the summary won).
+    """
     state = _ensure_ready()
     qvec = np.asarray(next(iter(state["model"].query_embed(question))))
-    scored = [
-        {
-            "id": d["id"],
-            "kind": d["kind"],
-            "title": d["title"],
-            "score": _cosine(qvec, state["doc_vecs"][d["id"]]),
-        }
-        for d in KNOWLEDGE
-    ]
-    scored.sort(key=lambda x: x["score"], reverse=True)
-    return scored[:k]
+
+    norms = np.linalg.norm(state["chunk_vecs"], axis=1) * (np.linalg.norm(qvec) or 1.0)
+    scores = state["chunk_vecs"] @ qvec / np.where(norms == 0, 1.0, norms)
+
+    best: dict[str, dict] = {}
+    for (doc, chunk), s in zip(state["chunks"], scores):
+        cur = best.get(doc["id"])
+        if cur is None or s > cur["score"]:
+            is_summary = chunk["id"].endswith("#summary")
+            best[doc["id"]] = {
+                "id": doc["id"],
+                "kind": doc["kind"],
+                "title": doc["title"],
+                "score": float(s),
+                "chunk": None if is_summary else chunk,
+            }
+    return sorted(best.values(), key=lambda x: x["score"], reverse=True)[:k]

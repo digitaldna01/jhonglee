@@ -39,7 +39,7 @@ export function ragPrompt(question, context) {
 }
 
 function extractive(question, retrieved) {
-  const projects = retrieved.filter((r) => r.doc.kind === 'project');
+  const projects = retrieved.filter((r) => r.doc.kind !== 'bio');
   const bioHit = retrieved.find((r) => r.doc.kind === 'bio');
   /* "who are you?" retrieves only the bio — answer with it, not a shrug */
   if (bioHit && (!projects.length || bioHit.s >= projects[0].s)) return BIO.desc;

@@ -75,7 +75,7 @@ export default function useChat(graphRef) {
     };
 
     const onSources = (payload) => {
-      const projects = payload.sources.filter((s) => s.kind === 'project');
+      const projects = payload.sources.filter((s) => s.kind !== 'bio');
       patchMessage(botId, {
         sources: projects,
         foot: {
