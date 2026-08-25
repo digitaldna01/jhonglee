@@ -1,46 +1,41 @@
 """FastAPI entrypoint for the jhonglee portfolio backend.
 
-All features are mounted under `/api/<feature>`. To add a new feature (e.g. a
-comments API), create `app/routers/<feature>.py` with an `APIRouter` and
-register it below with `app.include_router(..., prefix="/api")`.
+Package-by-feature: each feature under `app/` owns its router, schemas
+and logic (`content/`, `chat/`, `demos/<name>/`, `social/`); `core/`
+holds domain-free infrastructure (settings, db, cache, deps, lifespan).
+Every feature mounts under `/api/<feature>`. To add one, create the
+package with a `router.py` exposing `router` and register it below.
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from contextlib import asynccontextmanager
-
-from starlette.concurrency import run_in_threadpool
-
+from .chat.router import router as chat_router
+from .content.router import router as content_router
 from .core.config import get_settings
-from .ml import retrieval
-from .routers import chat, kmeans
-
-settings = get_settings()
+from .core.lifespan import lifespan
+from .demos.kmeans.router import router as kmeans_router
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # load the embedding model + corpus vectors before serving traffic
-    await run_in_threadpool(retrieval.warmup)
-    yield
+def create_app() -> FastAPI:
+    settings = get_settings()
+    app = FastAPI(title="jhonglee backend", version="0.2.0", lifespan=lifespan)
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins,
+        allow_credentials=True,  # anonymous visitor cookie
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    @app.get("/api/health", tags=["meta"])
+    def health():
+        return {"status": "ok"}
+
+    app.include_router(content_router, prefix="/api")  # /api/content/*
+    app.include_router(chat_router, prefix="/api")     # /api/chat/*
+    app.include_router(kmeans_router, prefix="/api")   # /api/kmeans/*
+    return app
 
 
-app = FastAPI(title="jhonglee backend", version="0.1.0", lifespan=lifespan)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-@app.get("/api/health", tags=["meta"])
-def health():
-    return {"status": "ok"}
-
-
-# Feature routers — add new ones here as the portfolio backend grows.
-app.include_router(kmeans.router, prefix="/api")  # -> /api/kmeans/*
-app.include_router(chat.router, prefix="/api")  # -> /api/chat/*
+app = create_app()

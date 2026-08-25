@@ -20,7 +20,8 @@ import threading
 import numpy as np
 
 from ..core.config import get_settings
-from ..data.corpus import KNOWLEDGE, NODES
+from ..content.repository import DOCS as KNOWLEDGE
+from ..content.repository import NODES
 
 # Each graph node links to its top-MAX most similar peers. Real-embedding
 # cosines cluster high, so raw scores are rescaled into the weight band

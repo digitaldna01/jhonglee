@@ -5,7 +5,7 @@
    source of truth. This script extracts the English prose, splits
    it into section chunks, and writes:
 
-     be_src/app/data/corpus.json            (backend: chunk + embed)
+     be_src/app/content/corpus.json            (backend: chunk + embed)
      fe_src/src/landing/data/corpus.gen.json (frontend fallback graph)
 
    Run with `npm run corpus` after editing posts; the outputs are
@@ -28,7 +28,7 @@ const SOURCES = [
   { dir: path.join(ROOT, 'src/content'), hasPage: false },
 ];
 const OUTPUTS = [
-  path.resolve(ROOT, '../be_src/app/data/corpus.json'),
+  path.resolve(ROOT, '../be_src/app/content/corpus.json'),
   path.join(ROOT, 'src/landing/data/corpus.gen.json'),
 ];
 

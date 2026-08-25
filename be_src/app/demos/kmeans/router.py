@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Query
 
-from ..ml import kmeans as kmeans_ml
-from ..schemas.kmeans import DatasetKind, DatasetResponse, RunRequest, RunResponse
+from . import service as kmeans_ml
+from .schemas import DatasetKind, DatasetResponse, RunRequest, RunResponse
 
 router = APIRouter(prefix="/kmeans", tags=["kmeans"])
 

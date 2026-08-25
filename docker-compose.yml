@@ -17,3 +17,10 @@ services:
       # set in a .env file next to this compose file on the Pi;
       # without it the chat degrades to retrieval-only answers
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      # SQLite lives on a named volume so it survives image updates
+      - DATABASE_URL=sqlite+aiosqlite:////app/data/app.db
+    volumes:
+      - backend-data:/app/data
+
+volumes:
+  backend-data:
