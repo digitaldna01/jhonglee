@@ -35,5 +35,8 @@ __pycache__/
 # Secrets (ANTHROPIC_API_KEY etc. — read by docker compose)
 .env
 
+# Private research/notes — never pushed (see _private_notes/README.md)
+_private_notes/
+
 # Design
 v2-design-handoff/

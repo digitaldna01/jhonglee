@@ -103,9 +103,29 @@ POST /api/social/posts/{slug}/likes  GET/POST /api/social/posts/{slug}/comments
 - `docker-compose.yml` (Pi): `backend` + `db`(`pgvector/pgvector:pg17`, arm64) + `redis`(`redis:7-alpine`).
   backend는 두 서비스의 healthcheck를 기다린 뒤 시작. 볼륨: `db-data`, `redis-data`
 - Pi의 `.env`: `ANTHROPIC_API_KEY`, `POSTGRES_PASSWORD`(필수 — 없으면 compose가 거부). 템플릿은 루트 `.env.example`
-- 메모리 (arm64 실측 2026-08-29): backend ~0.8GB(onnxruntime + 임베딩 모델 — 가장 큰 소비자), Postgres 유휴 ~30MB /
-  `shared_buffers=64MB`·`max_connections=20` 설정으로 상한 ~150MB, Redis `maxmemory 64mb`(allkeys-lru).
-  합계 ~1GB → 4GB Pi에서도 여유. 8GB면 `shared_buffers`/`effective_cache_size`를 올려도 됨
+- **Pi는 2GB** (Pi 4 B Rev 1.5, `free -h` 1.8Gi; 2026-08-29 확인). 2026-08-29에 다음을 적용함:
+  - 메모리 cgroup 활성화 (`/boot/firmware/cmdline.txt`에 `cgroup_enable=cpuset cgroup_enable=memory cgroup_memory=1`) —
+    이게 없으면 `docker stats`가 0B이고 compose `mem_limit`도 무시됨
+  - 스왑 200MB → **1GB** (`/etc/dphys-swapfile` `CONF_SWAPSIZE=1024`)
+  - 데스크톱 종료: `systemctl set-default multi-user.target` (GUI가 ~260MB를 먹고 있었음)
+  - 결과: OS + dockerd + Actions 러너 기본 사용량 **~250MB**. 새 스택 예산 ≈ backend 0.7GB + Postgres/Redis/nginx 0.15GB → ~1.2GB/1.8GB
+  - **VS Code Remote-SSH를 Pi에 붙이면 +~420MB** (node 서버 4개). 배포 중엔 끊을 것; 평소엔 터미널 ssh 권장
+  - compose `mem_limit`: backend 1100m · postgres 256m · redis 96m · web 64m
+  - 네트워크: Wi-Fi 5GHz(`KT_GiGA_5G_F48D`, ch149), IP 172.30.1.5 (공유기가 공인 IP:22022 → 이 주소로 포트포워딩하므로 사실상 고정,
+    MAC d8:3a:dd:27:c7:04). 맥 `~/.ssh/config`: `ssh raspberrypi`(LAN) / `ssh rpi-external`(외부, 키 인증)
+  - **Wi-Fi 프로필 우선순위**: 2026-08-29 재부팅 장애의 원인은 `KT_GiGA_5G_MAX`(다른 AP, 다른 서브넷) 프로필이
+    autoconnect-priority 100으로 메인 공유기(`KT_GiGA_5G_F48D`)보다 높았던 것. F48D를 200으로, MAX를 0으로 둘 것
+    (`nmcli connection modify "<name>" connection.autoconnect-priority N`)
+  - **SSH**: 공인 IP:22022가 인터넷에 포워딩돼 7일간 실패 로그인 13.8만 건 관측 → 2026-08-29 **키 전용으로 전환**
+    (`/etc/ssh/sshd_config.d/50-keys-only.conf`: PasswordAuthentication no, PermitRootLogin no, MaxAuthTries 3).
+    새 기기는 `ssh-copy-id`로 키 등록 필요. 다음: fail2ban(선택), 포트포워딩 제거 + Tailscale(로드맵)
+  - **헤드리스 복구 절차** (재부팅 후 Wi-Fi가 안 붙어 SSH 불가였던 사례): Bookworm은 `wpa_supplicant.conf`를 bootfs에 넣는
+    옛 방식이 안 통함. 대신 bootfs에 `firstrun.sh`(nmcli/imager_custom으로 Wi-Fi 등록 후 스스로 삭제)를 두고
+    `cmdline.txt` 끝에 `systemd.run=/boot/firmware/firstrun.sh systemd.run_success_action=reboot systemd.unit=kernel-command-line.target`
+    을 붙이면 첫 부팅에서 한 번 실행됨. macOS는 bootfs(FAT)만 마운트 가능, rootfs(ext4)는 못 읽음
+  - Postgres `shared_buffers=32MB`·`max_connections=10`, Redis `maxmemory 48mb`
+  - backend ~0.6–0.8GB(onnxruntime + bge-small 65MB)가 최대 소비자. **225MB급 다국어 임베딩 모델(+560MB)은 이 Pi에 불가** →
+    한국어 대응은 질문 재작성(Haiku 번역, 메모리 0) 또는 양자화 모델로 (rag-design-notes §임베딩 모델)
 - 스키마: 컨테이너 entrypoint가 `alembic upgrade head` 실행 → 배포 = 마이그레이션 자동 적용
 - RAG 인덱스: 시작 시 `retrieval.warmup()`이 corpus.json과 `rag_chunks`를 해시로 대조해 바뀐 청크만 임베딩
   (첫 부팅 30청크 2.6s, 이후 0.0s). 임베딩 모델을 바꾸면 해시가 전부 달라져 자동 재임베딩 — 단 차원이

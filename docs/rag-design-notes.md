@@ -149,10 +149,15 @@ relations:
       청크 id = `{doc}#{sha256(model+passage)[:12]}` (DB 쪽에서 생성 — build-corpus.mjs 수정 불필요)
 - [ ] **P2-2** 서버 세션(Redis, history.py) + 레이트 리밋 + 대화/검색 로그 테이블
 - [ ] **P2** 하이브리드 검색 (pgvector + tsvector, RRF) + 골든셋 평가 스크립트
+- [ ] **P3** corpus.json을 커밋 대상에서 제외 — CI(deploy.yml)가 `npm run corpus`를 돌려 백엔드 이미지에
+      아티팩트로 포함하거나 `POST /api/admin/ingest`로 전달. 동기화를 사람 기억에서 CI로.
+      그다음 `/api/content/*`도 rag_documents를 읽게 하면 corpus.json 자체가 사라질 수 있음
 - [ ] **P2** `relations` 선언 엣지 + 그래프 표시 구분
-- [ ] **P3** 다국어 임베딩 교체 (한국어 질문) — 1순위 `paraphrase-multilingual-MiniLM-L12-v2`(384, 무마이그레이션), 골든셋으로 bge-small과 비교
+- [ ] **P3** 한국어 질문 대응 — 골든셋(EN 12/KO 14) 실측: bge-small KO recall@4 64%, multilingual-MiniLM 93%·EN 손실 없음.
+      그러나 **Pi가 2GB라 +560MB 모델 교체 불가**. 채택 경로: **질문 재작성(Haiku가 한국어→영어 독립 질문, 메모리 0,
+      멀티턴 재작성과 한 호출)** → bge-small 유지. 대안: 양자화 int8 다국어 모델(`add_custom_model`, +150~250MB 추정, 재측정 필요)
 - [ ] **P3** 리랭커 (fastembed rerank) — 검색 품질 문제가 실측되면
-- [ ] **P3** 멀티턴 질문 재작성 — 후속 질문 검색 실패가 보이면
+- [ ] **P3** 멀티턴 질문 재작성 — 위 한국어 재작성과 같은 `chat/rewrite.py` 한 호출로 (후속 질문 → 독립 영어 질문)
 
 ## Sources
 

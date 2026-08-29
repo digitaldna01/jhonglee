@@ -5,9 +5,15 @@
 #   ANTHROPIC_API_KEY=...     (optional — without it chat is retrieval-only)
 #   POSTGRES_PASSWORD=...     (required)
 #
-# Memory budget (measured on arm64, 2026-08-29): backend ≈ 0.8 GB (onnxruntime +
-# embedding model), postgres ≈ 30 MB idle / ≤150 MB under the settings below,
-# redis capped at 64 MB. Fits a 4 GB Pi with room; comfortable on 8 GB.
+# Memory: the Pi is a 2 GB Pi 4 (free -h: 1.8Gi). Budget per container below
+# (mem_limit). These limits only work once memory cgroups are enabled on the
+# Pi — add `cgroup_enable=cpuset cgroup_enable=memory cgroup_memory=1` to
+# /boot/firmware/cmdline.txt and reboot (until then `docker stats` shows 0B).
+# Also raise swap to 1 GB (dphys-swapfile) to absorb the startup embedding peak.
+#   backend  ≈ 0.6–0.8 GB (onnxruntime + bge-small)   limit 1.1 GB
+#   postgres ≈ 30 MB idle                              limit 256 MB
+#   redis    ≤ 48 MB data                              limit 96 MB
+#   web      ≈ 10 MB                                   limit 64 MB
 services:
   web:
     image: ghcr.io/digitaldna01/jhonglee:latest
@@ -15,6 +21,7 @@ services:
     ports:
       - "8080:80"
     restart: unless-stopped
+    mem_limit: 64m
     depends_on:
       - backend
 
@@ -22,6 +29,7 @@ services:
     image: ghcr.io/digitaldna01/jhonglee-backend:latest
     container_name: jhonglee-backend
     restart: unless-stopped
+    mem_limit: 1100m
     environment:
       - CORS_ORIGINS=https://jhonglee.com
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
@@ -41,15 +49,16 @@ services:
       - POSTGRES_USER=jhonglee
       - POSTGRES_DB=jhonglee
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
-    # Small-node tuning: keep Postgres well under 200 MB. Raise shared_buffers
-    # / effective_cache_size if the Pi has 8 GB and the corpus grows large.
+    mem_limit: 256m
+    # 2 GB-node tuning: a few dozen vectors and a handful of tables need almost
+    # nothing. Raise shared_buffers / max_connections if the corpus grows large.
     command: >
       postgres
-      -c shared_buffers=64MB
-      -c effective_cache_size=256MB
-      -c work_mem=4MB
-      -c maintenance_work_mem=32MB
-      -c max_connections=20
+      -c shared_buffers=32MB
+      -c effective_cache_size=128MB
+      -c work_mem=2MB
+      -c maintenance_work_mem=16MB
+      -c max_connections=10
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
@@ -62,11 +71,12 @@ services:
     image: redis:7-alpine
     container_name: jhonglee-redis
     restart: unless-stopped
+    mem_limit: 96m
     # Ephemeral state only (chat sessions, counters) → hard memory cap with
     # LRU eviction; light snapshotting so sessions survive a restart.
     command: >
       redis-server
-      --maxmemory 64mb
+      --maxmemory 48mb
       --maxmemory-policy allkeys-lru
       --save 300 1
       --appendonly no
