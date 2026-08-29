@@ -216,6 +216,16 @@ relations:                  # 온톨로지-라이트 (§3)
 - 한국어는 조사가 붙은 채 토큰이 되어(만들었어, 방법은) 키워드가 거의 안 걸린다 — 의도된 분업: 한국어 질문은 dense, 키워드는 그 안의 영어 이름
 - 표본 40건 → 과적합 가능. `chat_logs`의 실제 질문으로 골든셋을 키운 뒤 재스윕. 상수는 `retrieval/hybrid.py` 상단 — 재측정 없이 바꾸지 말 것
 
+### 골든셋 키우기 — `scripts/mine_golden.py` (2026-08-29)
+골든셋의 재료는 Redis 세션(7일 휘발)이 아니라 Postgres `chat_logs`(영구, append-only). 흐름은 세 단계:
+1. **mine** — `chat_logs`에서 골든셋에 없는 질문을 `golden_candidates.json`으로: 검색이 돌려준 문서(`got`), 최고 코사인, 같은 세션
+   30분 안의 직전 질문(`prev` → 두 턴 케이스), 실패 힌트 플래그(`low-score` < 0.2, `fallback` Claude 답 아님, `repeat` 같은 세션에서 재질문)
+2. **label** — 사람이 `expect`를 채움. `got`은 시스템의 추측일 뿐, 사람이 틀렸다고 해야 실패. 후속이면 `type` A/B/D 지정
+3. **merge** — `--merge`가 라벨된 것만 언어 버킷/`followup`에 추가하고 후보 파일에서 뺌 → `eval_retrieval.py --sweep` 재측정
+
+Pi에선 컨테이너 파일이 휘발이라 `docker compose exec -T backend python scripts/mine_golden.py --out -`로 stdout에 받아 로컬에 저장.
+후보 파일은 gitignore(작업 파일), 골든셋만 커밋.
+
 ## 3. 온톨로지 / 지식그래프 판정
 
 **결론: 정통 온톨로지(RDF/OWL/트리플스토어/SPARQL)는 이 규모에 과하다. 개념의 20%만 채택한다.**
@@ -254,6 +264,8 @@ relations:
 - [x] **P2-3** 후속 질문 앵커: 이전 턴 1위 문서 제목 + 세션 `last_sources` (§2.5) — 2026-08-29
 - [x] **P2-4** 하이브리드 검색: `rag_chunks.tsv`(GIN) | 메모리 BM25, 점수 융합 + 게이트, `retrieval/` 패키지 승격,
       `eval_retrieval.py --sweep/--pg` (§2.6) — 2026-08-29
+- [x] **P2-5** 골든셋 채굴 `scripts/mine_golden.py`: chat_logs → 후보 → 라벨 → merge (§2.6) — 2026-08-29.
+      배포 후 실제 질문이 쌓이면 돌려서 재스윕 — 이게 평가 주도 루프의 시작점
 - [ ] **P3** corpus.json을 커밋 대상에서 제외 — CI(deploy.yml)가 `npm run corpus`를 돌려 백엔드 이미지에
       아티팩트로 포함하거나 `POST /api/admin/ingest`로 전달. 동기화를 사람 기억에서 CI로.
       그다음 `/api/content/*`도 rag_documents를 읽게 하면 corpus.json 자체가 사라질 수 있음

@@ -145,6 +145,8 @@ POST /api/social/posts/{slug}/likes  GET/POST /api/social/posts/{slug}/comments
   (첫 부팅 30청크 2.6s, 이후 0.0s). 임베딩 모델을 바꾸면 해시가 전부 달라져 자동 재임베딩 — 단 차원이
   바뀌면(384→1024) `vector(N)` 컬럼·HNSW 인덱스 마이그레이션이 먼저 필요
 - 키워드 인덱스: `rag_chunks.tsv`는 생성 컬럼이라 Postgres가 삽입 시 스스로 채움 — 인제스트 코드는 모름 (0004)
+- `chat_logs`는 디스크(Docker 볼륨, microSD)에만 쌓이고 요청 경로에서 읽지 않는다 — 행당 ~1 KB, 하루 50질문이면 연 20 MB.
+  Postgres RAM은 `shared_buffers=32MB`·`mem_limit 256m`로 고정. 골든셋 채굴은 `docker compose exec -T backend python scripts/mine_golden.py --out -`
 - 로컬: `docker-compose.local.yml`(프로덕션 동형, Postgres 5433·Redis 6380 노출) / `docker-compose.dev.yml`(핫 리로드).
   Docker 없이 `pytest`·uvicorn만 돌리면 SQLite + MemoryCache로 폴백
 - 2026-08-29 이전의 `backend-data` 볼륨(SQLite)은 더 이상 마운트하지 않음 — 데이터 없었음(social 미구현)

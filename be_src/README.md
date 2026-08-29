@@ -35,9 +35,11 @@ app/
   demos/kmeans/           stateless demo API
 migrations/               Alembic; env.py reads DATABASE_URL. 0001 pgvector ext, 0002 rag tables, 0003 chat_logs, 0004 rag_chunks.tsv
 docker-entrypoint.sh      `alembic upgrade head`, then uvicorn
-tests/                    smoke (TestClient), cache, ingest, chat state, follow-up, hybrid (+ Postgres tests via TEST_DATABASE_URL)
+tests/                    smoke (TestClient), cache, ingest, chat state, follow-up, hybrid, mine_golden (+ Postgres tests via TEST_DATABASE_URL)
 scripts/eval_retrieval.py golden-set retrieval eval (recall@1/@4 EN+KO, two-turn follow-ups, timing, peak RSS); `--sweep` ranking
                           constants, `--pg` the Postgres path — run before changing model/chunking/fusion weights
+scripts/mine_golden.py    chat_logs → golden_candidates.json (real questions + what retrieval returned, flags, session
+                          follow-ups); label `expect`, then `--merge` into golden_set.json. `--out -` for the Pi
 ```
 
 When a module outgrows one file, turn it into a package of the same name

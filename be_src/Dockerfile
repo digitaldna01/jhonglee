@@ -16,6 +16,7 @@ RUN python app/chat/embedding.py "${EMBED_MODEL}"
 COPY alembic.ini docker-entrypoint.sh ./
 COPY migrations ./migrations
 COPY app ./app
+COPY scripts ./scripts
 
 EXPOSE 8000
 ENTRYPOINT ["./docker-entrypoint.sh"]
