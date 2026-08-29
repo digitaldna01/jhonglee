@@ -47,7 +47,7 @@ export function createGraph(canvas, opts) {
   }
 
   resize();
-  const sim = createSimulation({ projects, edges, width: W, height: H });
+  const sim = createSimulation({ projects, edges, width: W, height: H, labels: !compact });
 
   function remeasure() {
     const b = measure?.();
