@@ -110,12 +110,24 @@
 .corner a:hover { color: var(--accent-2); }
 @media (max-width: 720px) { .corner { display: none; } }
 
+/* ---- Vertical composition ----------------------------------
+   Intro, graph and dock are one group centred on the optical centre:
+   the graph band (--band) sits on --optical, the intro hangs above it,
+   the dock rests below it. The canvas measures the intro's bottom and
+   the dock's top, so the graph fills exactly the band. In chat mode the
+   dock leaves the group for the bottom of the conversation. */
+.landing {
+  --band: clamp(240px, 38vh, 400px); /* graph band height */
+  --band-gap: 28px; /* breathing room between band and intro / dock */
+  --optical: 49%; /* a touch above geometric centre reads as centred */
+}
+
 /* ---- Intro (fades on first question) ----------------------- */
 .intro {
   position: fixed;
   left: 50%;
-  top: 33%;
-  transform: translate(-50%, -50%);
+  bottom: calc(100% - var(--optical) + var(--band) / 2 + var(--band-gap));
+  transform: translate(-50%, 0);
   z-index: 10;
   text-align: center;
   pointer-events: none;
@@ -124,7 +136,7 @@
 }
 .intro.gone {
   opacity: 0;
-  transform: translate(-50%, -58%);
+  transform: translate(-50%, -12%);
   pointer-events: none;
 }
 .intro .eyebrow {
@@ -156,8 +168,9 @@
 .dock {
   position: fixed;
   left: 50%;
-  bottom: 20px;
+  top: calc(var(--optical) + var(--band) / 2 + var(--band-gap));
   transform: translateX(-50%);
+  transition: top 0.5s var(--ease-out), bottom 0.5s var(--ease-out);
   z-index: 30;
   width: min(680px, calc(100vw - 28px));
   display: flex;
@@ -178,6 +191,7 @@
   background: var(--color-bg);
 }
 .landing.is-chat .chat { display: flex; }
+.landing.is-chat .dock { top: auto; bottom: 20px; } /* joins the conversation at its foot */
 @media (prefers-reduced-motion: no-preference) {
   .landing.is-chat .chat { animation: chatIn 0.5s var(--ease-out); }
 }
@@ -512,8 +526,9 @@
 .detail .x svg { width: 15px; height: 15px; }
 
 @media (max-width: 720px) {
-  .dock { width: calc(100vw - 20px); bottom: 14px; }
-  .intro { top: 28%; }
+  .dock { width: calc(100vw - 20px); }
+  .landing { --band: clamp(220px, 36vh, 340px); --band-gap: 20px; }
+  .landing.is-chat .dock { bottom: 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .caret { animation: none; }

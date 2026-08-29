@@ -20,8 +20,9 @@ def retrieval_label() -> str:
     return get_settings().embed_model.split("/")[-1] + ", server"
 
 
-def graph() -> dict:
-    """Everything the landing map needs, from the corpus's single source."""
+def graph(z: float | None = None) -> dict:
+    """Everything the landing map needs, from the corpus's single source.
+    `z` re-derives the edges with another σ threshold (see retrieval.edges)."""
     return {
         "projects": [
             {
@@ -36,7 +37,7 @@ def graph() -> dict:
             }
             for d in content.nodes()
         ],
-        "edges": retrieval.edges(),
+        "edges": retrieval.edges(z),
         "retrieval_model": retrieval_label(),
     }
 

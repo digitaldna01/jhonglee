@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from fastapi.responses import StreamingResponse
 
 from ..core.cache import get_cache
@@ -24,8 +24,8 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 
 
 @router.get("/graph", response_model=GraphResponse)
-def graph():
-    return service.graph()
+def graph(z: float | None = Query(default=None, ge=0.0, le=4.0, description="edge σ threshold (experiment knob)")):
+    return service.graph(z)
 
 
 def _sse(event: str, data: dict) -> str:

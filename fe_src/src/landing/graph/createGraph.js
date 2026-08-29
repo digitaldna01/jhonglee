@@ -5,6 +5,10 @@
    loop, pointer hover/drag/click, and mode handling —
      reduced: settle synchronously, draw once, no loop
      quiet  : (mobile) find a calm layout, then stop animating
+     compact: (narrow) labels only for the hovered / tapped node
+   The free band for the graph is measured from the page (`measure()`
+   → {top, bottom}: the intro's bottom edge, the dock's top edge) rather
+   than assumed from viewport fractions.
    Returns an API with destroy(); nothing global, so it lives
    and dies with the React component that owns it.
    ============================================================ */
@@ -12,7 +16,7 @@ import { createSimulation } from './simulation';
 import { readPalette, draw } from './renderer';
 
 export function createGraph(canvas, opts) {
-  const { projects, edges, reduced = false, quiet = false, onHover, onSelect } = opts;
+  const { projects, edges, reduced = false, quiet = false, compact = false, measure, onHover, onSelect } = opts;
   let theme = opts.theme || 'light';
 
   const ctx = canvas.getContext('2d');
@@ -45,8 +49,14 @@ export function createGraph(canvas, opts) {
   resize();
   const sim = createSimulation({ projects, edges, width: W, height: H });
 
+  function remeasure() {
+    const b = measure?.();
+    if (b) sim.setBounds(b.top, b.bottom);
+  }
+  remeasure();
+
   function paint() {
-    draw(ctx, sim, palette, hoverId, { width: W, height: H });
+    draw(ctx, sim, palette, hoverId, { width: W, height: H, compact });
   }
 
   function loop() {
@@ -68,6 +78,8 @@ export function createGraph(canvas, opts) {
     rafId = requestAnimationFrame(loop);
     if (quiet) quietTimer = setTimeout(() => { running = false; paint(); }, 2600);
   }
+  // web fonts settle the intro's height a moment after first paint
+  const measureTimer = setTimeout(() => { remeasure(); if (reduced || !running) paint(); }, 400);
 
   /* ---- pointer interaction ----------------------------------- */
   function setHover(id) {
@@ -104,6 +116,10 @@ export function createGraph(canvas, opts) {
     if (!hit) return;
     dragId = hit.id;
     hit.pinned = true;
+    if (compact && hit.id !== hoverId) { // touch: a tap reveals the label
+      setHover(hit.id);
+      onHover?.(hit.id);
+    }
     moved = false;
     downX = e.clientX - rect.left;
     downY = e.clientY - rect.top;
@@ -134,6 +150,7 @@ export function createGraph(canvas, opts) {
   function onWindowResize() {
     resize();
     sim.setSize(W, H);
+    remeasure();
     if (reduced || !running) paint();
   }
 
@@ -149,24 +166,6 @@ export function createGraph(canvas, opts) {
     setHover,
     focusNode(id) { setHover(id); },
 
-    injectQuery(text, matches) {
-      sim.injectQuery(text, matches);
-      running = true; // give it real motion even if the base sim is quiet
-      if (reduced) {
-        for (let s = 0; s < 260; s++) sim.step(true);
-        paint();
-      }
-    },
-
-    clearQuery() {
-      sim.clearQuery();
-      if (quiet) {
-        clearTimeout(quietTimer);
-        quietTimer = setTimeout(() => { running = false; paint(); }, 1400);
-      }
-      if (reduced || !running) paint();
-    },
-
     setTheme(next) {
       theme = next;
       palette = readPalette(theme);
@@ -175,6 +174,7 @@ export function createGraph(canvas, opts) {
 
     setIntro(on) {
       sim.setIntro(on);
+      remeasure();
       if (reduced || !running) paint();
     },
 
@@ -192,6 +192,7 @@ export function createGraph(canvas, opts) {
       destroyed = true;
       cancelAnimationFrame(rafId);
       clearTimeout(quietTimer);
+      clearTimeout(measureTimer);
       canvas.removeEventListener('pointermove', onPointerMove);
       canvas.removeEventListener('pointerdown', onPointerDown);
       canvas.removeEventListener('pointerup', onRelease);

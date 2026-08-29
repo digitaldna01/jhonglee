@@ -7,7 +7,6 @@
    ============================================================ */
 
 const LABEL_FONT = "500 11px 'IBM Plex Mono', ui-monospace, monospace";
-const QUERY_FONT = "500 10.5px 'IBM Plex Mono', ui-monospace, monospace";
 
 export function readPalette(theme) {
   const dark = theme === 'dark';
@@ -24,17 +23,14 @@ export function readPalette(theme) {
     label: dark ? 'rgba(235,235,238,0.82)' : 'rgba(20,20,22,0.78)',
     labelDim: dark ? 'rgba(235,235,238,0.24)' : 'rgba(20,20,22,0.22)',
     labelIdle: dark ? 'rgba(235,235,238,0.52)' : 'rgba(20,20,22,0.46)',
-    query: hot,
   };
 }
 
-export function draw(ctx, sim, palette, hoverId, { width, height }) {
+export function draw(ctx, sim, palette, hoverId, { width, height, compact = false }) {
   const c = palette;
   ctx.clearRect(0, 0, width, height);
 
   const hot = hoverId ? sim.neighbours(hoverId) : null;
-  const q = sim.queryNode;
-  const qset = q ? q.targetSet : null;
 
   // edges
   for (const l of sim.links) {
@@ -50,33 +46,13 @@ export function draw(ctx, sim, palette, hoverId, { width, height }) {
     ctx.stroke();
   }
 
-  // query edges (dashed, weighted by similarity)
-  if (q) {
-    for (const tg of q.targets) {
-      const b = sim.node(tg.id);
-      if (!b) continue;
-      ctx.beginPath();
-      ctx.moveTo(q.x, q.y);
-      ctx.lineTo(b.x, b.y);
-      ctx.strokeStyle = c.edgeHot;
-      ctx.lineWidth = 0.8 + tg.s * 2.2;
-      ctx.setLineDash([2, 4]);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
-  }
-
   // nodes
   for (const n of sim.nodes) {
-    const dimmed =
-      (hoverId && hoverId !== n.id && !(hot && hot.has(n.id))) ||
-      (q && qset && !qset.has(n.id));
-    const matched = q && qset && qset.has(n.id);
+    const dimmed = hoverId && hoverId !== n.id && !(hot && hot.has(n.id));
     const isHover = hoverId === n.id;
-    let fill = dimmed ? c.nodeDim : c.node;
-    if (matched || isHover) fill = c.nodeHot;
+    const fill = isHover ? c.nodeHot : dimmed ? c.nodeDim : c.node;
 
-    if (matched || isHover) {
+    if (isHover) {
       ctx.beginPath();
       ctx.arc(n.x, n.y, n.r + 7, 0, Math.PI * 2);
       ctx.fillStyle = c.ring;
@@ -87,31 +63,14 @@ export function draw(ctx, sim, palette, hoverId, { width, height }) {
     ctx.fillStyle = fill;
     ctx.fill();
 
-    // labels: always on hover/match, faint when idle, hidden while
-    // a hover or query focuses attention elsewhere
-    const showLabel = isHover || matched || (!q && !hoverId);
-    if (showLabel) {
+    // labels: always on hover, faint when idle, hidden while a hover
+    // focuses attention elsewhere; on narrow screens only the hovered /
+    // tapped node is labelled (eight 11px labels don't fit a phone)
+    if (isHover || (!hoverId && !compact)) {
       ctx.font = LABEL_FONT;
       ctx.textAlign = 'center';
-      ctx.fillStyle = matched || isHover ? c.label : dimmed ? c.labelDim : c.labelIdle;
+      ctx.fillStyle = isHover ? c.label : dimmed ? c.labelDim : c.labelIdle;
       ctx.fillText(n.label.toLowerCase(), n.x, n.y - n.r - 8);
     }
-  }
-
-  // query node on top
-  if (q) {
-    ctx.beginPath();
-    ctx.arc(q.x, q.y, 5.5, 0, Math.PI * 2);
-    ctx.fillStyle = c.query;
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(q.x, q.y, 11, 0, Math.PI * 2);
-    ctx.strokeStyle = c.ring;
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    ctx.font = QUERY_FONT;
-    ctx.textAlign = 'center';
-    ctx.fillStyle = c.query;
-    ctx.fillText(`“${q.text}”`, q.x, q.y - 18);
   }
 }

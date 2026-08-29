@@ -36,6 +36,7 @@ log = logging.getLogger(__name__)
 _model = None
 _store: VectorStore | None = None
 _edges: list[dict] | None = None
+_summary_vecs: dict[str, np.ndarray] = {}  # kept so edges can be re-derived with another z
 
 
 def _embed_passages(texts: list[str]) -> np.ndarray:
@@ -48,22 +49,25 @@ def _embed_query(text: str) -> np.ndarray:
 
 async def warmup() -> ingest.SyncReport:
     """Load the model, sync the vector index, derive graph edges (app startup)."""
-    global _model, _store, _edges
+    global _model, _store, _edges, _summary_vecs
     settings = get_settings()
     if _model is None:
         _model = await asyncio.to_thread(embedding.load, settings.embed_model)
     if _store is None:
         _store = select_store(settings.database_url)
     report = await ingest.sync(_store, _embed_passages, settings.embed_model)
-    _edges = build_edges(NODES, await _store.summary_vectors())
+    _summary_vecs = await _store.summary_vectors()
+    _edges = build_edges(NODES, _summary_vecs)
     log.info("%s [%s]", report, type(_store).__name__)
     return report
 
 
-def edges() -> list[dict]:
+def edges(z: float | None = None) -> list[dict]:
+    """Similarity edges for the landing map; `z` overrides the σ threshold
+    (an experiment knob — the default is what the map ships with)."""
     if _edges is None:
         raise RuntimeError("retrieval.warmup() has not run")
-    return _edges
+    return _edges if z is None else build_edges(NODES, _summary_vecs, z=z)
 
 
 async def _ready() -> VectorStore:

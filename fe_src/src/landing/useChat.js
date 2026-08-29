@@ -2,8 +2,8 @@
    Landing — chat session state machine
    ------------------------------------------------------------
    Owns the conversation: entering/leaving chat mode, message
-   list, streaming updates, and the graph side-effects (query
-   node injection, intro handoff).
+   list, streaming updates, and the intro handoff (the map slides
+   out while a chat is open — see landing.css .is-chat).
 
    Answer path: backend SSE first; if the backend is unreachable
    the on-device stand-in (data/retrieval + rag/generate) takes
@@ -86,7 +86,6 @@ export default function useChat(graphRef) {
           retrievalModel: payload.retrieval_model,
         },
       });
-      graphRef.current?.injectQuery(q, projects.map((s) => ({ id: s.id, s: s.score })));
     };
 
     try {
@@ -134,7 +133,6 @@ export default function useChat(graphRef) {
     setBusy(false);
     setMessages([]);
     convoRef.current = [];
-    graphRef.current?.clearQuery();
     graphRef.current?.setIntro(true);
   }, [graphRef]);
 

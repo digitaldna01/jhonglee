@@ -76,27 +76,28 @@ export function retrieve(qvec, k = 3) {
 }
 
 /* ---- similarity edges between projects (graph links) --------- */
-/* Each project links to its top-MAX most similar peers above FLOOR. */
-const FLOOR = 0.12;
-const MAX = 3;
+/* Same rule as be_src retrieval/edges.py: link a pair only when its cosine
+   is at least EDGE_Z standard deviations above the mean of all pairs (so
+   the bar recalibrates with the corpus); the rest float. No per-node cap.
+   Weight is a fixed function of the z-score (z=EDGE_Z → 0.15, z=3 → 0.85). */
+const EDGE_Z = 0.5;
 
 function buildEdges() {
-  const edges = [];
-  const seen = new Set();
-  PROJECTS.forEach((a, ai) => {
-    const sims = PROJECTS.map((b, bi) => ({ bi, s: ai === bi ? -1 : cosine(VECS.get(a.id), VECS.get(b.id)) }))
-      .filter((e) => e.bi !== ai)
-      .sort((x, y) => y.s - x.s)
-      .slice(0, MAX);
-    for (const e of sims) {
-      if (e.s < FLOOR) continue;
-      const key = ai < e.bi ? `${ai}-${e.bi}` : `${e.bi}-${ai}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      edges.push({ a: PROJECTS[ai].id, b: PROJECTS[e.bi].id, w: e.s });
-    }
-  });
-  return edges;
+  const n = PROJECTS.length;
+  if (n < 3) return [];
+  const pairs = [];
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) pairs.push({ i, j, s: cosine(VECS.get(PROJECTS[i].id), VECS.get(PROJECTS[j].id)) });
+  }
+  const mean = pairs.reduce((acc, p) => acc + p.s, 0) / pairs.length;
+  const sd = Math.sqrt(pairs.reduce((acc, p) => acc + (p.s - mean) ** 2, 0) / pairs.length);
+  if (sd < 1e-9) return [];
+  const weight = (z) => Math.round((0.15 + 0.7 * Math.min(Math.max((z - EDGE_Z) / (3 - EDGE_Z), 0), 1)) * 1000) / 1000;
+
+  return pairs
+    .map((p) => ({ ...p, z: (p.s - mean) / sd }))
+    .filter((p) => p.z >= EDGE_Z)
+    .map((p) => ({ a: PROJECTS[p.i].id, b: PROJECTS[p.j].id, w: weight(p.z) }));
 }
 
 export const EDGES = buildEdges();

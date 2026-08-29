@@ -83,7 +83,8 @@ pytest                                      # add TEST_DATABASE_URL=postgresql+a
 ```
 GET  /api/health
 GET  /api/content/posts            GET  /api/content/posts/{slug}
-GET  /api/chat/graph               POST /api/chat/stream   (SSE: sources → delta* → done; 429 + Retry-After when rate-limited)
+GET  /api/chat/graph[?z=0.5]       POST /api/chat/stream   (SSE: sources → delta* → done; 429 + Retry-After when rate-limited)
+     z = edge σ threshold, an experiment knob (default retrieval/edges.EDGE_Z)
 GET  /api/kmeans/dataset           POST /api/kmeans/run
 ```
 
