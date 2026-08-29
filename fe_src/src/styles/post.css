@@ -1,0 +1,21 @@
+/* ── Post — reading column ───────────────────────────────
+   One width for everything: text, figures, code, maths and
+   embedded demos all sit in the same 600px column, so the page
+   keeps a single rhythm. 18px Avenir at 600px measures ≈75
+   characters a line; phones drop to 16px with 20px gutters. */
+
+.post-body {
+  max-width: 600px;
+  margin: 0 auto;
+  font-size: 16px;
+  line-height: 1.72;
+}
+@media (min-width: 768px) { .post-body { font-size: 18px; line-height: 1.7; } }
+
+.post-body .prose p { text-wrap: pretty; }
+/* Korean never breaks inside a word; harmless for Latin text */
+.post-body .prose { word-break: keep-all; }
+.post-body .prose pre { font-size: 0.85em; }
+
+/* the old full-bleed hero now takes the column like everything else */
+.post-body .prose img.img-wide { width: 100%; max-width: 100%; }

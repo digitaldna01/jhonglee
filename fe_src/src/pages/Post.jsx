@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { LangProvider, useLang } from '../utils/lang';
 import '../styles/work.css';
+import '../styles/post.css';
 
 const postModules = import.meta.glob('../posts/*.mdx');
 
@@ -80,7 +81,7 @@ export default function Post() {
   return (
     <LangProvider initial={initial}>
       <section className="w-full pt-20 md:pt-24 font-sans overflow-x-clip">
-        <div className="max-w-4xl mx-auto px-[var(--layout-margin)]">
+        <div className="max-w-4xl mx-auto px-5 sm:px-8">
           <PostTitle meta={meta} />
           <div className="post-meta-row">
             <p className="text-[length:var(--caption)] text-center post-meta-text">
@@ -88,7 +89,7 @@ export default function Post() {
             </p>
             {locales && locales.length > 1 && <LangToggle locales={locales} />}
           </div>
-          {Component && <div className="prose"><Component /></div>}
+          {Component && <div className="post-body"><div className="prose"><Component /></div></div>}
         </div>
       </section>
     </LangProvider>

@@ -577,13 +577,6 @@
 [data-theme="dark"] .proj-card.is-figure .proj-card-index,
 [data-theme="dark"] .proj-card.is-figure .proj-card-hemi { color: rgba(255, 255, 255, 0.5); mix-blend-mode: normal; }
 
-/* ── Post image utilities ───────────────────────────────── */
-.img-wide {
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  display: block;
-}
-
 /* ── Post meta + language toggle ────────────────────────── */
 .post-meta-row {
   display: flex;
