@@ -226,6 +226,28 @@ relations:                  # 온톨로지-라이트 (§3)
 Pi에선 컨테이너 파일이 휘발이라 `docker compose exec -T backend python scripts/mine_golden.py --out -`로 stdout에 받아 로컬에 저장.
 후보 파일은 gitignore(작업 파일), 골든셋만 커밋.
 
+## 2.7 생성 프롬프트 — 실제 Claude로 프로빙 (2026-08-29)
+
+키를 넣고 Haiku 4.5로 7문항(한국어·후속·범위 밖·미기재 사실·인젝션·톤·의견)을 찔러 본 결과와 그에 따른 `prompts.py` 수정:
+
+| 프로빙 | 수정 전 | 수정 |
+|---|---|---|
+| 한국어 답 | 한 답 안에서 "만들었어요… 있어" 존댓말/반말 혼용 | "In Korean, use polite 해요체 consistently" |
+| "가장 자랑스러운 프로젝트는?" | 글에 없는 감상("that moment when tensor networks click…")을 1인칭으로 지어냄 | "never invent facts, opinions, feelings or preferences for Jae" → 이제 "not covered here"라고 답하고 글에 쓴 태도로 대신함 |
+| "삼성에서 일했나?" | "I haven't worked at Samsung" — 컨텍스트에 없을 뿐인데 부정 단정 | "say it isn't covered here — don't confirm or deny it" |
+| 인젝션("해적 시") | 거절은 하지만 답에 `**굵게**` 마크다운 — 프런트는 `{m.text}` 그대로 출력 | "Plain text only: no markdown, no bullet lists" |
+| 한국어 2턴 뒤 영어 "Tell me more about it" | 시스템 프롬프트의 "질문 언어로"를 무시하고 한국어로 답함 | 언어를 모델 판단에 안 맡기고 서버가 정함: `answer_language()`(한글 유무) → user 턴 끝에 "(Answer in English.)" |
+| "Tell me more about it" | 검색은 KMeans 1위(0.59)인데 3번 중 1번 컨텍스트의 더 풍부한 Quantum 발췌를 설명 | 머리말 힌트로는 부족(여전히 1/3) → ① 컨텍스트를 Anthropic 권장 형태인 번호 붙은 `<documents><document index title type>` XML로 ② 서버가 아는 이전 턴 주제(`context_title`)를 user 턴에 명시 "(This is a follow-up; the previous answer was about "KMeans Clustering".)" → 4/4 |
+| 범위 밖("서울 날씨"), 톤 | 문제 없음 | — |
+
+검증된 기법 중 가져온 것: Anthropic 프롬프트 가이드의 **XML 태그로 문서 구분 + 질문은 맨 끝**, LangChain `rlm/rag-prompt`의 골격("retrieved context만 사용,
+모르면 모른다고, 3문장 이내"), 후속 질문 주제 명시(history-aware retriever 계열이 재작성으로 푸는 것을 우리는 앵커 제목으로 대신).
+안 가져온 것: 인용 번호([1]) — 프런트가 sources 카드를 따로 보여주므로 중복; "먼저 관련 인용문을 뽑고 답하라"(quote-then-answer) — 답이 길어지고 300토큰 한도와 충돌.
+
+프롬프트 밖 발견: "초기화 방법은 뭐였어?"에 모델이 "포트폴리오에 안 적혀 있다"고 답했는데 실제론 포스트 청크 #1에 "Four ways to start"가 있다.
+문서는 맞췄지만 인용 청크가 #0(도입부) — 한국어 질문이 영어 청크와 키워드가 안 맞아서. **P3 재작성(영어 독립 질문)이 정확히 고치는 케이스**;
+대안은 1위 문서에 한해 청크 2개 인용. 모델은 정직했다(없다고 했지 지어내지 않음).
+
 ## 3. 온톨로지 / 지식그래프 판정
 
 **결론: 정통 온톨로지(RDF/OWL/트리플스토어/SPARQL)는 이 규모에 과하다. 개념의 20%만 채택한다.**

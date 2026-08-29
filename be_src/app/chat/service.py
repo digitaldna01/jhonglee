@@ -77,7 +77,7 @@ async def answer(
     parts: list[str] = []
     model = ""
     usage: dict = {}
-    async for name, payload in generation.generate(question, retrieved, turns):
+    async for name, payload in generation.generate(question, retrieved, turns, topic=context_title):
         if name == "delta":
             parts.append(payload["text"])
         elif name == "done":

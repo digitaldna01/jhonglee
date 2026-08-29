@@ -41,7 +41,9 @@ def extractive_answer(retrieved: list[dict]) -> str:
     )
 
 
-async def generate(question: str, retrieved: list[dict], history: list[dict]) -> AsyncIterator[Event]:
+async def generate(
+    question: str, retrieved: list[dict], history: list[dict], *, topic: str | None = None
+) -> AsyncIterator[Event]:
     """Yield ("delta", {text}) chunks, then ("done", {model, input_tokens?, output_tokens?}) —
     the token usage is present only when a model actually answered."""
     settings = get_settings()
@@ -51,7 +53,7 @@ async def generate(question: str, retrieved: list[dict], history: list[dict]) ->
         return
 
     messages: list[Any] = history + [  # MessageParam-shaped dicts; the SDK validates
-        {"role": "user", "content": user_message(question, build_context(retrieved))}
+        {"role": "user", "content": user_message(question, build_context(retrieved), topic=topic)}
     ]
     try:
         import anthropic
