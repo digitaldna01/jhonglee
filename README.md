@@ -28,7 +28,8 @@ mdx 포스트 ──(npm run corpus)──▶ corpus.json ──▶ 백엔드 �
 | 프로덕션 동형 (nginx) | `docker compose -f docker-compose.local.yml up --build` | http://localhost:8080 |
 | Pi (CI가 실행) | `docker compose up -d` — `main` 푸시 → GHCR 빌드 → self-hosted runner | https://jhonglee.com |
 
-- 시크릿은 compose 파일 옆 `.env` (`.env.example` 참고): `ANTHROPIC_API_KEY`(없으면 챗이 검색 결과만으로 답함), `POSTGRES_PASSWORD`(Pi 필수)
+- 로컬 시크릿은 compose 파일 옆 `.env` (`.env.example` 참고). **프로덕션은 GitHub Actions Secrets**
+  (`ANTHROPIC_API_KEY`, `POSTGRES_PASSWORD`) — 배포 워크플로가 Pi에서 `.env`를 생성. 키가 없으면 챗은 검색 결과만으로 답함
 - 로컬 스택에서 Postgres는 `localhost:5433`, Redis는 `localhost:6380`으로 노출 (DB 뷰어 연결용)
 - 포스트를 고친 뒤엔 `cd fe_src && npm run corpus` → `corpus.json` 커밋. 백엔드는 다음 시작 때 바뀐 청크만 재임베딩
 

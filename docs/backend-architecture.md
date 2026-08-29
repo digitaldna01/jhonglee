@@ -102,7 +102,10 @@ POST /api/social/posts/{slug}/likes  GET/POST /api/social/posts/{slug}/comments
 
 - `docker-compose.yml` (Pi): `backend` + `db`(`pgvector/pgvector:pg17`, arm64) + `redis`(`redis:7-alpine`).
   backend는 두 서비스의 healthcheck를 기다린 뒤 시작. 볼륨: `db-data`, `redis-data`
-- Pi의 `.env`: `ANTHROPIC_API_KEY`, `POSTGRES_PASSWORD`(필수 — 없으면 compose가 거부). 템플릿은 루트 `.env.example`
+- **프로덕션 시크릿은 GitHub Actions Secrets** (`ANTHROPIC_API_KEY`, `POSTGRES_PASSWORD`) — deploy.yml이 매 배포마다
+  `.env`를 새로 씀. Pi에 직접 둔 `.env`는 `actions/checkout`의 `git clean -ffdx`에 지워지므로 소용없음
+  (2026-08-29 확인: 프로덕션 backend에 ANTHROPIC_API_KEY가 비어 있었음). `POSTGRES_PASSWORD`는 첫 배포 후 **변경 금지**
+  (DB 볼륨이 초기 비밀번호를 보존). 로컬 템플릿은 루트 `.env.example`
 - **Pi는 2GB** (Pi 4 B Rev 1.5, `free -h` 1.8Gi; 2026-08-29 확인). 2026-08-29에 다음을 적용함:
   - 메모리 cgroup 활성화 (`/boot/firmware/cmdline.txt`에 `cgroup_enable=cpuset cgroup_enable=memory cgroup_memory=1`) —
     이게 없으면 `docker stats`가 0B이고 compose `mem_limit`도 무시됨
@@ -118,7 +121,9 @@ POST /api/social/posts/{slug}/likes  GET/POST /api/social/posts/{slug}/comments
     (`nmcli connection modify "<name>" connection.autoconnect-priority N`)
   - **SSH**: 공인 IP:22022가 인터넷에 포워딩돼 7일간 실패 로그인 13.8만 건 관측 → 2026-08-29 **키 전용으로 전환**
     (`/etc/ssh/sshd_config.d/50-keys-only.conf`: PasswordAuthentication no, PermitRootLogin no, MaxAuthTries 3).
-    새 기기는 `ssh-copy-id`로 키 등록 필요. 다음: fail2ban(선택), 포트포워딩 제거 + Tailscale(로드맵)
+    새 기기는 `ssh-copy-id`로 키 등록 필요. 같은 날 fail2ban(backend=systemd — Bookworm엔 auth.log 없음) 설치,
+    **Tailscale** 도입 후 공유기의 SSH 포워딩(22022·2222) 삭제 → 인터넷에 열린 건 80/443(웹, Cloudflare 경유)뿐.
+    외부 접속은 `ssh rpi-external`(Tailscale 주소, 집 안팎 동일)
   - **헤드리스 복구 절차** (재부팅 후 Wi-Fi가 안 붙어 SSH 불가였던 사례): Bookworm은 `wpa_supplicant.conf`를 bootfs에 넣는
     옛 방식이 안 통함. 대신 bootfs에 `firstrun.sh`(nmcli/imager_custom으로 Wi-Fi 등록 후 스스로 삭제)를 두고
     `cmdline.txt` 끝에 `systemd.run=/boot/firmware/firstrun.sh systemd.run_success_action=reboot systemd.unit=kernel-command-line.target`
