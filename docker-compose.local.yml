@@ -1,12 +1,13 @@
 # Local development only — NOT used on the Raspberry Pi.
 # Builds the images from local source (fe_src/ + be_src/) instead of pulling
-# from GHCR, so you can test the full stack — including the nginx /api proxy —
-# exactly as it runs in production.
+# from GHCR, so you can test the full stack — including the nginx /api proxy,
+# Postgres+pgvector and Redis — exactly as it runs in production.
 #
 #   docker compose -f docker-compose.local.yml up --build
 #
-# Then open http://localhost:8080. The plain docker-compose.yml (which the Pi
-# uses) is left untouched.
+# Then open http://localhost:8080. Postgres is on localhost:5433 and Redis on
+# localhost:6380 for inspection (psql / redis-cli). The plain
+# docker-compose.yml (which the Pi uses) is left untouched.
 services:
   web:
     build: ./fe_src
@@ -22,3 +23,42 @@ services:
     environment:
       - CORS_ORIGINS=http://localhost:8080
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - DATABASE_URL=postgresql+asyncpg://jhonglee:${POSTGRES_PASSWORD:-jhonglee}@db:5432/jhonglee
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  db:
+    image: pgvector/pgvector:pg17
+    container_name: jhonglee-db-local
+    environment:
+      - POSTGRES_USER=jhonglee
+      - POSTGRES_DB=jhonglee
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-jhonglee}
+    ports:
+      - "5433:5432"
+    volumes:
+      - db-data-local:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jhonglee -d jhonglee"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: jhonglee-redis-local
+    command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru --save "" --appendonly no
+    ports:
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  db-data-local:

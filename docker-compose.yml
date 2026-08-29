@@ -1,3 +1,13 @@
+# Production on the Raspberry Pi (arm64). Images are built by CI and pulled
+# from GHCR; db/redis are official multi-arch images. Secrets come from a
+# .env file next to this compose file on the Pi:
+#
+#   ANTHROPIC_API_KEY=...     (optional — without it chat is retrieval-only)
+#   POSTGRES_PASSWORD=...     (required)
+#
+# Memory budget (measured on arm64, 2026-08-29): backend ≈ 0.8 GB (onnxruntime +
+# embedding model), postgres ≈ 30 MB idle / ≤150 MB under the settings below,
+# redis capped at 64 MB. Fits a 4 GB Pi with room; comfortable on 8 GB.
 services:
   web:
     image: ghcr.io/digitaldna01/jhonglee:latest
@@ -14,13 +24,60 @@ services:
     restart: unless-stopped
     environment:
       - CORS_ORIGINS=https://jhonglee.com
-      # set in a .env file next to this compose file on the Pi;
-      # without it the chat degrades to retrieval-only answers
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
-      # SQLite lives on a named volume so it survives image updates
-      - DATABASE_URL=sqlite+aiosqlite:////app/data/app.db
+      - DATABASE_URL=postgresql+asyncpg://jhonglee:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/jhonglee
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  db:
+    image: pgvector/pgvector:pg17
+    container_name: jhonglee-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=jhonglee
+      - POSTGRES_DB=jhonglee
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    # Small-node tuning: keep Postgres well under 200 MB. Raise shared_buffers
+    # / effective_cache_size if the Pi has 8 GB and the corpus grows large.
+    command: >
+      postgres
+      -c shared_buffers=64MB
+      -c effective_cache_size=256MB
+      -c work_mem=4MB
+      -c maintenance_work_mem=32MB
+      -c max_connections=20
     volumes:
-      - backend-data:/app/data
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jhonglee -d jhonglee"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: jhonglee-redis
+    restart: unless-stopped
+    # Ephemeral state only (chat sessions, counters) → hard memory cap with
+    # LRU eviction; light snapshotting so sessions survive a restart.
+    command: >
+      redis-server
+      --maxmemory 64mb
+      --maxmemory-policy allkeys-lru
+      --save 300 1
+      --appendonly no
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
 volumes:
-  backend-data:
+  db-data:
+  redis-data:

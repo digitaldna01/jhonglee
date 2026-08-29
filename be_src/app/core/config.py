@@ -7,7 +7,11 @@
   CHAT_MODEL          Anthropic model id for answer generation
   EMBED_MODEL         fastembed model for retrieval (must match the model
                       pre-downloaded in the Docker image)
-  DATABASE_URL        SQLAlchemy async URL; SQLite file by default
+  DATABASE_URL        SQLAlchemy async URL. SQLite file by default (dev without
+                      Docker); production is Postgres + pgvector:
+                      postgresql+asyncpg://user:pass@db:5432/jhonglee
+                      Schema is managed by Alembic (`alembic upgrade head`,
+                      run by the container entrypoint)
   REDIS_URL           when set, the KV cache uses Redis; otherwise in-memory
   CHAT_HISTORY_TTL_DAYS  how long server-side chat sessions live in the cache
 """

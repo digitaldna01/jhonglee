@@ -4,7 +4,7 @@
 > 살아있는 문서 — 새 기법을 찾으면 여기에 추가하고, 결정이 바뀌면 표를 갱신한다.
 >
 > 전제 규모: 문서 10~20개(mdx 포스트 + bio), 청크 수백 개 이하, 라즈베리파이 배포.
-> 마지막 업데이트: 2026-08-23
+> 마지막 업데이트: 2026-08-29
 
 ---
 
@@ -12,13 +12,13 @@
 
 ```
 질문 → 임베딩(fastembed bge-small-en-v1.5, ONNX)
-     → 코사인 top-4  (numpy 행렬 — 벡터 DB 없음, 의도된 선택)
+     → 코사인 top-4  (numpy 행렬 in-memory — P2에서 pgvector로 이전, §2 벡터 DB 행)
      → 컨텍스트 조립(desc + bio 상시 포함)
      → Claude Haiku 4.5 스트리밍 (키 없으면 추출식 폴백)
      → SSE: sources → delta → done
 ```
 
-- 코드: `be_src/app/ml/retrieval.py`(검색·엣지), `be_src/app/routers/chat.py`(SSE·프롬프트)
+- 코드: `be_src/app/chat/retrieval.py`(검색·엣지), `chat/router.py`(SSE), `chat/prompts.py`(프롬프트)
 - 그래프 엣지도 같은 임베딩에서 파생 (노드당 top-2 유사 이웃, 가중치 0.15–0.85 리스케일)
 
 ## 1. 문서 스키마 방향 (결정됨)
@@ -81,7 +81,7 @@ relations:                  # 온톨로지-라이트 (§3)
 | **청크 크기** | 사실형 256–512tok, 분석형 512–1024tok | — | 섹션(`##`) 경계 우선, 256–512tok 목표 |
 | **청크 오버랩** | 10–20% 권장이 통설 | 2026-01 체계 분석에선 이득 없음, 인덱싱 비용만 증가 | 섹션 경계 청킹이라 **오버랩 불필요** |
 | **리랭킹 (크로스인코더)** | 후보를 질문과 함께 재채점 | 정밀도 대폭↑, 느려서 사전 필터된 집합에만 적용 | ⏸ **2단계 보류** — 후보가 수십 개뿐이라 이득 작고 Pi 부담. fastembed 리랭커로 추가 가능 |
-| **벡터 DB** (Qdrant, pgvector 등) | 대규모 ANN 인덱스 | — | ❌ **불필요** — 수백 청크까지 numpy + 코사인이 정답. 임베딩은 콘텐츠 해시 키로 파일 캐시 |
+| **벡터 DB** (Qdrant, pgvector 등) | 대규모 ANN 인덱스 | — | ✅ **pgvector 채택 (2026-08-29 결정 변경)** — 성능 때문이 아니라 ① 임베딩을 배포에서 분리(증분 인제스트: 청크 내용 해시로 바뀐 것만 재임베딩·삭제 동기화) ② 하이브리드 검색을 SQL(`tsvector` + `<=>`)로 ③ 오래 쓸 RAG 기반 학습. Qdrant 대신 pgvector: 컨테이너 하나, 백업 하나, 메타데이터 JOIN. 그래프 엣지는 O(n²)라 sync 끝에 전체 재계산 |
 | **Late chunking** (Jina) | 문서 전체를 먼저 임베딩 후 청크 풀링 | BEIR 이득, 문서 길수록 커짐 | ❌ 장문서용 — 해당 없음 |
 | **ColBERT / late interaction** | 토큰 단위 다중 벡터 매칭 | 정밀도↑, 저장량 수십 배 | ❌ 과함 |
 | **질문 재작성 / HyDE** | 멀티턴에서 후속 질문을 독립 질문으로 재작성 | 멀티턴 RAG 정확도↑ | 🤔 **후보** — "그거 더 알려줘" 류 후속 질문 검색이 약해지면 도입 (Haiku로 재작성 1콜) |
@@ -123,7 +123,10 @@ relations:
 - [x] **P1** 섹션 청킹 + 템플릿 컨텍스추얼 임베딩 — 2026-08-23
       청크 = `##` 섹션(≤2200자), passage = "From {title} ({kind}; {tags}): {chunk}",
       문서 점수 = max(청크), summary 합성 청크로 본문 빈약한 문서도 검색 가능
-- [ ] **P2** BM25 하이브리드 (RRF)
+- [x] **P2-0** 인프라: Postgres+pgvector, Redis, Alembic, compose 3종 — 2026-08-29
+- [ ] **P2-1** 청크 테이블 + 벡터 컬럼, `chat/ingest.py`(내용 해시 sync), retrieval을 DB 조회로 — 청크 id를 내용 해시 기반으로(build-corpus.mjs)
+- [ ] **P2-2** 서버 세션(Redis, history.py) + 레이트 리밋 + 대화/검색 로그 테이블
+- [ ] **P2** 하이브리드 검색 (pgvector + tsvector, RRF) + 골든셋 평가 스크립트
 - [ ] **P2** `relations` 선언 엣지 + 그래프 표시 구분
 - [ ] **P3** multilingual-e5-small 교체 (한국어 질문)
 - [ ] **P3** 리랭커 (fastembed rerank) — 검색 품질 문제가 실측되면

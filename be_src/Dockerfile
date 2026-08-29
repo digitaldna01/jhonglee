@@ -9,7 +9,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # weights at runtime. Must match EMBED_MODEL (app/core/config.py).
 RUN python -c "from fastembed import TextEmbedding; TextEmbedding('BAAI/bge-small-en-v1.5')"
 
+COPY alembic.ini docker-entrypoint.sh ./
+COPY migrations ./migrations
 COPY app ./app
 
 EXPOSE 8000
+ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

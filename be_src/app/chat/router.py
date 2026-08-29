@@ -4,6 +4,7 @@ GET  /api/chat/graph   nodes + similarity edges for the landing map
 POST /api/chat/stream  SSE: `sources` (retrieval + timing) → `delta`
                        (answer text chunks) → `done` (model label)
 """
+
 from __future__ import annotations
 
 import json
@@ -29,7 +30,9 @@ def _sse(event: str, data: dict) -> str:
 @router.post("/stream")
 def stream(req: ChatRequest):
     history = [t.model_dump() for t in req.history]
-    events = (_sse(name, payload) for name, payload in service.answer(req.question, history))
+    events = (
+        _sse(name, payload) for name, payload in service.answer(req.question, history)
+    )
     return StreamingResponse(
         events,
         media_type="text/event-stream",

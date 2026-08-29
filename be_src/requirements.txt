@@ -6,3 +6,7 @@ anthropic>=0.40
 fastembed>=0.4
 sqlalchemy[asyncio]>=2.0
 aiosqlite>=0.20
+asyncpg>=0.30
+pgvector>=0.3
+alembic>=1.13
+redis>=5.0

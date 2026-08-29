@@ -1,10 +1,11 @@
-"""Database access — SQLAlchemy 2.0 async, SQLite by default.
+"""Database access — SQLAlchemy 2.0 async. Postgres (+pgvector) in
+production, SQLite when DATABASE_URL is unset (local dev without Docker).
 
 The engine is created lazily on first use, so features that never touch
 the DB (chat, demos) cost nothing, and the app boots without a database
-at all. Switching to Postgres is a DATABASE_URL change. Models live in
-each feature package (e.g. social/models.py) and register on `Base`;
-schema migrations arrive with Alembic when the first model lands.
+at all. Models live in each feature package (e.g. social/models.py) and
+register on `Base`; the schema is managed by Alembic (../migrations),
+applied by the container entrypoint before uvicorn starts.
 
     async def endpoint(session: AsyncSession = Depends(get_session)): ...
 """
@@ -27,15 +28,19 @@ _engine = None
 _sessionmaker: async_sessionmaker[AsyncSession] | None = None
 
 
+def ensure_sqlite_dir(url: str) -> None:
+    """For file-backed SQLite URLs, create the parent directory (./data by default)."""
+    if url.startswith("sqlite"):
+        path = url.split("///", 1)[-1]
+        if path and path != ":memory:":
+            Path(path).parent.mkdir(parents=True, exist_ok=True)
+
+
 def get_engine():
     global _engine, _sessionmaker
     if _engine is None:
         url = get_settings().database_url
-        if url.startswith("sqlite"):
-            # make sure the file's directory exists (./data by default)
-            path = url.split("///", 1)[-1]
-            if path and path != ":memory:":
-                Path(path).parent.mkdir(parents=True, exist_ok=True)
+        ensure_sqlite_dir(url)
         _engine = create_async_engine(url, future=True)
         _sessionmaker = async_sessionmaker(_engine, expire_on_commit=False)
     return _engine

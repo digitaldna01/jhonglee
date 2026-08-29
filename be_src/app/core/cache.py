@@ -2,13 +2,14 @@
 
 Everything ephemeral (chat sessions, rate-limit counters, hot aggregates)
 goes through this interface, never through a client library directly.
-Today there is one implementation, in-memory; when REDIS_URL is set a
-Redis-backed one will be selected here (and only here) — no call site
-changes. Values are JSON-serialisable Python objects.
+Two implementations: in-memory (default, single process) and Redis,
+selected once per process by REDIS_URL — no call site changes. Values
+are JSON-serialisable Python objects.
 """
 from __future__ import annotations
 
 import asyncio
+import json
 import time
 from typing import Any, Protocol
 
@@ -20,6 +21,7 @@ class KVCache(Protocol):
     async def set(self, key: str, value: Any, ttl: int | None = None) -> None: ...
     async def delete(self, key: str) -> None: ...
     async def incr(self, key: str, ttl: int | None = None) -> int: ...
+    async def close(self) -> None: ...
 
 
 class MemoryCache:
@@ -61,6 +63,42 @@ class MemoryCache:
             self._data[key] = (value, expires)
             return value
 
+    async def close(self) -> None:
+        return None
+
+
+class RedisCache:
+    """Redis-backed cache, shared across workers/restarts.
+
+    Values are stored as JSON strings. `incr` relies on Redis INCR, which
+    works because json.dumps(int) is the plain integer string, so a counter
+    written by `set` and one bumped by `incr` read back the same way.
+    """
+
+    def __init__(self, url: str) -> None:
+        import redis.asyncio as redis  # only imported when selected
+
+        self._r = redis.from_url(url, decode_responses=True)
+
+    async def get(self, key: str) -> Any | None:
+        raw = await self._r.get(key)
+        return None if raw is None else json.loads(raw)
+
+    async def set(self, key: str, value: Any, ttl: int | None = None) -> None:
+        await self._r.set(key, json.dumps(value), ex=ttl)
+
+    async def delete(self, key: str) -> None:
+        await self._r.delete(key)
+
+    async def incr(self, key: str, ttl: int | None = None) -> int:
+        value = await self._r.incr(key)
+        if ttl and value == 1:  # first write starts the TTL; later bumps keep it
+            await self._r.expire(key, ttl)
+        return int(value)
+
+    async def close(self) -> None:
+        await self._r.aclose()
+
 
 _cache: KVCache | None = None
 
@@ -70,9 +108,12 @@ def get_cache() -> KVCache:
     global _cache
     if _cache is None:
         settings = get_settings()
-        if settings.redis_url:
-            # TODO(redis): return RedisCache(settings.redis_url) once redis is
-            # added to requirements and docker-compose. Until then, be loud.
-            raise RuntimeError("REDIS_URL is set but the Redis cache is not implemented yet")
-        _cache = MemoryCache()
+        _cache = RedisCache(settings.redis_url) if settings.redis_url else MemoryCache()
     return _cache
+
+
+async def close_cache() -> None:
+    global _cache
+    if _cache is not None:
+        await _cache.close()
+        _cache = None
