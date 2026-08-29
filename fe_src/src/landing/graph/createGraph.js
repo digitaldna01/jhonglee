@@ -5,7 +5,7 @@
    loop, pointer hover/drag/click, and mode handling —
      reduced: settle synchronously, draw once, no loop
      quiet  : (mobile) find a calm layout, then stop animating
-     compact: (narrow) labels only for the hovered / tapped node
+     compact: (narrow) smaller labels, tighter node clearance
    The free band for the graph is measured from the page (`measure()`
    → {top, bottom}: the intro's bottom edge, the dock's top edge) rather
    than assumed from viewport fractions.
@@ -47,7 +47,7 @@ export function createGraph(canvas, opts) {
   }
 
   resize();
-  const sim = createSimulation({ projects, edges, width: W, height: H, labels: !compact });
+  const sim = createSimulation({ projects, edges, width: W, height: H, labels: true, compact });
 
   function remeasure() {
     const b = measure?.();

@@ -1,14 +1,9 @@
 @import "tailwindcss";
 
 /* ── Design tokens → Tailwind utilities ──────────────────
-   text-primary, bg-secondary, border-black-5, font-sans …  */
+   text-primary, bg-secondary, border-black-5, font-sans …
+   primary = the accent as a mark, secondary = the accent as a fill. */
 @theme {
-  --color-primary:          #b4342a;   /* seal red — a MARK: links, underlines. Never a fill. */
-  --color-primary-dark:     #9a2b22;
-  --color-primary-light:    #c4564c;
-  --color-secondary:        #12406a;   /* navy — a FIELD: filled controls, grounds. Never a 1px mark. */
-  --color-secondary-dark:   #0b2c4b;
-  --color-secondary-light:  #195a96;
   --color-black-1:          #000000;
   --color-black-2:          #333333;
   --color-black-3:          #666666;
@@ -18,6 +13,16 @@
   --font-sans:  Avenir, Inter, Helvetica, Arial, sans-serif;
   --font-noto:  "Noto Sans KR", Arial, sans-serif;
   --font-mono:  "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+}
+/* Brand utilities follow the theme-switching tokens below (inline so
+   text-primary compiles to color: var(--accent), i.e. theme-aware). */
+@theme inline {
+  --color-primary:          var(--accent);
+  --color-primary-dark:     var(--accent-2);
+  --color-primary-light:    var(--accent);
+  --color-secondary:        var(--accent-fill);
+  --color-secondary-dark:   var(--accent-fill-2);
+  --color-secondary-light:  var(--accent-fill);
 }
 
 /* ── Responsive type & layout tokens ─────────────────────
@@ -50,28 +55,33 @@
 
 /* ── Semantic aliases ────────────────────────────────────
    Colour rule (see v2-design-handoff/DESIGN_RULES.md):
-   navy is a FIELD, seal red is a MARK. Never equal-size side
-   by side, never on pure white — the warm paper ground is
-   load-bearing. */
+   ONE accent — ink blue (ultramarine). Thin things (links,
+   1px underlines, the hot node, focus rings) use --accent;
+   large filled controls use --accent-fill. Both grounds carry
+   the accent's hue at near-zero chroma, so light is a cool
+   paper and dark is ink-navy, never black — the page is drained
+   so the work (images) is the only saturated thing on it. */
 :root {
   color-scheme: light;
 
-  --fg-1: #18181a;  --fg-2: #5f5f63;  --fg-3: #94949a;  --fg-4: #b4b4b9;
-  --hairline: rgba(20,20,22,0.11);
-  --line-soft: rgba(20,20,22,0.06);
-  --color-bg: #f7f7f5;          /* warm paper, NOT white */
+  --fg-1: #16181f;  --fg-2: #5b5f6c;  --fg-3: #767b8a;  --fg-4: #a4a8b4;   /* fg-3 ≈ 3.9:1 — decoration only; small text that carries information uses fg-2 */
+  --hairline: rgba(22,24,40,0.12);
+  --line-soft: rgba(22,24,40,0.06);
+  --color-bg: #f3f4f7;          /* cool paper, NOT white */
+  --ground-2: #eceef2;          /* one step below — WORK, so white plates read as blocks */
   --color-bg-alt: #ffffff;
-  --panel: #ffffff;  --panel-2: #fbfbfa;
+  --panel: #ffffff;  --panel-2: #fafafc;
+  --mat: #ffffff;               /* what every image hangs on */
 
-  /* PRIMARY — seal red. A MARK: links, underlines, one hot node. Never a fill. */
-  --accent: #b4342a;
-  --accent-2: #9a2b22;
-  --accent-rgb: 180,52,42;
-  --accent-bg: rgba(180,52,42,0.10);
+  /* ACCENT — ink blue. Marks: links, underlines, one hot node, focus rings. */
+  --accent: #1a47d6;
+  --accent-2: #0f34b0;          /* hover / pressed (deeper) */
+  --accent-rgb: 26,71,214;
+  --accent-bg: rgba(26,71,214,0.08);
 
-  /* SECONDARY — navy. A FIELD: filled controls, panel grounds. Never a 1px mark. */
-  --navy: #12406a;  --navy-2: #0b2c4b;  --navy-fg: #ffffff;
-  --navy-bg: rgba(18,64,106,0.10);
+  /* the same blue as a FIELD: filled buttons, large controls that light up */
+  --accent-fill: #1a47d6;  --accent-fill-2: #0f34b0;  --accent-fill-fg: #ffffff;
+  --accent-fill-bg: rgba(26,71,214,0.12);
 
   --ease-out: cubic-bezier(0.22,0.61,0.36,1);
   --dur-fast: 250ms;  --dur-base: 300ms;  --dur-slow: 400ms;
@@ -82,17 +92,21 @@
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --fg-1: #ededee;  --fg-2: #9a9aa0;  --fg-3: #5d5d63;
-  --hairline: rgba(235,235,238,0.13);
-  --line-soft: rgba(235,235,238,0.07);
-  --color-bg: #0b0b0c;  --color-bg-alt: #161618;
-  --panel: #161618;  --panel-2: #121214;
+  --fg-1: #e9ebf0;  --fg-2: #9aa0ae;  --fg-3: #737988;  --fg-4: #4b505c;
+  --hairline: rgba(233,235,240,0.13);
+  --line-soft: rgba(233,235,240,0.07);
+  --color-bg: #11151c;          /* ink-navy: the accent with the colour drained out */
+  --ground-2: #11151c;
+  --color-bg-alt: #181d26;
+  --panel: #181d26;  --panel-2: #141820;
+  --mat: #262c37;
 
-  --accent: #d9564a;  --accent-2: #e8796d;
-  --accent-rgb: 217,86,74;  --accent-bg: rgba(217,86,74,0.14);
+  --accent: #6f9bff;  --accent-2: #8fb1ff;   /* hover / pressed (lighter) */
+  --accent-rgb: 111,155,255;  --accent-bg: rgba(111,155,255,0.14);
 
-  --navy: #235f96;  --navy-2: #2d6fab;  --navy-fg: #ffffff;
-  --navy-bg: rgba(35,95,150,0.20);
+  /* the light-blue mark can't hold white text, so fills use a deeper blue */
+  --accent-fill: #2f5fe0;  --accent-fill-2: #3f6ff2;  --accent-fill-fg: #ffffff;
+  --accent-fill-bg: rgba(111,155,255,0.20);
 }
 
 /* ── MDX prose content ───────────────────────────────── */
@@ -150,5 +164,5 @@ body {
 }
 
 ::selection { background: var(--accent-bg); color: var(--accent-2); }
-/* thin rings are marks → seal red; large controls (composer) light navy instead */
+/* thin rings are marks → --accent; a large control (the composer) lights its whole border with --accent-fill-bg instead */
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }

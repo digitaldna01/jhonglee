@@ -4,7 +4,7 @@
    No DOM, no canvas, no timers: callers own the loop and call
    step(). O(n²) repulsion is fine — n is tiny by design.
 
-   createSimulation({ projects, edges, width, height, labels })
+   createSimulation({ projects, edges, width, height, labels, compact })
      .step(noWobble)      advance one tick
      .setSize(w, h)       viewport changed
      .setBounds(top, bottom)  the free vertical band (below the intro,
@@ -50,7 +50,8 @@ const EDGE_MARGIN = 56;
 const DOCK_MARGIN = 128; // fallback when the dock hasn't been measured
 const LABEL_PAD = 18; // room above a node for its label inside the band
 const CLEAR_LABELS = 90; // min centre distance so two 11px labels don't collide
-const CLEAR_DOTS = 48; // …when labels are off (compact)
+const CLEAR_LABELS_COMPACT = 74; // …9.5px labels on a phone
+const CLEAR_DOTS = 48; // …when labels are off
 const FIELD_EASE = 0.05; // how fast the force field re-centres on the cloud's extent
 const OVERSHOOT = 40; // how far the boundary circle pokes past the band, top and bottom
 
@@ -60,9 +61,10 @@ export function createSimulation({
   width,
   height,
   labels = true,
+  compact = false,
 }) {
-  const padTop = labels ? LABEL_PAD : NODE_R; // compact mode draws no labels
-  const clear = labels ? CLEAR_LABELS : CLEAR_DOTS;
+  const padTop = labels ? LABEL_PAD : NODE_R;
+  const clear = labels ? (compact ? CLEAR_LABELS_COMPACT : CLEAR_LABELS) : CLEAR_DOTS;
   let W = width;
   let H = height;
   let t = 0;

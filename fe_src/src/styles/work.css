@@ -5,12 +5,11 @@
 /* ── Page shell ────────────────────────────────────────── */
 .proj-page {
   min-height: 100vh;
-  /* one step below the site's warm paper so white figure blocks read as blocks */
-  background: #efefec;
+  /* one step below the site's paper so white figure blocks read as blocks */
+  background: var(--ground-2);
 }
 /* the navbar must sit on the same ground or a white band appears across the top */
-:root.route-work { --nav-bg: #efefec; }
-:root.route-work[data-theme="dark"] { --nav-bg: #0b0b0c; }
+:root.route-work { --nav-bg: var(--ground-2); }
 .proj-container {
   max-width: 1280px;
   margin: 0 auto;
@@ -54,14 +53,16 @@
 .proj-title {
   font-family: var(--font-sans);
   font-size: var(--d1);
+  text-wrap: balance;
   font-weight: 300;
   line-height: 1;
   letter-spacing: -0.01em;
   color: var(--fg-1);
   margin: 0;
 }
+@media (max-width: 480px) { .proj-title { font-size: 44px; } } /* two lines, & never starts a line */
 .proj-title em  { font-style: normal; font-weight: 300; color: var(--accent); }
-.proj-title .ampersand { font-weight: 300; color: var(--color-secondary); font-style: italic; }
+.proj-title .ampersand { font-weight: 300; } /* one emphasis per headline: "Ideas" */
 
 .proj-lede {
   font-size: var(--body-md);
@@ -106,7 +107,8 @@
   flex-wrap: wrap;
   gap: 16px;
   padding: 12px 0;
-  background: rgba(239, 239, 236, 0.92);
+  /* the page ground at 92% — same token as the page and the navbar, both themes */
+  background: color-mix(in srgb, var(--ground-2) 92%, transparent);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--hairline);
@@ -144,7 +146,7 @@
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--fg-3);
+  color: var(--fg-2);
   min-width: 0;
 }
 .proj-filter-mobile-select {
@@ -175,7 +177,7 @@
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--fg-3);
+  color: var(--fg-2);
   margin-right: 20px;
   background: transparent;
   border: 0;
@@ -218,7 +220,7 @@
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--fg-3);
+  color: var(--fg-2);
 }
 @media (min-width: 768px) {
   .proj-sort { font-size: 11px; }
@@ -421,7 +423,7 @@
   font-size: 11px; font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--fg-3);
+  color: var(--fg-2);
   margin: 0 0 10px;
 }
 .proj-card-meta-divider {
@@ -458,13 +460,13 @@
   font-size: 11px;
   font-weight: 400;
   letter-spacing: 0.04em;
-  color: var(--fg-3);
+  color: var(--fg-2);
   padding: 2px 10px;
   border: 1px solid var(--hairline);
   border-radius: 9999px;
   transition: color var(--dur-base), border-color var(--dur-base);
 }
-.proj-card:hover .proj-card-keyword { border-color: var(--fg-3); color: var(--fg-2); }
+.proj-card:hover .proj-card-keyword { border-color: var(--fg-3); color: var(--fg-1); }
 
 /* LIST ---------------------------------------------------- */
 .proj-list { display: flex; flex-direction: column; }
@@ -525,7 +527,7 @@
 }
 .proj-row:hover .proj-row-title { color: var(--accent-2); }
 .proj-row-sub {
-  font-size: var(--body-sm); color: var(--fg-3); font-weight: 300; margin: 0;
+  font-size: var(--body-sm); color: var(--fg-2); font-weight: 400; margin: 0;
   display: -webkit-box; -webkit-line-clamp: 1; line-clamp: 1;
   -webkit-box-orient: vertical; overflow: hidden;
 }
@@ -533,14 +535,14 @@
   display: none;
   font-size: 11px; font-weight: 600;
   letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--fg-3);
+  color: var(--fg-2);
 }
 @media (min-width: 768px) { .proj-row-keywords { display: block; } }
 .proj-row-date {
   display: none;
   font-size: 12px; font-weight: 600;
   letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--fg-3);
+  color: var(--fg-2);
   font-variant-numeric: tabular-nums;
 }
 @media (min-width: 768px) { .proj-row-date { display: block; } }
@@ -554,20 +556,18 @@
 .proj-row:hover .proj-row-arrow { color: var(--accent-2); transform: translateX(6px); }
 
 /* Empty state */
-.proj-empty { text-align: center; padding: 96px 0; color: var(--fg-3); }
+.proj-empty { text-align: center; padding: 96px 0; color: var(--fg-2); }
 .proj-empty-title { font-size: var(--h4); font-weight: 400; color: var(--fg-2); margin: 0 0 8px; }
 .proj-empty p { margin: 0; font-size: var(--body-sm); }
 
 /* ── Dark mode is a gallery, not an inversion ───────────── */
-[data-theme="dark"] .proj-page    { background: #0b0b0c; }
-[data-theme="dark"] .proj-toolbar { background: rgba(11, 11, 12, 0.92); }
 
 /* every image hangs on the same neutral mat — light-ground and dark-ground alike */
 [data-theme="dark"] .proj-card.is-figure  .proj-card-thumb,
 [data-theme="dark"] .proj-card.is-artwork .proj-card-thumb,
 [data-theme="dark"] .proj-row.is-figure   .proj-row-thumb,
-[data-theme="dark"] .proj-row.is-artwork  .proj-row-thumb { background: #26262a; border-color: transparent; }
-[data-theme="dark"] .proj-card.is-noimage .proj-card-thumb { background: #161618; }
+[data-theme="dark"] .proj-row.is-artwork  .proj-row-thumb { background: var(--mat); border-color: transparent; }
+[data-theme="dark"] .proj-card.is-noimage .proj-card-thumb { background: var(--panel); }
 
 /* figures are paper: keep them contained, take the glare off */
 [data-theme="dark"] .proj-card.is-figure  .proj-card-thumb-img { padding: 11%; filter: brightness(0.9); }
@@ -607,7 +607,7 @@
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.12em;
-  color: var(--fg-3);
+  color: var(--fg-2);
   background: none;
   border: 0;
   padding: 2px 6px;

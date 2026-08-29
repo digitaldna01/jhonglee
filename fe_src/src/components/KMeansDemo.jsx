@@ -62,7 +62,7 @@ const unproject = (v, px, py) => [(px - v.tx) / v.scale, (v.ty - py) / v.scale];
 // — Segmented toggle (replaces a native <select>) —
 function Segmented({ options, value, onChange, disabled }) {
   return (
-    <div className="inline-flex flex-wrap gap-0.5 rounded-md border border-black-5 bg-white p-0.5">
+    <div className="inline-flex flex-wrap gap-0.5 rounded-md border border-[var(--hairline)] bg-[var(--panel)] p-0.5">
       {options.map((o) => {
         const active = o.value === value;
         return (
@@ -73,8 +73,8 @@ function Segmented({ options, value, onChange, disabled }) {
             onClick={() => onChange(o.value)}
             className={`rounded px-2.5 py-1 text-xs font-medium transition-colors disabled:opacity-40 ${
               active
-                ? "bg-secondary text-white"
-                : "text-black-3 hover:bg-black-5/30 hover:text-secondary"
+                ? "bg-secondary text-[var(--accent-fill-fg)]"
+                : "text-[var(--fg-2)] hover:bg-[var(--line-soft)] hover:text-secondary"
             }`}
           >
             {o.label}
@@ -112,11 +112,11 @@ function Chevron({ dir }) {
 function Stepper({ label, value, min, max, step = 1, onChange, disabled }) {
   const set = (v) => onChange(Math.max(min, Math.min(max, v)));
   const tick =
-    "flex h-6 w-6 items-center justify-center rounded text-black-3 transition-colors hover:bg-black-5/30 hover:text-secondary disabled:opacity-30";
+    "flex h-6 w-6 items-center justify-center rounded text-[var(--fg-2)] transition-colors hover:bg-[var(--line-soft)] hover:text-secondary disabled:opacity-30";
   return (
     <div className="inline-flex items-center gap-1.5">
-      <span className="text-[11px] uppercase tracking-wider text-black-4">{label}</span>
-      <div className="inline-flex items-center rounded-md border border-black-5 bg-white">
+      <span className="text-[11px] uppercase tracking-wider text-[var(--fg-3)]">{label}</span>
+      <div className="inline-flex items-center rounded-md border border-[var(--hairline)] bg-[var(--panel)]">
         <button
           type="button"
           className={tick}
@@ -126,7 +126,7 @@ function Stepper({ label, value, min, max, step = 1, onChange, disabled }) {
         >
           <Chevron dir="left" />
         </button>
-        <span className="w-9 text-center text-sm tabular-nums text-black-2">{value}</span>
+        <span className="w-9 text-center text-sm tabular-nums text-[var(--fg-1)]">{value}</span>
         <button
           type="button"
           className={tick}
@@ -160,8 +160,8 @@ function Sparkline({ values, index }) {
   return (
     <svg width={w} height={h} aria-hidden="true">
       <path d={path(values.length - 1)} fill="none" stroke="var(--hairline)" strokeWidth="1.5" />
-      <path d={path(index)} fill="none" stroke="#ff8c00" strokeWidth="1.5" />
-      <circle cx={x(index)} cy={y(values[index])} r="2.5" fill="#ff8c00" />
+      <path d={path(index)} fill="none" style={{ stroke: "var(--accent)" }} strokeWidth="1.5" />
+      <circle cx={x(index)} cy={y(values[index])} r="2.5" style={{ fill: "var(--accent)" }} />
     </svg>
   );
 }
@@ -322,9 +322,12 @@ export default function KMeansDemo() {
     });
 
     const centroids = cur ? cur.centroids : manual;
+    // manual centroids (not yet clustered) take the site accent, read at draw time
+    const accent =
+      getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#1a47d6";
     centroids.forEach((ctr, j) => {
       const [px, py] = project(view, ctr[0], ctr[1]);
-      const color = cur ? PALETTE[j % PALETTE.length] : "#12406a";
+      const color = cur ? PALETTE[j % PALETTE.length] : accent;
       const a = 14;
       // soft halo disc
       ctx.beginPath();
@@ -358,7 +361,7 @@ export default function KMeansDemo() {
   const cost = cur ? cur.inertia : null;
 
   let status;
-  let statusTone = "text-black-3";
+  let statusTone = "text-[var(--fg-2)]";
   if (error) {
     status = error;
     statusTone = "text-[#c0392b]";
@@ -378,13 +381,13 @@ export default function KMeansDemo() {
     "inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed";
 
   return (
-    <div className="not-prose my-7 w-full overflow-hidden rounded-xl border border-black-5 bg-white shadow-[var(--shadow-card)]">
+    <div className="not-prose my-7 w-full overflow-hidden rounded-xl border border-[var(--hairline)] bg-[var(--mat)] shadow-[var(--shadow-card)]">
       {/* header */}
-      <div className="flex items-center justify-between gap-3 border-b border-black-5 bg-[var(--color-bg-alt)] px-4 py-2.5">
-        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-black-3">
+      <div className="flex items-center justify-between gap-3 border-b border-[var(--hairline)] bg-[var(--color-bg-alt)] px-4 py-2.5">
+        <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--fg-2)]">
           k-means · lloyd
         </span>
-        <span className="font-mono text-xs tabular-nums text-black-4">
+        <span className="font-mono text-xs tabular-nums text-[var(--fg-3)]">
           cost{" "}
           <span className={cost != null ? "font-semibold text-secondary" : ""}>
             {cost != null ? cost.toFixed(1) : "—"}
@@ -395,11 +398,11 @@ export default function KMeansDemo() {
       {/* controls */}
       <div className="flex flex-col gap-2.5 px-4 pb-1 pt-3">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="w-9 text-[11px] uppercase tracking-wider text-black-4">init</span>
+          <span className="w-9 text-[11px] uppercase tracking-wider text-[var(--fg-3)]">init</span>
           <Segmented options={INIT_METHODS} value={init} onChange={handleInitChange} disabled={busy} />
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="w-9 text-[11px] uppercase tracking-wider text-black-4">data</span>
+          <span className="w-9 text-[11px] uppercase tracking-wider text-[var(--fg-3)]">data</span>
           <Segmented options={DATASETS} value={dataset} onChange={handleDatasetChange} disabled={busy} />
         </div>
         <div className="flex flex-wrap items-center gap-4 pt-0.5">
@@ -427,7 +430,7 @@ export default function KMeansDemo() {
             type="button"
             onClick={() => fetchDataset(numPoints, dataset)}
             disabled={busy}
-            className={`${btn} border border-black-5 text-black-3 hover:border-secondary hover:text-secondary`}
+            className={`${btn} border border-[var(--hairline)] text-[var(--fg-2)] hover:border-secondary hover:text-secondary`}
           >
             ↻ new data
           </button>
@@ -448,12 +451,12 @@ export default function KMeansDemo() {
       </div>
 
       {/* footer */}
-      <div className="flex flex-wrap items-center gap-2 border-t border-black-5 bg-[var(--color-bg-alt)] px-4 py-3">
+      <div className="flex flex-wrap items-center gap-2 border-t border-[var(--hairline)] bg-[var(--color-bg-alt)] px-4 py-3">
         <button
           type="button"
           onClick={handleStep}
           disabled={busy || !points.length}
-          className={`${btn} border border-secondary text-secondary hover:bg-secondary hover:text-white`}
+          className={`${btn} border border-secondary text-secondary hover:bg-secondary hover:text-[var(--accent-fill-fg)]`}
         >
           ▸ Step
         </button>
@@ -461,7 +464,7 @@ export default function KMeansDemo() {
           type="button"
           onClick={handleRun}
           disabled={busy || !points.length}
-          className={`${btn} bg-secondary text-white hover:bg-secondary-dark`}
+          className={`${btn} bg-secondary text-[var(--accent-fill-fg)] hover:bg-secondary-dark`}
         >
           ▸▸ Run
         </button>
@@ -469,7 +472,7 @@ export default function KMeansDemo() {
           type="button"
           onClick={resetRun}
           disabled={busy}
-          className={`${btn} text-black-3 hover:bg-black-5/30 hover:text-secondary`}
+          className={`${btn} text-[var(--fg-2)] hover:bg-[var(--line-soft)] hover:text-secondary`}
         >
           Reset
         </button>

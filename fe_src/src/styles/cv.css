@@ -83,7 +83,7 @@
 .cv-date {
   font-family: var(--font-mono);
   font-size: var(--text-meta);
-  color: var(--fg-3);
+  color: var(--fg-2); /* a recruiter reads dates — information, not decoration */
   letter-spacing: 0.01em;
   line-height: 1.5;
 }

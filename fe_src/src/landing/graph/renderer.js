@@ -7,22 +7,23 @@
    ============================================================ */
 
 const LABEL_FONT = "500 11px 'IBM Plex Mono', ui-monospace, monospace";
+const LABEL_FONT_COMPACT = "500 9.5px 'IBM Plex Mono', ui-monospace, monospace"; // phones: smaller, but named
 
 export function readPalette(theme) {
   const dark = theme === 'dark';
   const cs = getComputedStyle(document.documentElement);
-  const hot = (cs.getPropertyValue('--accent') || '#b4342a').trim();
-  const rgb = (cs.getPropertyValue('--accent-rgb') || '180,52,42').trim();
+  const hot = (cs.getPropertyValue('--accent') || '#1a47d6').trim();
+  const rgb = (cs.getPropertyValue('--accent-rgb') || '26,71,214').trim();
   return {
-    edge: dark ? 'rgba(235,235,238,0.10)' : 'rgba(20,20,22,0.085)',
+    edge: dark ? 'rgba(233,235,240,0.16)' : 'rgba(22,24,40,0.16)',
     edgeHot: `rgba(${rgb},0.55)`,
-    node: dark ? 'rgba(235,235,238,0.34)' : 'rgba(20,20,22,0.30)',
-    nodeDim: dark ? 'rgba(235,235,238,0.13)' : 'rgba(20,20,22,0.12)',
+    node: `rgba(${rgb},${dark ? 0.58 : 0.5})`, // the accent at rest, so the map reads as the site's own
+    nodeDim: dark ? 'rgba(233,235,240,0.13)' : 'rgba(22,24,40,0.12)',
     nodeHot: hot,
     ring: `rgba(${rgb},0.31)`,
-    label: dark ? 'rgba(235,235,238,0.82)' : 'rgba(20,20,22,0.78)',
-    labelDim: dark ? 'rgba(235,235,238,0.24)' : 'rgba(20,20,22,0.22)',
-    labelIdle: dark ? 'rgba(235,235,238,0.52)' : 'rgba(20,20,22,0.46)',
+    label: dark ? 'rgba(233,235,240,0.82)' : 'rgba(22,24,40,0.78)',
+    labelDim: dark ? 'rgba(233,235,240,0.24)' : 'rgba(22,24,40,0.22)',
+    labelIdle: dark ? 'rgba(233,235,240,0.60)' : 'rgba(22,24,40,0.56)',
   };
 }
 
@@ -64,10 +65,10 @@ export function draw(ctx, sim, palette, hoverId, { width, height, compact = fals
     ctx.fill();
 
     // labels: always on hover, faint when idle, hidden while a hover
-    // focuses attention elsewhere; on narrow screens only the hovered /
-    // tapped node is labelled (eight 11px labels don't fit a phone)
-    if (isHover || (!hoverId && !compact)) {
-      ctx.font = LABEL_FONT;
+    // focuses attention elsewhere. Narrow screens keep them too, smaller —
+    // an unnamed dot is decoration, a named one is a link.
+    if (isHover || !hoverId) {
+      ctx.font = compact ? LABEL_FONT_COMPACT : LABEL_FONT;
       ctx.textAlign = 'center';
       ctx.fillStyle = isHover ? c.label : dimmed ? c.labelDim : c.labelIdle;
       ctx.fillText(n.label.toLowerCase(), n.x, n.y - n.r - 8);

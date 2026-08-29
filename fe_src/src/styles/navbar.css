@@ -1,7 +1,7 @@
 /* ── Navbar ──────────────────────────────────────────────
    Reference: v2-design-handoff/design/shared/chrome.css
    Pages whose ground differs from --color-bg override the
-   navbar background via --nav-bg (e.g. WORK sets #efefec). */
+   navbar background via --nav-bg (e.g. WORK sets --ground-2). */
 
 .site-nav {
   position: sticky;
