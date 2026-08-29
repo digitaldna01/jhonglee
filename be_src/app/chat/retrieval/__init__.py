@@ -23,7 +23,7 @@ from ...content.repository import NODES, by_id
 from ...core.config import get_settings
 from .. import embedding, ingest
 from ..store import VectorStore, select_store
-from .edges import build_edges
+from .edges import EDGE_K, EDGE_Z, build_edges
 from .hybrid import CONTEXT_WEIGHT, KEYWORD_WEIGHT, RRF_K, contextual_query, rank, rrf
 
 __all__ = [
@@ -62,12 +62,15 @@ async def warmup() -> ingest.SyncReport:
     return report
 
 
-def edges(z: float | None = None) -> list[dict]:
-    """Similarity edges for the landing map; `z` overrides the σ threshold
-    (an experiment knob — the default is what the map ships with)."""
+def edges(z: float | None = None, k: int | None = None) -> list[dict]:
+    """Similarity edges for the landing map; `z` overrides the σ floor and `k`
+    the mutual-kNN size (experiment knobs — the defaults are what the map
+    ships with; k=0 drops the reciprocity rule)."""
     if _edges is None:
         raise RuntimeError("retrieval.warmup() has not run")
-    return _edges if z is None else build_edges(NODES, _summary_vecs, z=z)
+    if z is None and k is None:
+        return _edges
+    return build_edges(NODES, _summary_vecs, z=EDGE_Z if z is None else z, k=EDGE_K if k is None else k)
 
 
 async def _ready() -> VectorStore:

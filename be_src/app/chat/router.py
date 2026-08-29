@@ -24,8 +24,11 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 
 
 @router.get("/graph", response_model=GraphResponse)
-def graph(z: float | None = Query(default=None, ge=0.0, le=4.0, description="edge σ threshold (experiment knob)")):
-    return service.graph(z)
+def graph(
+    z: float | None = Query(default=None, ge=0.0, le=4.0, description="edge σ floor (experiment knob)"),
+    k: int | None = Query(default=None, ge=0, le=10, description="mutual-kNN size, 0 = off (experiment knob)"),
+):
+    return service.graph(z, k)
 
 
 def _sse(event: str, data: dict) -> str:

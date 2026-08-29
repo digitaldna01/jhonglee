@@ -39,7 +39,7 @@ be_src/app/
     router.py           HTTP만: /graph, /stream(SSE 직렬화)
     service.py          retrieve → context → generate 오케스트레이션, (event, payload) 이벤트 생성
     retrieval/          패키지(규칙 6 첫 적용): __init__ warmup(인덱스 sync + 엣지)·edges·retrieve(context_title=) /
-                        hybrid.py dense + 키워드 + 앵커를 점수 융합(rank) / edges.py 그래프 엣지(평균+0.5σ 이상 쌍만, 부유 허용)
+                        hybrid.py dense + 키워드 + 앵커를 점수 융합(rank) / edges.py 그래프 엣지(상호 2-NN ∩ 평균+0.5σ, 부유 허용)
     embedding.py        fastembed 로드 + 카탈로그 밖 모델 등록(CUSTOM). app import 없음 → Dockerfile이 직접 실행해 사전 다운로드
     store.py            VectorStore 인터페이스: search(코사인)·keyword_search(tsvector | BM25) — PgVectorStore | MemoryStore(SQLite 폴백); 공용 토크나이저
     ingest.py           corpus.json → 청크 계획(해시) → 바뀐 것만 임베딩·삽입, 사라진 것 삭제. `python -m app.chat.ingest`
