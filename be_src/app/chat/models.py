@@ -13,8 +13,10 @@ of it (what the in-memory numpy matrix used to be), kept in sync by
                  through untouched) for the keyword half of hybrid search
   chat_logs      one row per answered question: what was asked, what was
                  retrieved (ids + scores), what was answered, by which
-                 model, how fast. The raw material for growing the golden
-                 set and judging retrieval after the fact. Append-only.
+                 model, how fast, and how many tokens it cost (NULL for
+                 extractive fallbacks). The raw material for growing the
+                 golden set, judging retrieval after the fact and the cost
+                 report (scripts/usage_report.py). Append-only.
 
 EMBED_DIM must match the embedding model (bge-small: 384). Changing to a
 model with another dimension needs a migration that alters the column
@@ -83,6 +85,8 @@ class ChatLog(Base):
     answer: Mapped[str] = mapped_column(Text)
     model: Mapped[str] = mapped_column(Text)
     retrieval_ms: Mapped[float] = mapped_column(Float)
+    input_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)  # model usage; None = fallback
+    output_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), index=True
     )

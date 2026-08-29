@@ -53,8 +53,7 @@ async def answer(
     to the session and logged."""
     turns = client_history[-history.HISTORY_MAX * 2 :]
     context_title: str | None = None
-    has_session = bool(visitor_id and session_id)
-    if has_session:
+    if visitor_id and session_id:  # (not a bool flag: keeps the Optional narrowing for the type checker)
         session = await history.load_session(visitor_id, session_id)
         turns = session["turns"] or turns
         if session["last_sources"]:
@@ -77,15 +76,17 @@ async def answer(
 
     parts: list[str] = []
     model = ""
+    usage: dict = {}
     async for name, payload in generation.generate(question, retrieved, turns):
         if name == "delta":
             parts.append(payload["text"])
         elif name == "done":
             model = payload["model"]
+            usage = {k: payload.get(k) for k in ("input_tokens", "output_tokens")}
         yield name, payload
 
     answer_text = "".join(parts)
-    if has_session:
+    if visitor_id and session_id:
         await history.append(
             visitor_id, session_id, question, answer_text, sources=[s["id"] for s in sources]
         )
@@ -98,4 +99,5 @@ async def answer(
             answer=answer_text,
             model=model,
             retrieval_ms=retrieval_ms,
+            **usage,
         )

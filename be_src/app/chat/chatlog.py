@@ -19,6 +19,8 @@ async def record(
     answer: str,
     model: str,
     retrieval_ms: float,
+    input_tokens: int | None = None,
+    output_tokens: int | None = None,
 ) -> None:
     try:
         async with session_factory()() as s, s.begin():
@@ -31,6 +33,8 @@ async def record(
                     answer=answer,
                     model=model,
                     retrieval_ms=retrieval_ms,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
                 )
             )
     except Exception as e:  # noqa: BLE001 — observability must not take down chat

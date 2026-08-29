@@ -89,7 +89,8 @@ async def evaluate(store, embed_query, **opts) -> dict:
     # the session's last_sources[0]; its title anchors the follow-up
     fu: dict = {}
     for case in GOLDEN.get("followup", []):
-        prev_title = by_id((await ids(case["prev"]))[0])["title"]
+        prev_doc = by_id((await ids(case["prev"]))[0])
+        prev_title = prev_doc["title"] if prev_doc else ""
         got = await ids(case["q"], prev_title)
         expect = set(case["expect"])
         t = fu.setdefault(case["type"], {"n": 0, "r1": 0, "rk": 0, "misses": []})

@@ -8,6 +8,12 @@ from app.chat import history, retrieval
 from app.content.repository import by_id
 
 
+def _title(doc_id: str) -> str:
+    doc = by_id(doc_id)
+    assert doc is not None
+    return doc["title"]
+
+
 def test_rrf_prefers_docs_ranked_well_in_both():
     fused = retrieval.rrf([["a", "b", "c"], ["b", "a", "d"]])
     assert fused[:2] in (["a", "b"], ["b", "a"])  # tie at the top, order irrelevant
@@ -31,7 +37,7 @@ def test_session_keeps_last_sources_and_contextual_query():
 
 def test_retrieve_anchors_ellipsis_without_sticking_on_topic_switch():
     # cases the golden set shows the title anchor fixes / must not break
-    quantum, blender = by_id("quantumSimulator")["title"], by_id("cogsAndGears")["title"]
+    quantum, blender = _title("quantumSimulator"), _title("cogsAndGears")
 
     async def run():
         anchored = await retrieval.retrieve(

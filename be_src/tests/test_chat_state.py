@@ -78,3 +78,17 @@ def test_stream_sets_cookie_keeps_session_and_rate_limits(monkeypatch):
         c.post("/api/chat/stream", json={"question": "third"})
         r4 = c.post("/api/chat/stream", json={"question": "fourth"})
         assert r4.status_code == 429 and r4.headers["Retry-After"] == "60"
+        assert r4.headers["X-RateLimit-Scope"] == "visitor"
+
+
+def test_global_daily_cap_trips_after_everyone_combined(monkeypatch):
+    monkeypatch.setenv("CHAT_RATE_GLOBAL_PER_DAY", "2")
+    with TestClient(app) as c:
+        assert c.post("/api/chat/stream", json={"question": "one"}).status_code == 200
+        c.cookies.clear()  # a different visitor
+        assert c.post("/api/chat/stream", json={"question": "two"}).status_code == 200
+        c.cookies.clear()
+        r = c.post("/api/chat/stream", json={"question": "three"})
+        assert r.status_code == 429 and r.headers["X-RateLimit-Scope"] == "global"
+        assert "come back tomorrow" in r.json()["detail"]
+        assert r.headers["Retry-After"] == "86400"

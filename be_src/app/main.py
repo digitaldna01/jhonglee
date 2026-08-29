@@ -29,6 +29,7 @@ def create_app() -> FastAPI:
         allow_credentials=True,  # anonymous visitor cookie
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["Retry-After", "X-RateLimit-Scope"],  # the 429 details, readable cross-origin (Vite dev)
     )
 
     @app.get("/api/health", tags=["meta"])

@@ -19,13 +19,16 @@ export async function fetchGraph({ signal } = {}) {
  *   (history is still sent for older backends; the server prefers its own).
  *   onSources({sources, retrieval_ms, retrieval_model}) fires once,
  *   onDelta(text) per chunk; resolves with the `done` payload {model}.
- *   Throws RateLimitError (429) when the visitor has asked too much.
+ *   Throws RateLimitError (429) when the visitor has asked too much —
+ *   scope 'visitor' | 'ip' (wait a minute) or 'global' (the site-wide
+ *   daily budget is spent; back tomorrow).
  */
 export class RateLimitError extends Error {
-  constructor(retryAfter) {
+  constructor(retryAfter, scope = 'visitor') {
     super('rate limited');
     this.name = 'RateLimitError';
     this.retryAfter = retryAfter;
+    this.scope = scope;
   }
 }
 
@@ -36,7 +39,12 @@ export async function streamAnswer({ question, sessionId, history = [], onSource
     body: JSON.stringify({ question, session_id: sessionId, history }),
     signal,
   });
-  if (res.status === 429) throw new RateLimitError(Number(res.headers.get('Retry-After')) || 60);
+  if (res.status === 429) {
+    throw new RateLimitError(
+      Number(res.headers.get('Retry-After')) || 60,
+      res.headers.get('X-RateLimit-Scope') || 'visitor',
+    );
+  }
   if (!res.ok || !res.body) throw new Error(`chat stream failed: ${res.status}`);
 
   const reader = res.body.getReader();

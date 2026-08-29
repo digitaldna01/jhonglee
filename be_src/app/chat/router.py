@@ -32,20 +32,31 @@ def _sse(event: str, data: dict) -> str:
     return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
 
 
+LIMIT_MESSAGES = {
+    "global": "The assistant has answered a lot of questions today and is taking a rest — please come back tomorrow.",
+    "visitor": "Too many questions — please wait a moment.",
+    "ip": "Too many questions — please wait a moment.",
+}
+
+
 async def _rate_limit(request: Request, visitor_id: str = Depends(get_visitor_id)) -> str:
-    """Per-visitor and per-IP fixed windows; both must pass. Returns the visitor id."""
+    """Per-visitor, per-IP and site-wide fixed windows; all must pass.
+    Returns the visitor id. The site-wide daily cap is the hard ceiling on
+    the Claude bill (cap × cost per answer); it is counted last so one
+    abuser trips their own limit before eating into everyone's budget."""
     settings = get_settings()
     limiter = RateLimiter(get_cache())
     ip = get_client_ip(request)
     try:
-        for who in (f"v:{visitor_id}", f"ip:{ip}"):
-            await limiter.hit(f"rl:chat:min:{who}", settings.chat_rate_per_minute, 60)
-            await limiter.hit(f"rl:chat:day:{who}", settings.chat_rate_per_day, 86400)
+        for scope, who in (("visitor", f"v:{visitor_id}"), ("ip", f"ip:{ip}")):
+            await limiter.hit(f"rl:chat:min:{who}", settings.chat_rate_per_minute, 60, scope=scope)
+            await limiter.hit(f"rl:chat:day:{who}", settings.chat_rate_per_day, 86400, scope=scope)
+        await limiter.hit("rl:chat:day:global", settings.chat_rate_global_per_day, 86400, scope="global")
     except RateLimited as e:
         raise HTTPException(
             status_code=429,
-            detail="Too many questions — please wait a moment.",
-            headers={"Retry-After": str(e.retry_after)},
+            detail=LIMIT_MESSAGES.get(e.scope, LIMIT_MESSAGES["visitor"]),
+            headers={"Retry-After": str(e.retry_after), "X-RateLimit-Scope": e.scope},
         ) from None
     return visitor_id
 

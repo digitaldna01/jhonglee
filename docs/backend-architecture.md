@@ -14,7 +14,8 @@
 | RAG 프레임워크 | **직접 구현** (LangChain/LangGraph 미사용) — 2026-08-29 결정 | 파이프라인 전체가 500줄 안쪽이고 모든 단계가 보임(토크나이저·SQL·정규화까지 열어봐야 했던 문제들이 실제로 있었음). LangChain은 API 변동이 잦아 "오래 쓸 사이트"와 안 맞고, 학습 목표(RAG를 깊이)와도 충돌. `service.answer()`가 전송 무관 이벤트 제너레이터라, 흐름이 그래프(조건 분기·재검색 루프·도구 선택)가 되는 P3 이후엔 LangGraph를 **배선 계층**으로만 `chat/graph.py`에 도입 가능 — 조각(embedding/store/generation)은 그대로. LangChain의 Document/VectorStore/Retriever 추상화는 그때도 안 씀(하이브리드 검색은 raw SQL) |
 | 정체성      | **익명 visitor 쿠키** (`core/deps.py`), OAuth 없음 | 좋아요 중복 방지·댓글 귀속에 충분. 세부(닉네임 등)는 social 구현 때 결정                           |
 | 챗 히스토리 | **서버 저장** — Redis, TTL 7일 (2026-08-29 구현)     | 클라이언트는 페이지당 `session_id`만 보냄. 옛 클라이언트의 history도 받되 서버 사본이 우선          |
-| 레이트 리밋 | 방문자 쿠키 **+ IP** 이중, 분/일 고정 윈도우 (`core/ratelimit.py`) | Claude 호출은 돈. 키를 프로덕션에 넣기 전 필수. IP는 `CF-Connecting-IP` → XFF → peer 순 |
+| 레이트 리밋 | 방문자 쿠키 **+ IP** 이중, 분/일 고정 윈도우 **+ 사이트 전역 일일 상한**(`CHAT_RATE_GLOBAL_PER_DAY`=500) (`core/ratelimit.py`) | Claude 호출은 돈. 전역 상한이 청구서의 하드캡(500 × ≈$0.003 = 하루 $1.5, 월 $45 이상 불가). 마지막에 세어 한 남용자가 남의 예산을 먹기 전에 자기 한도에 걸리게. 429에 `X-RateLimit-Scope`(visitor/ip/global)를 실어 프런트가 문구를 고름. IP는 `CF-Connecting-IP` → XFF → peer 순 |
+| 생성 모델   | **Claude Haiku 4.5** (`CHAT_MODEL`), 제공사 추상화 없음 — 2026-08-29 조사 후 유지 | 채팅 SSE는 첫 토큰 지연이 전부: Haiku 4.5는 추론 없음이 기본이라 설정 없이 TTFT <1s, 2026 경쟁 소형 모델(GPT-5.6 Luna, Gemini 3.5 Flash-Lite)은 기본이 reasoning이라 추론을 꺼야 하고 그 상태 품질 자료가 없음. 답변당 ≈$0.003 → 월 $5 수준이라 가격은 결정 요인 아님. Gemini 무료 티어는 방문자 질문이 학습 데이터로 쓰여 프로덕션 제외. 두 번째 제공사가 필요해지면 `generation/` 패키지로 승격(규칙 6). 키 발급 후 Sonnet 5 판정자로 답변 품질 골든셋 측정 예정 |
 | 검색 융합   | **점수 합** `cos(q) + 0.3·cos(q+앵커 제목) + 0.1·kw`, RRF 아님 — 2026-08-29 | 9문서 코퍼스에선 dense 후보가 곧 전체라 RRF가 평평해져 키워드 리스트 *소속*이 순위를 지배. 코사인 크기를 살리는 점수 합이 골든셋 전 항목에서 우위 (rag-design-notes §2.6). `rrf()`는 대안 융합으로 유지 |
 | 대화 로그   | **Postgres `chat_logs`** append-only                 | 질문·검색 결과(id+score)·답·모델·시간. 골든셋 확장과 사후 검색 품질 판단의 재료. 쓰기 실패해도 답변은 안 깨짐 |
 
@@ -145,6 +146,9 @@ POST /api/social/posts/{slug}/likes  GET/POST /api/social/posts/{slug}/comments
   (첫 부팅 30청크 2.6s, 이후 0.0s). 임베딩 모델을 바꾸면 해시가 전부 달라져 자동 재임베딩 — 단 차원이
   바뀌면(384→1024) `vector(N)` 컬럼·HNSW 인덱스 마이그레이션이 먼저 필요
 - 키워드 인덱스: `rag_chunks.tsv`는 생성 컬럼이라 Postgres가 삽입 시 스스로 채움 — 인제스트 코드는 모름 (0004)
+- 비용 관리 3겹: ① 콘솔 — 자동 충전 끔(선불 크레딧이 곧 하드캡), 월 지출 한도·알림 ② 앱 — 방문자/IP 리밋 + 전역 일일 상한 ③ 관찰 —
+  `chat_logs.input_tokens/output_tokens`(0005, Anthropic 스트림의 usage)로 `scripts/usage_report.py`가 일별 토큰·USD·30일 예상치를 출력.
+  키 오류(401)·크레딧 소진(400)·모델 퇴역(404)은 전부 추출식 폴백으로 서비스가 유지되며 이유는 backend 로그 WARNING에 남는다
 - `chat_logs`는 디스크(Docker 볼륨, microSD)에만 쌓이고 요청 경로에서 읽지 않는다 — 행당 ~1 KB, 하루 50질문이면 연 20 MB.
   Postgres RAM은 `shared_buffers=32MB`·`mem_limit 256m`로 고정. 골든셋 채굴은 `docker compose exec -T backend python scripts/mine_golden.py --out -`
 - 로컬: `docker-compose.local.yml`(프로덕션 동형, Postgres 5433·Redis 6380 노출) / `docker-compose.dev.yml`(핫 리로드).

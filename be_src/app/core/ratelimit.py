@@ -16,7 +16,7 @@ from .cache import KVCache
 
 @dataclass
 class RateLimited(Exception):
-    scope: str
+    scope: str  # "visitor" | "ip" | "global" — or the key when no scope was given
     limit: int
     window: int
 
@@ -29,11 +29,11 @@ class RateLimiter:
     def __init__(self, cache: KVCache) -> None:
         self._cache = cache
 
-    async def hit(self, key: str, limit: int, window: int) -> int:
+    async def hit(self, key: str, limit: int, window: int, *, scope: str | None = None) -> int:
         """Count one request against `key`; return the count or raise RateLimited."""
         if limit <= 0:
             return 0
         n = await self._cache.incr(key, ttl=window)
         if n > limit:
-            raise RateLimited(scope=key, limit=limit, window=window)
+            raise RateLimited(scope=scope or key, limit=limit, window=window)
         return n

@@ -106,9 +106,11 @@ export default function useChat(graphRef) {
     } catch (err) {
       if (err instanceof RateLimitError) {
         const wait = Math.ceil(err.retryAfter / 60);
-        reveal(botId, `Too many questions for now — try again in about ${wait} minute${wait > 1 ? 's' : ''}.`, () =>
-          finishBot(botId, { model: 'rate limited' }),
-        );
+        const text =
+          err.scope === 'global'
+            ? "I've answered a lot of questions today and I'm taking a rest — please come back tomorrow."
+            : `Too many questions for now — try again in about ${wait} minute${wait > 1 ? 's' : ''}.`;
+        reveal(botId, text, () => finishBot(botId, { model: 'rate limited' }));
         return;
       }
       /* backend unreachable — answer on-device with the same shape */

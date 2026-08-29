@@ -33,13 +33,15 @@ app/
     history.py            server-side sessions in the cache (Redis): turns + last_sources, keyed by visitor + session_id
     chatlog.py            append-only chat_logs rows (best-effort)
   demos/kmeans/           stateless demo API
-migrations/               Alembic; env.py reads DATABASE_URL. 0001 pgvector ext, 0002 rag tables, 0003 chat_logs, 0004 rag_chunks.tsv
+migrations/               Alembic; env.py reads DATABASE_URL. 0001 pgvector ext, 0002 rag tables, 0003 chat_logs, 0004 rag_chunks.tsv, 0005 chat_logs tokens
 docker-entrypoint.sh      `alembic upgrade head`, then uvicorn
-tests/                    smoke (TestClient), cache, ingest, chat state, follow-up, hybrid, mine_golden (+ Postgres tests via TEST_DATABASE_URL)
+tests/                    smoke (TestClient), cache, ingest, chat state (incl. global cap), follow-up, hybrid, mine_golden, usage_report
+                          (+ Postgres tests via TEST_DATABASE_URL)
 scripts/eval_retrieval.py golden-set retrieval eval (recall@1/@4 EN+KO, two-turn follow-ups, timing, peak RSS); `--sweep` ranking
                           constants, `--pg` the Postgres path — run before changing model/chunking/fusion weights
 scripts/mine_golden.py    chat_logs → golden_candidates.json (real questions + what retrieval returned, flags, session
                           follow-ups); label `expect`, then `--merge` into golden_set.json. `--out -` for the Pi
+scripts/usage_report.py   chat_logs → per-day questions / answered / tokens / USD at list price, 30-day projection
 ```
 
 When a module outgrows one file, turn it into a package of the same name
@@ -72,6 +74,7 @@ pytest                                      # add TEST_DATABASE_URL=postgresql+a
 | `ANTHROPIC_API_KEY` | *(unset → extractive answers)* | |
 | `CHAT_MODEL` | `claude-haiku-4-5` | |
 | `CHAT_RATE_PER_MINUTE` / `CHAT_RATE_PER_DAY` | `10` / `100` | per visitor **and** per IP on `POST /api/chat/stream`; `0` disables a window |
+| `CHAT_RATE_GLOBAL_PER_DAY` | `500` | site-wide daily cap = the hard ceiling on the Claude bill (500 × ≈$0.003 ≈ $1.5/day). 429 carries `X-RateLimit-Scope: global` |
 | `CHAT_HISTORY_TTL_DAYS` | `7` | server-side session lifetime |
 | `EMBED_MODEL` | `Xenova/paraphrase-multilingual-MiniLM-L12-v2-q8` | fastembed catalog name or a `chat/embedding.CUSTOM` key; the Dockerfile `ARG` bakes the same default. 384-d is baked into `rag_chunks.embedding` |
 

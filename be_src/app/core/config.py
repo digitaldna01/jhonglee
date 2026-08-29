@@ -18,6 +18,9 @@
   CHAT_RATE_PER_MINUTE / CHAT_RATE_PER_DAY
                       per-visitor and per-IP ceilings on POST /api/chat/stream
                       (each Claude call costs money; 0 disables a window)
+  CHAT_RATE_GLOBAL_PER_DAY
+                      site-wide ceiling per day — the hard cap on the bill:
+                      answers/day × cost per answer (≈ $0.003 on Haiku 4.5)
 """
 import os
 from functools import lru_cache
@@ -37,6 +40,7 @@ class Settings:
         self.chat_history_ttl_days = int(os.getenv("CHAT_HISTORY_TTL_DAYS", "7"))
         self.chat_rate_per_minute = int(os.getenv("CHAT_RATE_PER_MINUTE", "10"))
         self.chat_rate_per_day = int(os.getenv("CHAT_RATE_PER_DAY", "100"))
+        self.chat_rate_global_per_day = int(os.getenv("CHAT_RATE_GLOBAL_PER_DAY", "500"))
 
 
 @lru_cache
