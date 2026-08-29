@@ -12,7 +12,9 @@
 | 캐시/세션   | **`core/cache.py` 인터페이스**, 구현 memory \| **Redis** | 2026-08-29 RedisCache 구현·compose 추가. `REDIS_URL` 하나로 선택. 챗 세션·레이트리밋·시맨틱 캐시의 자리 |
 | 벡터 저장   | **pgvector** (별도 벡터 DB 없음)                    | 사이트 규모에서 Qdrant급 스케일은 불필요, 운영 표면 최소화. retrieval.py의 저장소 부분만 교체하면 나중에 전용 벡터 DB로 이전 가능 |
 | 정체성      | **익명 visitor 쿠키** (`core/deps.py`), OAuth 없음 | 좋아요 중복 방지·댓글 귀속에 충분. 세부(닉네임 등)는 social 구현 때 결정                           |
-| 챗 히스토리 | **서버 저장 예정** — Redis, TTL 7일                | `chat/history.py`에 설계만 기록. 켜기 전까지 클라이언트가 히스토리를 보냄                          |
+| 챗 히스토리 | **서버 저장** — Redis, TTL 7일 (2026-08-29 구현)     | 클라이언트는 페이지당 `session_id`만 보냄. 옛 클라이언트의 history도 받되 서버 사본이 우선          |
+| 레이트 리밋 | 방문자 쿠키 **+ IP** 이중, 분/일 고정 윈도우 (`core/ratelimit.py`) | Claude 호출은 돈. 키를 프로덕션에 넣기 전 필수. IP는 `CF-Connecting-IP` → XFF → peer 순 |
+| 대화 로그   | **Postgres `chat_logs`** append-only                 | 질문·검색 결과(id+score)·답·모델·시간. 골든셋 확장과 사후 검색 품질 판단의 재료. 쓰기 실패해도 답변은 안 깨짐 |
 
 ## 레이아웃
 
@@ -24,7 +26,8 @@ be_src/app/
     lifespan.py         시작: 임베딩 warmup / 종료: cache close, DB dispose
     db.py               async 엔진(지연 생성) + get_session Depends + Base
     cache.py            KVCache 프로토콜 (get/set/delete/incr/close + ttl) — MemoryCache | RedisCache
-    deps.py             get_visitor_id (익명 쿠키 jhl_vid)
+    deps.py             get_visitor_id (익명 쿠키 jhl_vid), get_client_ip (Cloudflare/nginx 뒤 실제 IP)
+    ratelimit.py        RateLimiter(cache).hit(key, limit, window) — 고정 윈도우, INCR+TTL
   content/              축 ②: "내가 만든 것" — 읽기 전용, corpus.json이 소스 (chat이 빌려 씀)
     repository.py       corpus.json 로더 (DOCS / NODES / BIO / by_id)
     service.py          list_posts · get · exists · nodes  ← 타 기능은 여기만 호출
@@ -36,15 +39,16 @@ be_src/app/
     embedding.py        fastembed 로드 + 카탈로그 밖 모델 등록(CUSTOM). app import 없음 → Dockerfile이 직접 실행해 사전 다운로드
     store.py            VectorStore 인터페이스: PgVectorStore(pgvector) | MemoryStore(numpy, SQLite 폴백)
     ingest.py           corpus.json → 청크 계획(해시) → 바뀐 것만 임베딩·삽입, 사라진 것 삭제. `python -m app.chat.ingest`
-    models.py           rag_documents · rag_chunks (vector(384), HNSW) — corpus.json의 파생 인덱스
+    models.py           rag_documents · rag_chunks (vector(384), HNSW) — corpus.json의 파생 인덱스; chat_logs
     generation.py       Claude 스트리밍(AsyncAnthropic) + 추출식 폴백 — (event, payload) async 제너레이터
     prompts.py          시스템 프롬프트·컨텍스트 조립 — 톤 수정은 여기서
-    history.py          서버 세션 설계 (구현 예정)
+    history.py          서버 세션: load/append/clear — cache 키 chat:session:{vid}:{sid}, 마지막 8교환
+    chatlog.py          chat_logs 기록 (best-effort)
     schemas.py
   demos/kmeans/         축 ②: 인터랙티브 데모 API (router · service · schemas)
   social/               축 ③ (예정): 좋아요·댓글·챗 히스토리 — __init__ docstring에 계획
 tests/                  TestClient 스모크 (기능별 1개 이상)
-be_src/migrations/      Alembic (env.py는 DATABASE_URL을 읽음; 0001 = pgvector 확장, 0002 = rag_* 테이블 + HNSW)
+be_src/migrations/      Alembic (env.py는 DATABASE_URL을 읽음; 0001 pgvector 확장, 0002 rag_* + HNSW, 0003 chat_logs)
 be_src/docker-entrypoint.sh  `alembic upgrade head` 후 uvicorn — 컨테이너 시작마다 스키마 동기화
 ```
 
@@ -65,7 +69,8 @@ be_src/docker-entrypoint.sh  `alembic upgrade head` 후 uvicorn — 컨테이너
    | --------------------------------- | --------- | ------------------------------------ |
    | 파생 콘텐츠 (corpus.json)         | 배포 단위 | 파일 → 메모리 (`content.repository`) |
    | ML 런타임 (임베딩 모델)           | 프로세스  | 메모리, lifespan warmup              |
-   | 세션/휘발 (챗 히스토리, 카운터)   | TTL       | `core.cache`                         |
+   | 세션/휘발 (챗 히스토리, 레이트리밋 카운터) | TTL | `core.cache` (Redis) — `chat/history.py`, `core/ratelimit.py` |
+   | 대화 로그 (append-only)            | 영구      | `chat_logs` (Postgres)               |
    | 영속 사용자 데이터 (좋아요, 댓글) | 영구      | `core.db` (Postgres)                 |
    | 청크 벡터 (corpus.json의 인덱스)   | 콘텐츠 해시 | `rag_chunks.embedding` (pgvector) — 시작 시 증분 sync |
 
@@ -93,7 +98,7 @@ be_src/docker-entrypoint.sh  `alembic upgrade head` 후 uvicorn — 컨테이너
 ```
 GET  /api/health
 GET  /api/content/posts              GET /api/content/posts/{slug}
-GET  /api/chat/graph                 POST /api/chat/stream (SSE)
+GET  /api/chat/graph                 POST /api/chat/stream (SSE; body {question, session_id?, history?}; 429 + Retry-After)
 GET  /api/kmeans/dataset             POST /api/kmeans/run
 --- planned ---
 POST /api/social/posts/{slug}/likes  GET/POST /api/social/posts/{slug}/comments

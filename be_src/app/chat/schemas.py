@@ -13,6 +13,9 @@ class ChatTurn(BaseModel):
 
 class ChatRequest(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
+    # client-minted per page load; when present the server keeps the history
+    session_id: str | None = Field(default=None, max_length=64, pattern=r"^[A-Za-z0-9_-]+$")
+    # older clients send the transcript themselves; ignored once a server session exists
     history: list[ChatTurn] = []
 
 

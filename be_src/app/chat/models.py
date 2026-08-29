@@ -8,6 +8,10 @@ of it (what the in-memory numpy matrix used to be), kept in sync by
   rag_chunks     one row per embedded passage; the primary key embeds the
                  content hash, so a changed chunk is a new row and the old
                  one is deleted — no in-place updates, no stale vectors
+  chat_logs      one row per answered question: what was asked, what was
+                 retrieved (ids + scores), what was answered, by which
+                 model, how fast. The raw material for growing the golden
+                 set and judging retrieval after the fact. Append-only.
 
 EMBED_DIM must match the embedding model (bge-small: 384). Changing to a
 model with another dimension needs a migration that alters the column
@@ -18,7 +22,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Text, func
+from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ..core.db import Base
@@ -57,4 +61,20 @@ class RagChunk(Base):
     embedding: Mapped[list[float]] = mapped_column(Vector(EMBED_DIM))
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
+    )
+
+
+class ChatLog(Base):
+    __tablename__ = "chat_logs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    visitor_id: Mapped[str] = mapped_column(Text, index=True)
+    session_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    question: Mapped[str] = mapped_column(Text)
+    sources: Mapped[list] = mapped_column(JSON)  # [{id, kind, title, score}] as sent to the client
+    answer: Mapped[str] = mapped_column(Text)
+    model: Mapped[str] = mapped_column(Text)
+    retrieval_ms: Mapped[float] = mapped_column(Float)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
     )

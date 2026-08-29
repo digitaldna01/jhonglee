@@ -27,3 +27,19 @@ def get_visitor_id(request: Request, response: Response) -> str:
             secure=request.url.scheme == "https",
         )
     return vid
+
+
+def get_client_ip(request: Request) -> str:
+    """Best-effort client address for rate limiting.
+
+    Order: Cloudflare's CF-Connecting-IP (the site is proxied through
+    Cloudflare; nginx forwards unknown headers untouched) → first hop of
+    X-Forwarded-For (nginx) → the socket peer (local dev).
+    """
+    cf = request.headers.get("cf-connecting-ip")
+    if cf:
+        return cf.strip()
+    xff = request.headers.get("x-forwarded-for")
+    if xff:
+        return xff.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"

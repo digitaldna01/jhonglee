@@ -15,16 +15,28 @@ export async function fetchGraph({ signal } = {}) {
 
 /**
  * Stream an answer over SSE.
+ *   sessionId: per-page-load id — the server keeps the transcript under it
+ *   (history is still sent for older backends; the server prefers its own).
  *   onSources({sources, retrieval_ms, retrieval_model}) fires once,
  *   onDelta(text) per chunk; resolves with the `done` payload {model}.
+ *   Throws RateLimitError (429) when the visitor has asked too much.
  */
-export async function streamAnswer({ question, history = [], onSources, onDelta, signal }) {
+export class RateLimitError extends Error {
+  constructor(retryAfter) {
+    super('rate limited');
+    this.name = 'RateLimitError';
+    this.retryAfter = retryAfter;
+  }
+}
+
+export async function streamAnswer({ question, sessionId, history = [], onSources, onDelta, signal }) {
   const res = await fetch('/api/chat/stream', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ question, history }),
+    body: JSON.stringify({ question, session_id: sessionId, history }),
     signal,
   });
+  if (res.status === 429) throw new RateLimitError(Number(res.headers.get('Retry-After')) || 60);
   if (!res.ok || !res.body) throw new Error(`chat stream failed: ${res.status}`);
 
   const reader = res.body.getReader();

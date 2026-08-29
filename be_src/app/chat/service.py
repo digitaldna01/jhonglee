@@ -11,9 +11,8 @@ from collections.abc import AsyncIterator
 
 from ..content import service as content
 from ..core.config import get_settings
-from . import generation, retrieval
+from . import chatlog, generation, history, retrieval
 
-HISTORY_MAX = 8  # prior turns carried into a follow-up question
 TOP_K = 4
 
 
@@ -42,19 +41,54 @@ def graph() -> dict:
     }
 
 
-async def answer(question: str, history: list[dict]) -> AsyncIterator[tuple[str, dict]]:
+async def answer(
+    question: str,
+    client_history: list[dict],
+    *,
+    visitor_id: str | None = None,
+    session_id: str | None = None,
+) -> AsyncIterator[tuple[str, dict]]:
+    """sources → delta* → done. With a session, the server-side transcript
+    wins over whatever the client sent; afterwards the exchange is appended
+    to the session and logged."""
+    turns = client_history[-history.HISTORY_MAX * 2 :]
+    has_session = bool(visitor_id and session_id)
+    if has_session:
+        turns = await history.load(visitor_id, session_id) or turns
+
     t0 = time.perf_counter()
     retrieved = await retrieval.retrieve(question, k=TOP_K)
-    retrieval_ms = (time.perf_counter() - t0) * 1000
+    retrieval_ms = round((time.perf_counter() - t0) * 1000, 1)
 
+    sources = [
+        {"id": r["id"], "kind": r["kind"], "title": r["title"], "score": round(r["score"], 3)}
+        for r in retrieved
+    ]
     yield "sources", {
-        "sources": [
-            {"id": r["id"], "kind": r["kind"], "title": r["title"], "score": round(r["score"], 3)}
-            for r in retrieved
-        ],
-        "retrieval_ms": round(retrieval_ms, 1),
+        "sources": sources,
+        "retrieval_ms": retrieval_ms,
         "retrieval_model": retrieval_label(),
     }
 
-    async for event in generation.generate(question, retrieved, history[-HISTORY_MAX:]):
-        yield event
+    parts: list[str] = []
+    model = ""
+    async for name, payload in generation.generate(question, retrieved, turns):
+        if name == "delta":
+            parts.append(payload["text"])
+        elif name == "done":
+            model = payload["model"]
+        yield name, payload
+
+    answer_text = "".join(parts)
+    if has_session:
+        await history.append(visitor_id, session_id, question, answer_text)
+    if visitor_id:
+        await chatlog.record(
+            visitor_id=visitor_id,
+            session_id=session_id,
+            question=question,
+            sources=sources,
+            answer=answer_text,
+            model=model,
+            retrieval_ms=retrieval_ms,
+        )

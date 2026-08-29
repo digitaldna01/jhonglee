@@ -17,6 +17,7 @@ app/
     config.py             env → Settings (every knob is documented in its docstring)
     db.py                 SQLAlchemy async engine (Postgres; SQLite fallback), session_factory
     cache.py              KVCache protocol — MemoryCache | RedisCache (REDIS_URL)
+    ratelimit.py          fixed-window RateLimiter on top of the cache
     lifespan.py           startup: retrieval.warmup() / shutdown: cache + db
   content/                corpus.json loader + /api/content/* (read-only; the corpus source)
   chat/                   /api/chat/* — the RAG pipeline
@@ -29,8 +30,10 @@ app/
     models.py             rag_documents, rag_chunks (vector(384), HNSW)
     generation.py         Claude streaming (AsyncAnthropic) + extractive fallback
     prompts.py            system prompt + context assembly
+    history.py            server-side sessions in the cache (Redis), keyed by visitor + session_id
+    chatlog.py            append-only chat_logs rows (best-effort)
   demos/kmeans/           stateless demo API
-migrations/               Alembic; env.py reads DATABASE_URL. 0001 pgvector ext, 0002 rag tables
+migrations/               Alembic; env.py reads DATABASE_URL. 0001 pgvector ext, 0002 rag tables, 0003 chat_logs
 docker-entrypoint.sh      `alembic upgrade head`, then uvicorn
 tests/                    smoke (TestClient), cache, ingest (+ Postgres test via TEST_DATABASE_URL)
 scripts/eval_retrieval.py golden-set retrieval eval (recall@1/@4 EN+KO, timing, peak RSS) — run before changing model/chunking
@@ -65,6 +68,8 @@ pytest                                      # add TEST_DATABASE_URL=postgresql+a
 | `REDIS_URL` | *(unset → in-memory)* | compose: `redis://redis:6379/0` |
 | `ANTHROPIC_API_KEY` | *(unset → extractive answers)* | |
 | `CHAT_MODEL` | `claude-haiku-4-5` | |
+| `CHAT_RATE_PER_MINUTE` / `CHAT_RATE_PER_DAY` | `10` / `100` | per visitor **and** per IP on `POST /api/chat/stream`; `0` disables a window |
+| `CHAT_HISTORY_TTL_DAYS` | `7` | server-side session lifetime |
 | `EMBED_MODEL` | `Xenova/paraphrase-multilingual-MiniLM-L12-v2-q8` | fastembed catalog name or a `chat/embedding.CUSTOM` key; the Dockerfile `ARG` bakes the same default. 384-d is baked into `rag_chunks.embedding` |
 
 ## API surface
@@ -72,7 +77,7 @@ pytest                                      # add TEST_DATABASE_URL=postgresql+a
 ```
 GET  /api/health
 GET  /api/content/posts            GET  /api/content/posts/{slug}
-GET  /api/chat/graph               POST /api/chat/stream   (SSE: sources → delta* → done)
+GET  /api/chat/graph               POST /api/chat/stream   (SSE: sources → delta* → done; 429 + Retry-After when rate-limited)
 GET  /api/kmeans/dataset           POST /api/kmeans/run
 ```
 

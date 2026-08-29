@@ -10,10 +10,13 @@
    over with the same message shape — the UI never special-cases.
    ============================================================ */
 import { useCallback, useRef, useState } from 'react';
-import { streamAnswer } from './rag/client';
+import { RateLimitError, streamAnswer } from './rag/client';
 import { embed, retrieve } from './data/retrieval';
 import { answer as localAnswer, HISTORY_MAX } from './rag/generate';
 
+
+// one server-side chat session per page load (see be_src chat/history.py)
+const SESSION_ID = crypto.randomUUID();
 let nextId = 1;
 
 export default function useChat(graphRef) {
@@ -90,6 +93,7 @@ export default function useChat(graphRef) {
       let answerText = '';
       const done = await streamAnswer({
         question: q,
+        sessionId: SESSION_ID,
         history,
         onSources,
         onDelta: (chunk) => {
@@ -99,7 +103,14 @@ export default function useChat(graphRef) {
       });
       record(answerText);
       finishBot(botId, { model: done.model });
-    } catch {
+    } catch (err) {
+      if (err instanceof RateLimitError) {
+        const wait = Math.ceil(err.retryAfter / 60);
+        reveal(botId, `Too many questions for now — try again in about ${wait} minute${wait > 1 ? 's' : ''}.`, () =>
+          finishBot(botId, { model: 'rate limited' }),
+        );
+        return;
+      }
       /* backend unreachable — answer on-device with the same shape */
       const t0 = performance.now();
       const qvec = await embed(q);

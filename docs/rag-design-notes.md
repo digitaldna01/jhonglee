@@ -154,7 +154,8 @@ relations:
 - [x] **P2-0** 인프라: Postgres+pgvector, Redis, Alembic, compose 3종 — 2026-08-29
 - [x] **P2-1** rag_documents/rag_chunks(vector(384), HNSW) + `chat/ingest.py` 해시 sync + retrieval→pgvector, 챗 경로 async — 2026-08-29
       청크 id = `{doc}#{sha256(model+passage)[:12]}` (DB 쪽에서 생성 — build-corpus.mjs 수정 불필요)
-- [ ] **P2-2** 서버 세션(Redis, history.py) + 레이트 리밋 + 대화/검색 로그 테이블
+- [x] **P2-2** 서버 세션(Redis, history.py) + 레이트 리밋(방문자+IP) + `chat_logs` — 2026-08-29.
+      프런트는 페이지당 `session_id` 전송, 429는 안내 문구로 처리. 시맨틱 캐시는 로그로 반복 질문 비율을 본 뒤 결정
 - [ ] **P2** 하이브리드 검색 (pgvector + tsvector, RRF) + 골든셋 평가 스크립트
 - [ ] **P3** corpus.json을 커밋 대상에서 제외 — CI(deploy.yml)가 `npm run corpus`를 돌려 백엔드 이미지에
       아티팩트로 포함하거나 `POST /api/admin/ingest`로 전달. 동기화를 사람 기억에서 CI로.

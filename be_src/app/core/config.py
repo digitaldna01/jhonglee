@@ -15,6 +15,9 @@
                       run by the container entrypoint)
   REDIS_URL           when set, the KV cache uses Redis; otherwise in-memory
   CHAT_HISTORY_TTL_DAYS  how long server-side chat sessions live in the cache
+  CHAT_RATE_PER_MINUTE / CHAT_RATE_PER_DAY
+                      per-visitor and per-IP ceilings on POST /api/chat/stream
+                      (each Claude call costs money; 0 disables a window)
 """
 import os
 from functools import lru_cache
@@ -32,6 +35,8 @@ class Settings:
         self.database_url = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./data/app.db")
         self.redis_url = os.getenv("REDIS_URL", "")
         self.chat_history_ttl_days = int(os.getenv("CHAT_HISTORY_TTL_DAYS", "7"))
+        self.chat_rate_per_minute = int(os.getenv("CHAT_RATE_PER_MINUTE", "10"))
+        self.chat_rate_per_day = int(os.getenv("CHAT_RATE_PER_DAY", "100"))
 
 
 @lru_cache
