@@ -23,24 +23,25 @@ app/
   chat/                   /api/chat/* — the RAG pipeline
     router.py             HTTP only (SSE serialisation)
     service.py            retrieve → context → generate, as (event, payload) async events
-    retrieval.py          warmup (index sync + graph edges), retrieve()
+    retrieval/            package: __init__ (warmup, edges, retrieve) · hybrid (dense + keyword + follow-up anchor, score fusion) · edges (graph)
     embedding.py          fastembed loader + custom (non-catalog) model registry; run directly by the Dockerfile
-    store.py              VectorStore: PgVectorStore (pgvector) | MemoryStore (numpy fallback)
+    store.py              VectorStore: PgVectorStore (pgvector + tsvector) | MemoryStore (numpy + BM25 fallback); shared tokeniser
     ingest.py             corpus → chunk plan (content hash) → embed only what changed
-    models.py             rag_documents, rag_chunks (vector(384), HNSW)
+    models.py             rag_documents, rag_chunks (vector(384) HNSW + generated tsvector GIN), chat_logs
     generation.py         Claude streaming (AsyncAnthropic) + extractive fallback
     prompts.py            system prompt + context assembly
     history.py            server-side sessions in the cache (Redis): turns + last_sources, keyed by visitor + session_id
     chatlog.py            append-only chat_logs rows (best-effort)
   demos/kmeans/           stateless demo API
-migrations/               Alembic; env.py reads DATABASE_URL. 0001 pgvector ext, 0002 rag tables, 0003 chat_logs
+migrations/               Alembic; env.py reads DATABASE_URL. 0001 pgvector ext, 0002 rag tables, 0003 chat_logs, 0004 rag_chunks.tsv
 docker-entrypoint.sh      `alembic upgrade head`, then uvicorn
-tests/                    smoke (TestClient), cache, ingest (+ Postgres test via TEST_DATABASE_URL)
-scripts/eval_retrieval.py golden-set retrieval eval (recall@1/@4 EN+KO, two-turn follow-ups, timing, peak RSS) — run before changing model/chunking
+tests/                    smoke (TestClient), cache, ingest, chat state, follow-up, hybrid (+ Postgres tests via TEST_DATABASE_URL)
+scripts/eval_retrieval.py golden-set retrieval eval (recall@1/@4 EN+KO, two-turn follow-ups, timing, peak RSS); `--sweep` ranking
+                          constants, `--pg` the Postgres path — run before changing model/chunking/fusion weights
 ```
 
 When a module outgrows one file, turn it into a package of the same name
-(`retrieval.py` → `retrieval/{__init__,dense,hybrid}.py`) so imports stay
+(`retrieval.py` → `retrieval/{__init__,hybrid,edges}.py`, done 2026-08-29) so imports stay
 `from .retrieval import retrieve` — see rule 6 in the architecture doc.
 
 ## Run

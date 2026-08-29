@@ -12,8 +12,8 @@ docs/       설계 결정 기록 — backend-architecture.md, rag-design-notes.m
 ## 아키텍처 한눈에
 
 ```
-mdx 포스트 ──(npm run corpus)──▶ corpus.json ──▶ 백엔드 시작 시 해시 대조 → 바뀐 청크만 임베딩 → Postgres(pgvector)
-브라우저 ──POST /api/chat/stream──▶ FastAPI ──▶ pgvector 검색 → Claude 스트리밍 ──SSE──▶ 브라우저
+mdx 포스트 ──(npm run corpus)──▶ corpus.json ──▶ 백엔드 시작 시 해시 대조 → 바뀐 청크만 임베딩 → Postgres(pgvector + tsvector)
+브라우저 ──POST /api/chat/stream──▶ FastAPI ──▶ 하이브리드 검색(코사인 + 키워드, 점수 융합) → Claude 스트리밍 ──SSE──▶ 브라우저
                                      └─ Redis: 세션·카운터 (core/cache.py)
 ```
 

@@ -15,6 +15,7 @@
 | 정체성      | **익명 visitor 쿠키** (`core/deps.py`), OAuth 없음 | 좋아요 중복 방지·댓글 귀속에 충분. 세부(닉네임 등)는 social 구현 때 결정                           |
 | 챗 히스토리 | **서버 저장** — Redis, TTL 7일 (2026-08-29 구현)     | 클라이언트는 페이지당 `session_id`만 보냄. 옛 클라이언트의 history도 받되 서버 사본이 우선          |
 | 레이트 리밋 | 방문자 쿠키 **+ IP** 이중, 분/일 고정 윈도우 (`core/ratelimit.py`) | Claude 호출은 돈. 키를 프로덕션에 넣기 전 필수. IP는 `CF-Connecting-IP` → XFF → peer 순 |
+| 검색 융합   | **점수 합** `cos(q) + 0.3·cos(q+앵커 제목) + 0.1·kw`, RRF 아님 — 2026-08-29 | 9문서 코퍼스에선 dense 후보가 곧 전체라 RRF가 평평해져 키워드 리스트 *소속*이 순위를 지배. 코사인 크기를 살리는 점수 합이 골든셋 전 항목에서 우위 (rag-design-notes §2.6). `rrf()`는 대안 융합으로 유지 |
 | 대화 로그   | **Postgres `chat_logs`** append-only                 | 질문·검색 결과(id+score)·답·모델·시간. 골든셋 확장과 사후 검색 품질 판단의 재료. 쓰기 실패해도 답변은 안 깨짐 |
 
 ## 레이아웃
@@ -36,11 +37,12 @@ be_src/app/
   chat/                 축 ①: 랜딩 RAG  (content에 의존, 역방향 없음)
     router.py           HTTP만: /graph, /stream(SSE 직렬화)
     service.py          retrieve → context → generate 오케스트레이션, (event, payload) 이벤트 생성
-    retrieval.py        warmup(인덱스 sync + 엣지)·retrieve(context_title=) — 후속 질문은 이전 턴 1위 제목으로 앵커, 가중 RRF
+    retrieval/          패키지(규칙 6 첫 적용): __init__ warmup(인덱스 sync + 엣지)·edges·retrieve(context_title=) /
+                        hybrid.py dense + 키워드 + 앵커를 점수 융합(rank) / edges.py 그래프 엣지
     embedding.py        fastembed 로드 + 카탈로그 밖 모델 등록(CUSTOM). app import 없음 → Dockerfile이 직접 실행해 사전 다운로드
-    store.py            VectorStore 인터페이스: PgVectorStore(pgvector) | MemoryStore(numpy, SQLite 폴백)
+    store.py            VectorStore 인터페이스: search(코사인)·keyword_search(tsvector | BM25) — PgVectorStore | MemoryStore(SQLite 폴백); 공용 토크나이저
     ingest.py           corpus.json → 청크 계획(해시) → 바뀐 것만 임베딩·삽입, 사라진 것 삭제. `python -m app.chat.ingest`
-    models.py           rag_documents · rag_chunks (vector(384), HNSW) — corpus.json의 파생 인덱스; chat_logs
+    models.py           rag_documents · rag_chunks (vector(384) HNSW + tsv 생성 컬럼 GIN) — corpus.json의 파생 인덱스; chat_logs
     generation.py       Claude 스트리밍(AsyncAnthropic) + 추출식 폴백 — (event, payload) async 제너레이터
     prompts.py          시스템 프롬프트·컨텍스트 조립 — 톤 수정은 여기서
     history.py          서버 세션: load_session/append/clear — 키 chat:session:{vid}:{sid}, 마지막 8교환 + last_sources
@@ -86,9 +88,8 @@ be_src/docker-entrypoint.sh  `alembic upgrade head` 후 uvicorn — 컨테이너
    re-export하므로 호출부 import(`from .retrieval import retrieve`)는 그대로.
 
    ```
-   chat/retrieval.py            →   chat/retrieval/__init__.py   (retrieve, warmup, edges re-export)
-                                    chat/retrieval/dense.py      (pgvector 검색)
-                                    chat/retrieval/hybrid.py     (BM25 + RRF)
+   chat/retrieval.py            →   chat/retrieval/__init__.py   (warmup, edges, retrieve — 2026-08-29 승격됨)
+                                    chat/retrieval/hybrid.py     (dense + 키워드 + 앵커, 점수 융합)
                                     chat/retrieval/edges.py      (그래프 엣지)
    chat/models.py               →   chat/models/__init__.py, models/rag.py, models/log.py
    ```
@@ -143,6 +144,7 @@ POST /api/social/posts/{slug}/likes  GET/POST /api/social/posts/{slug}/comments
 - RAG 인덱스: 시작 시 `retrieval.warmup()`이 corpus.json과 `rag_chunks`를 해시로 대조해 바뀐 청크만 임베딩
   (첫 부팅 30청크 2.6s, 이후 0.0s). 임베딩 모델을 바꾸면 해시가 전부 달라져 자동 재임베딩 — 단 차원이
   바뀌면(384→1024) `vector(N)` 컬럼·HNSW 인덱스 마이그레이션이 먼저 필요
+- 키워드 인덱스: `rag_chunks.tsv`는 생성 컬럼이라 Postgres가 삽입 시 스스로 채움 — 인제스트 코드는 모름 (0004)
 - 로컬: `docker-compose.local.yml`(프로덕션 동형, Postgres 5433·Redis 6380 노출) / `docker-compose.dev.yml`(핫 리로드).
   Docker 없이 `pytest`·uvicorn만 돌리면 SQLite + MemoryCache로 폴백
 - 2026-08-29 이전의 `backend-data` 볼륨(SQLite)은 더 이상 마운트하지 않음 — 데이터 없었음(social 미구현)

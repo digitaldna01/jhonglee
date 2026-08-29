@@ -7,7 +7,10 @@ of it (what the in-memory numpy matrix used to be), kept in sync by
   rag_documents  one row per corpus doc (metadata for filters/joins)
   rag_chunks     one row per embedded passage; the primary key embeds the
                  content hash, so a changed chunk is a new row and the old
-                 one is deleted — no in-place updates, no stale vectors
+                 one is deleted — no in-place updates, no stale vectors.
+                 `tsv` is a generated full-text column over the passage
+                 (english config: stopwords + stemming, Hangul passes
+                 through untouched) for the keyword half of hybrid search
   chat_logs      one row per answered question: what was asked, what was
                  retrieved (ids + scores), what was answered, by which
                  model, how fast. The raw material for growing the golden
@@ -22,12 +25,14 @@ from __future__ import annotations
 from datetime import datetime
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Integer, Text, func
+from sqlalchemy import JSON, Boolean, Computed, DateTime, Float, ForeignKey, Integer, Text, func
+from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ..core.db import Base
 
 EMBED_DIM = 384
+FTS_CONFIG = "english"  # text-search config for rag_chunks.tsv — keep in step with migration 0004
 
 
 class RagDocument(Base):
@@ -59,6 +64,9 @@ class RagChunk(Base):
     is_summary: Mapped[bool] = mapped_column(Boolean, default=False)
     model: Mapped[str] = mapped_column(Text)
     embedding: Mapped[list[float]] = mapped_column(Vector(EMBED_DIM))
+    tsv = mapped_column(  # keyword index, maintained by Postgres (see FTS_CONFIG)
+        TSVECTOR, Computed(f"to_tsvector('{FTS_CONFIG}', passage)", persisted=True), nullable=True
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

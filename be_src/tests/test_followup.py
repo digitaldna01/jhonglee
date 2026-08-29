@@ -1,4 +1,5 @@
-"""Follow-up handling: RRF fusion, the contextual query, and last_question."""
+"""Follow-up handling: the contextual query, session last_sources, and the anchor
+(retrieval.rrf stays available as the alternative fusion — see hybrid.rank)."""
 from __future__ import annotations
 
 import asyncio

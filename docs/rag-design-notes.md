@@ -79,7 +79,7 @@ relations:                  # 온톨로지-라이트 (§3)
 | 기법 | 내용 | 보고된 효과 | 이 사이트 판정 |
 |---|---|---|---|
 | **Contextual Retrieval** | 청크 앞에 문서 문맥 요약을 붙여서 임베딩 (Anthropic) | top-20 검색 실패 35%↓, BM25 결합 시 49%↓, 리랭킹까지 67%↓ | ✅ **채택** — LLM 없이 frontmatter 템플릿으로: `"From {title} ({kind}, {tags}): {chunk}"` |
-| **하이브리드 검색** | dense 임베딩 + BM25 키워드, RRF로 융합 | 고유명사·정확 키워드 질문 보완, 단일 방식 대비 일관된 우위 | ✅ **채택** — `rank-bm25` 몇 줄, 인프라 불필요. "XGBoost 써봤어?" 류 질문에 결정적 |
+| **하이브리드 검색** | dense 임베딩 + BM25 키워드, RRF로 융합 | 고유명사·정확 키워드 질문 보완, 단일 방식 대비 일관된 우위 | ✅ **구현 (2026-08-29, §2.6)** — Postgres `tsvector`(GIN) + 메모리 BM25. 융합은 RRF가 아니라 점수 합 — 이 규모에선 RRF가 평평해짐 |
 | **부모-자식(계층) 청킹** | 작은 자식 청크(128–256tok)로 검색, 큰 부모(512–1024tok)를 LLM에 제공 | 2025–26 프로덕션에서 가장 널리 채택된 패턴 | ✅ **채택(간이형)** — 섹션 청크로 검색, 컨텍스트엔 summary + 해당 섹션 |
 | **청크 크기** | 사실형 256–512tok, 분석형 512–1024tok | — | 섹션(`##`) 경계 우선, 256–512tok 목표 |
 | **청크 오버랩** | 10–20% 권장이 통설 | 2026-01 체계 분석에선 이득 없음, 인덱싱 비용만 증가 | 섹션 경계 청킹이라 **오버랩 불필요** |
@@ -118,7 +118,7 @@ relations:                  # 온톨로지-라이트 (§3)
 - 양자화 품질 손실 없음. recall@4는 동일 100%. **EN recall@1 손실 2건 중 하나가 "What did you build with k-means?"** —
   토크나이저가 `k-means`를 `k / - / me / ans`로 쪼개 개념을 못 잡고 "build"가 cogsAndGears("translated … into an interactive
   experience")에 끌림 (0.320 vs 0.299). `kmeans`·"k-means project"는 정상. top-4엔 들어가므로 Claude 답변엔 영향 없고
-  추출식 폴백만 틀림 → **하이브리드 검색(정확 토큰 매칭)이 고칠 대표 케이스**. `scripts/eval_retrieval.py`가 miss@1도 출력
+  추출식 폴백만 틀림 → **하이브리드 검색(정확 토큰 매칭)이 고칠 대표 케이스** → §2.6에서 해결(EN 12/12). `scripts/eval_retrieval.py`가 miss@1도 출력
 - fp32 원본(+560MB)은 2GB Pi에 불가 → int8(+354MB)로. 예산 ≈ 250 + 1.1GB + 150 = 1.5GB/1.8GB, backend mem_limit 1300m
 - 남은 KO 실패 1건 "일러스트 작품 보여줘": visualArtPortfolio 본문 청크 0개 → 콘텐츠 보강으로 해결
 - 대안으로 검토했던 것: Haiku 질문 재작성(메모리 0, API 의존) → 멀티턴 후속 질문 재작성 용도로 보류. `bge-m3`(1024-d)는 fastembed 0.8 미지원
@@ -144,24 +144,77 @@ relations:                  # 온톨로지-라이트 (§3)
 | 질문 단독 (기준) | — | 1/7 / 6/7 | 5/5 / 5/5 | 1/2 / 2/2 |
 | RRF(q, **prev+q**) | 임베딩 +1 | 3/7 / 6/7 | **4/5** ↓ | **0/2 / 1/2** ↓ — 긴 이전 질문이 랭킹을 지배 |
 | RRF(q, q+prev) w=0.6 | 〃 | 3/7 / 7/7 | 4/5 ↓ | 1/2 / 2/2 |
-| **wRRF(q, q + 이전 턴 1위 문서 제목) w=0.6 — 채택** | 〃 (제목은 세션 `last_sources[0]`) | **4/7 / 7/7** | 5/5 / 5/5 | **2/2 / 2/2** |
+| **wRRF(q, q + 이전 턴 1위 문서 제목) w=0.6 — 1차 채택** | 〃 (제목은 세션 `last_sources[0]`) | **4/7 / 7/7** | 5/5 / 5/5 | **2/2 / 2/2** |
+| **점수 합 cos(q) + 0.3·cos(q+제목) + 0.1·키워드 — 현재 (§2.6)** | 〃 + 키워드 SQL 1회 | **7/7 / 7/7** | 5/5 / 5/5 | 2/2 / 2/2 |
 | 질문 재작성 (Haiku condense) | API +1콜, +0.3~0.5초 | (미측정 — 키 필요) | | |
 
 채택 이유: A가 오르고 B·D 무손실. "후속 질문은 방금 얘기한 **그것**에 관한 것"을 이전 질문 전문이 아니라 제목 한 줄로
 표현하니, 새 주제가 나오면 제목 하나는 질문 단독 랭킹에 눌린다. 런타임 비용은 임베딩 1회(≈1ms).
-**한계 (dev 세션 실측)**
-- 앵커 = 이전 턴 **1위** 문서. 1위가 틀리면("What did you build with k-means?" → cogsAndGears) 다음 턴도 틀린 앵커를 따라감 —
-  단발 검색 정확도(하이브리드 검색)가 곧 후속 질문 정확도
-- w=0.6은 앵커를 "동점 결정자"로만 작동시킴: "Tell me more about it"처럼 질문 단독 랭킹이 무작위인 완전 생략은 못 살림
-  (A 남은 3/7이 이 부류). 이건 재작성(P3)의 몫
-- `sources`의 `score`는 문서별 최고 코사인이고 순서는 RRF라, 클라이언트에 표시되는 점수가 순서와 단조가 아닐 수 있음
+**한계 (dev 세션 실측) — §2.6 이후 갱신**
+- ~~앵커 = 이전 턴 1위 문서라 1위가 틀리면("k-means?" → cogsAndGears) 다음 턴도 따라감~~ → 하이브리드 검색으로 단발 1위 12/12
+- ~~RRF w=0.6은 앵커를 "동점 결정자"로만 작동시켜 "Tell me more about it"류 완전 생략(A 3/7)을 못 살림~~ → 점수 융합이
+  앵커 질의의 코사인 크기(0.64 vs 0.27)를 살려 A 7/7. 골든셋 밖의 완전 생략은 여전히 재작성(P3)의 몫
+- `sources`의 `score`는 문서별 최고 코사인이고 순서는 융합 점수라, 클라이언트에 표시되는 점수가 순서와 단조가 아닐 수 있음
 - 표본 14건 → 과적합 가능. `chat_logs`의 실제 후속 질문을 골든셋에 추가해 재측정
-구현: `retrieval.retrieve(..., context_title=)`, `retrieval.rrf(weights)`, `history.load_session()["last_sources"]`.
+구현: `retrieval.retrieve(..., context_title=)` → `retrieval/hybrid.rank()`, `history.load_session()["last_sources"]`.
 
 ### 다음 단계
-- **P3 질문 재작성** (`chat/rewrite.py`): history가 있을 때 Haiku 1콜로 독립 **영어** 질문 생성 → 검색. A의 남은 3/7과
-  k-means 토큰화 문제를 같이 겨냥. 처음엔 "history 있으면 항상", 로그로 비율을 본 뒤 조건부로. 키 없으면 위 방식으로 폴백
+- **P3 질문 재작성** (`chat/rewrite.py`): history가 있을 때 Haiku 1콜로 독립 **영어** 질문 생성 → 검색. 앵커+하이브리드가
+  골든셋을 다 맞추므로, 도입 전 `chat_logs`에서 실패 사례(대명사뿐인 후속, C 유형)를 먼저 모아 골든셋에 넣고 비교 측정.
+  처음엔 "history 있으면 항상", 로그로 비율을 본 뒤 조건부로. 키 없으면 위 방식으로 폴백
 - **도구 사용(agentic)**: 모델이 검색 여부·질의를 결정 → C 유형까지. LangGraph 도입 시점과 같이 판단 (backend-architecture 결정 표)
+
+## 2.6 하이브리드 검색 (dense + 키워드) — 2026-08-29
+
+동기: 다국어 int8 모델이 "k-means"를 k/-/me/ans로 쪼개 "What did you build with k-means?"의 1위가 cogsAndGears(0.314 vs 0.291)였고,
+후속 질문 앵커가 그 틀린 1위를 다음 턴에 물려받았다. 정확 토큰 매칭이 보완할 영역.
+
+### 구성
+| | Postgres (프로덕션) | MemoryStore (SQLite 폴백·테스트·평가) |
+|---|---|---|
+| 인덱스 | `rag_chunks.tsv = to_tsvector('english', passage)` 생성 컬럼 + GIN (마이그레이션 0004) | 파이썬 BM25 (k1 1.2, b 0.75), `apply()` 뒤 지연 재생성 |
+| 질의 | `to_tsquery('english', 'a | b | c')` OR, `ts_rank_cd`, 문서별 최고 청크 `DISTINCT ON` | 같은 토크나이저 → BM25, 문서별 최고 청크 |
+
+토크나이저(`store.words` / `store.terms`)는 PG `english` 설정을 흉내낸다(스톱워드 + Porter 1a/1b). 결정 세 가지:
+1. 하이픈 복합어는 통째 **+ 조각** ("k-means" → k-means, k, means). PG의 `k-mean <-> k <-> mean` 구문 검색만으로는
+   본문의 "KMeans"/"k clusters"를 못 맞춘다 — 코퍼스에 literal "k-means"가 없다
+2. 라틴/한글 경계 분리 ("k-means로" → k-means, 로): 한국어 질문 속 영어 이름
+3. 질문용 동사·필러 스톱워드 (tell show use make anything one …): 한 포스트에만 있는 "tell", "living"(↔ live demo)이
+   단독 히트로 임베딩 1위를 뒤집었음
+
+### 융합: RRF가 아니라 점수 합
+9문서 코퍼스에서 dense 후보 20개는 곧 전체 → RRF에선 순위 차가 1/61 vs 1/66으로 평평하고, 키워드 리스트 **소속** 자체가
+한 칸(1/61)을 통째로 준다. 앵커 질의가 0.643 vs 0.274로 압도해도 RRF는 그 크기를 버린다("초기화 방법은 뭐였어?" 실패).
+한 모델의 코사인은 질의 간 비교 가능하므로:
+
+    final = cos(q) + 0.3·cos(q + 이전 턴 1위 제목) + 0.1·(kw / kw_max)        # hybrid.rank(fusion="score")
+
+- **키워드 게이트 0.6**: 질문 단독 코사인이 최고의 60% 미만인 문서는 키워드 히트를 무시 — dense가 recall, 키워드가 precision(리랭커 역할).
+  게이트는 질문 단독 코사인만 본다: 앵커 질의엔 제목이 들어가 앵커 문서 점수가 부풀고, 그걸 기준으로 삼으면 주제 전환이 막힌다
+- **앵커 가중치 0.6 → 0.3**: 같은 이유로 앵커 문서는 항상 +0.36을 받았고, 그러면 주제 전환(B)이 3/5로 무너진다
+- 인용 청크: 문서를 가장 높이 올린 랭킹의 청크, 동점이면 키워드 히트(질문의 단어가 그대로 있는 청크)
+
+### 측정 (`scripts/eval_retrieval.py --sweep`, r@1 / r@4)
+| 설정 | EN (12) | KO (14) | A (7) | B (5) | D (2) |
+|---|---|---|---|---|---|
+| 이전 프로덕션: RRF ctx 0.6, 키워드 없음 | 10 / 12 | 13 / 13 | 4 / 7 | 5 / 5 | 2 / 2 |
+| RRF + 키워드 0.5 (게이트 0.6) | 11 / 12 | 13 / 13 | 6 / 7 | 5 / 5 | **1** / 2 — 'fastest'가 kmeans 본문에 |
+| 점수 합 ctx 0.3, 키워드 0 | 10 / 12 | 13 / 13 | 6 / 7 | 4 / 5 | 1 / 2 |
+| **점수 합 ctx 0.3, 키워드 0.1 — 채택** | **12** / 12 | 13 / 13 | **7** / 7 | **5** / 5 | **2** / 2 |
+| 〃 키워드 0.05 ~ 0.15 | 12 | 13 | 7 | 5 (0.05는 4) | 2 |
+| 점수 합 ctx ≥ 0.4 | 12 | 13 | 7 | **3** / 5 | 2 |
+| 〃 게이트 0 | 11 | 13 | 7 | 5 | 2 |
+| 〃 앵커 질의도 키워드 검색 | 12 | 13 | 7 | **3~4** / 5 | 2 |
+| PgVectorStore(tsvector), 채택 설정 (`--pg`) | 12 | 13 | 7 | 5 | 2 — 메모리 BM25와 동일 |
+
+남은 실패 1건: "일러스트 작품 보여줘" — visualArtPortfolio 본문 청크 0개(콘텐츠). 질의당 메모리 1–2 ms, PG 7–9 ms
+(dense 2회 + 키워드 1회). 라이브 API 3턴 확인: k-means → "How did you initialise the centroids?" → "Have you used XGBoost?" 모두 정답.
+
+### 한계·메모
+- `ts_rank_cd`엔 IDF가 없다: "illustration work"의 'work'가 모든 포스트에 걸려 PG 점수는 smartfactory 0.3 > visualArt 0.2
+  (BM25는 반대). 게이트·정규화 덕에 최종 순위는 같았지만 코퍼스가 커지면 재검토 (`ts_rank_cd(…, 32)` 정규화 또는 파이썬 BM25로 통일)
+- 한국어는 조사가 붙은 채 토큰이 되어(만들었어, 방법은) 키워드가 거의 안 걸린다 — 의도된 분업: 한국어 질문은 dense, 키워드는 그 안의 영어 이름
+- 표본 40건 → 과적합 가능. `chat_logs`의 실제 질문으로 골든셋을 키운 뒤 재스윕. 상수는 `retrieval/hybrid.py` 상단 — 재측정 없이 바꾸지 말 것
 
 ## 3. 온톨로지 / 지식그래프 판정
 
@@ -198,7 +251,9 @@ relations:
       청크 id = `{doc}#{sha256(model+passage)[:12]}` (DB 쪽에서 생성 — build-corpus.mjs 수정 불필요)
 - [x] **P2-2** 서버 세션(Redis, history.py) + 레이트 리밋(방문자+IP) + `chat_logs` — 2026-08-29.
       프런트는 페이지당 `session_id` 전송, 429는 안내 문구로 처리. 시맨틱 캐시는 로그로 반복 질문 비율을 본 뒤 결정
-- [ ] **P2** 하이브리드 검색 (pgvector + tsvector, RRF) + 골든셋 평가 스크립트
+- [x] **P2-3** 후속 질문 앵커: 이전 턴 1위 문서 제목 + 세션 `last_sources` (§2.5) — 2026-08-29
+- [x] **P2-4** 하이브리드 검색: `rag_chunks.tsv`(GIN) | 메모리 BM25, 점수 융합 + 게이트, `retrieval/` 패키지 승격,
+      `eval_retrieval.py --sweep/--pg` (§2.6) — 2026-08-29
 - [ ] **P3** corpus.json을 커밋 대상에서 제외 — CI(deploy.yml)가 `npm run corpus`를 돌려 백엔드 이미지에
       아티팩트로 포함하거나 `POST /api/admin/ingest`로 전달. 동기화를 사람 기억에서 CI로.
       그다음 `/api/content/*`도 rag_documents를 읽게 하면 corpus.json 자체가 사라질 수 있음
