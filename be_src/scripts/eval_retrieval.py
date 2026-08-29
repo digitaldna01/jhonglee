@@ -22,6 +22,8 @@ from pathlib import Path
 warnings.filterwarnings("ignore")
 
 from app.chat import embedding, ingest  # noqa: E402
+from app.chat.retrieval import CONTEXT_WEIGHT, contextual_query, rrf  # noqa: E402
+from app.content.repository import by_id  # noqa: E402
 from app.core.config import get_settings  # noqa: E402
 
 HERE = Path(__file__).parent
@@ -38,6 +40,14 @@ def evaluate(name: str) -> dict:
     t_embed = time.perf_counter() - t0
     doc_ids = [r.doc_id for r in rows]
 
+    def rank_docs(text: str) -> list[str]:
+        """Docs by their best chunk's cosine — what store.search does."""
+        q = embedding.embed_query(model, text)
+        best: dict[str, float] = {}
+        for d, s in zip(doc_ids, P @ q):
+            best[d] = max(best.get(d, -1.0), float(s))
+        return sorted(best, key=best.get, reverse=True)
+
     out: dict = {"embed_s": t_embed}
     n_q = 0
     t0 = time.perf_counter()
@@ -46,20 +56,40 @@ def evaluate(name: str) -> dict:
         r1 = rk = 0
         misses = []
         for case in cases:
-            q = embedding.embed_query(model, case["q"])
+            rank = rank_docs(case["q"])
             n_q += 1
-            best: dict[str, float] = {}
-            for d, s in zip(doc_ids, P @ q):
-                best[d] = max(best.get(d, -1.0), float(s))
-            rank = sorted(best, key=best.get, reverse=True)
             expect = set(case["expect"])
-            r1 += rank[0] in expect
+            top1 = rank[0] in expect
             hit = bool(set(rank[:K]) & expect)
+            r1 += top1
             rk += hit
             if not hit:
-                misses.append(f"{case['q']} → {rank[:K]}")
+                misses.append(f"MISS@{K}  {case['q']} → {rank[:K]}")
+            elif not top1:
+                misses.append(f"miss@1   {case['q']} → top1={rank[0]} (expected in top{K} ✓)")
         out[lang] = {"r1": r1, "rk": rk, "n": len(cases), "misses": misses}
     out["query_ms"] = (time.perf_counter() - t0) / n_q * 1000
+
+    # two-turn cases: question-only vs weighted RRF(question, question + previous
+    # turn's top-source title) — the previous turn's top source is what the
+    # server stores as the session's last_sources[0]
+    fu: dict = {}
+    for case in GOLDEN.get("followup", []):
+        single = rank_docs(case["q"])
+        prev_title = by_id(rank_docs(case["prev"])[0])["title"]
+        fused = rrf(
+            [single, rank_docs(contextual_query(case["q"], prev_title))], [1.0, CONTEXT_WEIGHT]
+        )
+        expect = set(case["expect"])
+        t = fu.setdefault(case["type"], {"n": 0, "single1": 0, "singlek": 0, "fused1": 0, "fusedk": 0, "misses": []})
+        t["n"] += 1
+        t["single1"] += single[0] in expect
+        t["singlek"] += bool(set(single[:K]) & expect)
+        t["fused1"] += fused[0] in expect
+        t["fusedk"] += bool(set(fused[:K]) & expect)
+        if fused[0] not in expect:
+            t["misses"].append(f"[{case['type']}] {case['prev']} → {case['q']} :: fused top1={fused[0]} single top1={single[0]}")
+    out["followup"] = fu
     return out
 
 
@@ -84,8 +114,15 @@ def main(models: list[str]) -> None:
             print(f"  {lang.upper()}: recall@1 {r['r1']}/{r['n']} ({r['r1']/r['n']:.0%})   "
                   f"recall@{K} {r['rk']}/{r['n']} ({r['rk']/r['n']:.0%})")
             for m in r["misses"]:
-                print("      · miss:", m)
+                print("      ·", m)
         print(f"  embed {len(DOCS)} docs: {res['embed_s']:.2f}s   per query: {res['query_ms']:.0f} ms")
+        if res["followup"]:
+            print("  follow-up (two-turn)            question-only        wRRF(question, question+prev-title)")
+            for t, r in sorted(res["followup"].items()):
+                print(f"    type {t} (n={r['n']}):  r@1 {r['single1']}/{r['n']}  r@{K} {r['singlek']}/{r['n']}"
+                      f"      r@1 {r['fused1']}/{r['n']}  r@{K} {r['fusedk']}/{r['n']}")
+                for m in r["misses"]:
+                    print("      ·", m)
         print(f"  peak RSS (fresh process, load+embed): {peak_rss_mb(name)} MB")
 
 

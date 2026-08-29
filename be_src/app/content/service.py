@@ -23,6 +23,11 @@ def exists(slug: str) -> bool:
     return get(slug) is not None
 
 
+def get_any(doc_id: str) -> dict | None:
+    """Any corpus doc by id, page or not (bio, notes) — for internal lookups."""
+    return repository.by_id(doc_id)
+
+
 def nodes() -> list[dict]:
     """Docs shown on the landing graph."""
     return repository.NODES

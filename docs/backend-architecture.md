@@ -11,6 +11,7 @@
 | DB          | **Postgres + pgvector** (SQLAlchemy 2.0 async, asyncpg), 스키마는 Alembic | 2026-08-29 SQLite에서 전환. 영속 데이터와 벡터를 한 DB에 — 하이브리드 검색을 SQL로, 백업 하나(pg_dump), 컨테이너 하나만 추가. `DATABASE_URL` 미설정 시 SQLite로 폴백(Docker 없는 로컬 개발) |
 | 캐시/세션   | **`core/cache.py` 인터페이스**, 구현 memory \| **Redis** | 2026-08-29 RedisCache 구현·compose 추가. `REDIS_URL` 하나로 선택. 챗 세션·레이트리밋·시맨틱 캐시의 자리 |
 | 벡터 저장   | **pgvector** (별도 벡터 DB 없음)                    | 사이트 규모에서 Qdrant급 스케일은 불필요, 운영 표면 최소화. retrieval.py의 저장소 부분만 교체하면 나중에 전용 벡터 DB로 이전 가능 |
+| RAG 프레임워크 | **직접 구현** (LangChain/LangGraph 미사용) — 2026-08-29 결정 | 파이프라인 전체가 500줄 안쪽이고 모든 단계가 보임(토크나이저·SQL·정규화까지 열어봐야 했던 문제들이 실제로 있었음). LangChain은 API 변동이 잦아 "오래 쓸 사이트"와 안 맞고, 학습 목표(RAG를 깊이)와도 충돌. `service.answer()`가 전송 무관 이벤트 제너레이터라, 흐름이 그래프(조건 분기·재검색 루프·도구 선택)가 되는 P3 이후엔 LangGraph를 **배선 계층**으로만 `chat/graph.py`에 도입 가능 — 조각(embedding/store/generation)은 그대로. LangChain의 Document/VectorStore/Retriever 추상화는 그때도 안 씀(하이브리드 검색은 raw SQL) |
 | 정체성      | **익명 visitor 쿠키** (`core/deps.py`), OAuth 없음 | 좋아요 중복 방지·댓글 귀속에 충분. 세부(닉네임 등)는 social 구현 때 결정                           |
 | 챗 히스토리 | **서버 저장** — Redis, TTL 7일 (2026-08-29 구현)     | 클라이언트는 페이지당 `session_id`만 보냄. 옛 클라이언트의 history도 받되 서버 사본이 우선          |
 | 레이트 리밋 | 방문자 쿠키 **+ IP** 이중, 분/일 고정 윈도우 (`core/ratelimit.py`) | Claude 호출은 돈. 키를 프로덕션에 넣기 전 필수. IP는 `CF-Connecting-IP` → XFF → peer 순 |
@@ -35,14 +36,14 @@ be_src/app/
   chat/                 축 ①: 랜딩 RAG  (content에 의존, 역방향 없음)
     router.py           HTTP만: /graph, /stream(SSE 직렬화)
     service.py          retrieve → context → generate 오케스트레이션, (event, payload) 이벤트 생성
-    retrieval.py        warmup(인덱스 sync + 엣지)·retrieve() — 모델은 embedding.py, 저장소는 store.py에 위임
+    retrieval.py        warmup(인덱스 sync + 엣지)·retrieve(context_title=) — 후속 질문은 이전 턴 1위 제목으로 앵커, 가중 RRF
     embedding.py        fastembed 로드 + 카탈로그 밖 모델 등록(CUSTOM). app import 없음 → Dockerfile이 직접 실행해 사전 다운로드
     store.py            VectorStore 인터페이스: PgVectorStore(pgvector) | MemoryStore(numpy, SQLite 폴백)
     ingest.py           corpus.json → 청크 계획(해시) → 바뀐 것만 임베딩·삽입, 사라진 것 삭제. `python -m app.chat.ingest`
     models.py           rag_documents · rag_chunks (vector(384), HNSW) — corpus.json의 파생 인덱스; chat_logs
     generation.py       Claude 스트리밍(AsyncAnthropic) + 추출식 폴백 — (event, payload) async 제너레이터
     prompts.py          시스템 프롬프트·컨텍스트 조립 — 톤 수정은 여기서
-    history.py          서버 세션: load/append/clear — cache 키 chat:session:{vid}:{sid}, 마지막 8교환
+    history.py          서버 세션: load_session/append/clear — 키 chat:session:{vid}:{sid}, 마지막 8교환 + last_sources
     chatlog.py          chat_logs 기록 (best-effort)
     schemas.py
   demos/kmeans/         축 ②: 인터랙티브 데모 API (router · service · schemas)

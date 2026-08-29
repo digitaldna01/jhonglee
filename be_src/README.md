@@ -30,13 +30,13 @@ app/
     models.py             rag_documents, rag_chunks (vector(384), HNSW)
     generation.py         Claude streaming (AsyncAnthropic) + extractive fallback
     prompts.py            system prompt + context assembly
-    history.py            server-side sessions in the cache (Redis), keyed by visitor + session_id
+    history.py            server-side sessions in the cache (Redis): turns + last_sources, keyed by visitor + session_id
     chatlog.py            append-only chat_logs rows (best-effort)
   demos/kmeans/           stateless demo API
 migrations/               Alembic; env.py reads DATABASE_URL. 0001 pgvector ext, 0002 rag tables, 0003 chat_logs
 docker-entrypoint.sh      `alembic upgrade head`, then uvicorn
 tests/                    smoke (TestClient), cache, ingest (+ Postgres test via TEST_DATABASE_URL)
-scripts/eval_retrieval.py golden-set retrieval eval (recall@1/@4 EN+KO, timing, peak RSS) — run before changing model/chunking
+scripts/eval_retrieval.py golden-set retrieval eval (recall@1/@4 EN+KO, two-turn follow-ups, timing, peak RSS) — run before changing model/chunking
 ```
 
 When a module outgrows one file, turn it into a package of the same name

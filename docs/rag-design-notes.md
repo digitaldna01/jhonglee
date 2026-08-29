@@ -115,11 +115,53 @@ relations:                  # 온톨로지-라이트 (§3)
 | multilingual-MiniLM-L12 fp32 | 83% / 100% | 79% / 93% | 9ms | 830MB |
 | **multilingual-MiniLM-L12 int8 (채택)** | 83% / 100% | 93% / 93% | 2ms | **622MB** |
 
-- 양자화 품질 손실 없음. EN recall@1 −1은 애매한 질문(Blender/illustration), recall@4는 동일 100%
+- 양자화 품질 손실 없음. recall@4는 동일 100%. **EN recall@1 손실 2건 중 하나가 "What did you build with k-means?"** —
+  토크나이저가 `k-means`를 `k / - / me / ans`로 쪼개 개념을 못 잡고 "build"가 cogsAndGears("translated … into an interactive
+  experience")에 끌림 (0.320 vs 0.299). `kmeans`·"k-means project"는 정상. top-4엔 들어가므로 Claude 답변엔 영향 없고
+  추출식 폴백만 틀림 → **하이브리드 검색(정확 토큰 매칭)이 고칠 대표 케이스**. `scripts/eval_retrieval.py`가 miss@1도 출력
 - fp32 원본(+560MB)은 2GB Pi에 불가 → int8(+354MB)로. 예산 ≈ 250 + 1.1GB + 150 = 1.5GB/1.8GB, backend mem_limit 1300m
 - 남은 KO 실패 1건 "일러스트 작품 보여줘": visualArtPortfolio 본문 청크 0개 → 콘텐츠 보강으로 해결
 - 대안으로 검토했던 것: Haiku 질문 재작성(메모리 0, API 의존) → 멀티턴 후속 질문 재작성 용도로 보류. `bge-m3`(1024-d)는 fastembed 0.8 미지원
 - 되돌리기: `EMBED_MODEL=BAAI/bge-small-en-v1.5` (Dockerfile ARG 동일) → 해시가 바뀌어 다음 시작에 자동 재임베딩
+
+## 2.5 후속 질문 처리 (Conversational RAG) — 2026-08-29
+
+검색 결과는 **요청 단위 첨부물**(이번 user 메시지의 `Context:`에만), 대화 기록은 **세션 단위 기억**(Redis, 질문/답만).
+이 분리는 표준(LangChain `create_history_aware_retriever`, LlamaIndex `CondensePlusContext`)이고, 비는 자리는 하나 —
+후속 질문이 주제어를 생략할 때("초기화 방법은 뭐였어?") 검색이 그 문장만 보는 것.
+
+### 실패 유형
+| | 예 | 요구 |
+|---|---|---|
+| A 생략/지시어 | "그거 더 자세히", "How did you initialise the centroids?" | 직전 주제를 되찾아야 |
+| B 주제 전환 | (k-means 후) "타이포그래피 작업은?" | 직전 주제에 **끌려가면 안 됨** |
+| C 검색 불필요 | "고마워" | (미해결 — 도구 사용 단계에서) |
+| D 언어 전환 | EN 질문 후 KO 후속 | A+다국어 |
+
+### 방법 비교 (골든셋 `followup` 14건: A 7 / B 5 / D 2)
+| 방법 | 비용 | A r@1 / r@4 | B r@1 / r@4 | D r@1 / r@4 |
+|---|---|---|---|---|
+| 질문 단독 (기준) | — | 1/7 / 6/7 | 5/5 / 5/5 | 1/2 / 2/2 |
+| RRF(q, **prev+q**) | 임베딩 +1 | 3/7 / 6/7 | **4/5** ↓ | **0/2 / 1/2** ↓ — 긴 이전 질문이 랭킹을 지배 |
+| RRF(q, q+prev) w=0.6 | 〃 | 3/7 / 7/7 | 4/5 ↓ | 1/2 / 2/2 |
+| **wRRF(q, q + 이전 턴 1위 문서 제목) w=0.6 — 채택** | 〃 (제목은 세션 `last_sources[0]`) | **4/7 / 7/7** | 5/5 / 5/5 | **2/2 / 2/2** |
+| 질문 재작성 (Haiku condense) | API +1콜, +0.3~0.5초 | (미측정 — 키 필요) | | |
+
+채택 이유: A가 오르고 B·D 무손실. "후속 질문은 방금 얘기한 **그것**에 관한 것"을 이전 질문 전문이 아니라 제목 한 줄로
+표현하니, 새 주제가 나오면 제목 하나는 질문 단독 랭킹에 눌린다. 런타임 비용은 임베딩 1회(≈1ms).
+**한계 (dev 세션 실측)**
+- 앵커 = 이전 턴 **1위** 문서. 1위가 틀리면("What did you build with k-means?" → cogsAndGears) 다음 턴도 틀린 앵커를 따라감 —
+  단발 검색 정확도(하이브리드 검색)가 곧 후속 질문 정확도
+- w=0.6은 앵커를 "동점 결정자"로만 작동시킴: "Tell me more about it"처럼 질문 단독 랭킹이 무작위인 완전 생략은 못 살림
+  (A 남은 3/7이 이 부류). 이건 재작성(P3)의 몫
+- `sources`의 `score`는 문서별 최고 코사인이고 순서는 RRF라, 클라이언트에 표시되는 점수가 순서와 단조가 아닐 수 있음
+- 표본 14건 → 과적합 가능. `chat_logs`의 실제 후속 질문을 골든셋에 추가해 재측정
+구현: `retrieval.retrieve(..., context_title=)`, `retrieval.rrf(weights)`, `history.load_session()["last_sources"]`.
+
+### 다음 단계
+- **P3 질문 재작성** (`chat/rewrite.py`): history가 있을 때 Haiku 1콜로 독립 **영어** 질문 생성 → 검색. A의 남은 3/7과
+  k-means 토큰화 문제를 같이 겨냥. 처음엔 "history 있으면 항상", 로그로 비율을 본 뒤 조건부로. 키 없으면 위 방식으로 폴백
+- **도구 사용(agentic)**: 모델이 검색 여부·질의를 결정 → C 유형까지. LangGraph 도입 시점과 같이 판단 (backend-architecture 결정 표)
 
 ## 3. 온톨로지 / 지식그래프 판정
 
@@ -165,7 +207,8 @@ relations:
       (KO recall@4 64%→93%, EN 100% 유지, +354MB). `chat/embedding.py` 커스텀 등록, `scripts/eval_retrieval.py` 편입.
       Pi 첫 배포 후 `docker stats` 실측 → 스왑 사용 시 bge-small + Haiku 질문 재작성으로 회귀
 - [ ] **P3** 리랭커 (fastembed rerank) — 검색 품질 문제가 실측되면
-- [ ] **P3** 멀티턴 질문 재작성 (`chat/rewrite.py`, Haiku 1콜: 후속 질문 → 독립 질문) — 후속 질문 검색 실패가 보이면
+- [x] **P2-3** 후속 질문 1단계: 골든셋 `followup` + 제목 앵커 가중 RRF — 2026-08-29 (§2.5)
+- [ ] **P3** 멀티턴 질문 재작성 (`chat/rewrite.py`, Haiku 1콜: 후속 질문 → 독립 영어 질문) — API 키 켠 뒤, §2.5 표로 비교
 
 ## Sources
 

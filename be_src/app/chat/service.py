@@ -52,12 +52,17 @@ async def answer(
     wins over whatever the client sent; afterwards the exchange is appended
     to the session and logged."""
     turns = client_history[-history.HISTORY_MAX * 2 :]
+    context_title: str | None = None
     has_session = bool(visitor_id and session_id)
     if has_session:
-        turns = await history.load(visitor_id, session_id) or turns
+        session = await history.load_session(visitor_id, session_id)
+        turns = session["turns"] or turns
+        if session["last_sources"]:
+            prev_top = content.get_any(session["last_sources"][0])
+            context_title = prev_top["title"] if prev_top else None
 
     t0 = time.perf_counter()
-    retrieved = await retrieval.retrieve(question, k=TOP_K)
+    retrieved = await retrieval.retrieve(question, k=TOP_K, context_title=context_title)
     retrieval_ms = round((time.perf_counter() - t0) * 1000, 1)
 
     sources = [
@@ -81,7 +86,9 @@ async def answer(
 
     answer_text = "".join(parts)
     if has_session:
-        await history.append(visitor_id, session_id, question, answer_text)
+        await history.append(
+            visitor_id, session_id, question, answer_text, sources=[s["id"] for s in sources]
+        )
     if visitor_id:
         await chatlog.record(
             visitor_id=visitor_id,
