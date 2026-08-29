@@ -32,23 +32,27 @@ be_src/app/
   chat/                 축 ①: 랜딩 RAG  (content에 의존, 역방향 없음)
     router.py           HTTP만: /graph, /stream(SSE 직렬화)
     service.py          retrieve → context → generate 오케스트레이션, (event, payload) 이벤트 생성
-    retrieval.py        청크 임베딩·코사인 검색·그래프 엣지
-    generation.py       Claude 스트리밍 + 추출식 폴백 (같은 출력 형태)
+    retrieval.py        모델 로드·warmup(인덱스 sync + 엣지)·retrieve() — 저장소는 store.py에 위임
+    store.py            VectorStore 인터페이스: PgVectorStore(pgvector) | MemoryStore(numpy, SQLite 폴백)
+    ingest.py           corpus.json → 청크 계획(해시) → 바뀐 것만 임베딩·삽입, 사라진 것 삭제. `python -m app.chat.ingest`
+    models.py           rag_documents · rag_chunks (vector(384), HNSW) — corpus.json의 파생 인덱스
+    generation.py       Claude 스트리밍(AsyncAnthropic) + 추출식 폴백 — (event, payload) async 제너레이터
     prompts.py          시스템 프롬프트·컨텍스트 조립 — 톤 수정은 여기서
     history.py          서버 세션 설계 (구현 예정)
     schemas.py
   demos/kmeans/         축 ②: 인터랙티브 데모 API (router · service · schemas)
   social/               축 ③ (예정): 좋아요·댓글·챗 히스토리 — __init__ docstring에 계획
 tests/                  TestClient 스모크 (기능별 1개 이상)
-be_src/migrations/      Alembic (env.py는 DATABASE_URL을 읽음; 0001 = pgvector 확장)
+be_src/migrations/      Alembic (env.py는 DATABASE_URL을 읽음; 0001 = pgvector 확장, 0002 = rag_* 테이블 + HNSW)
 be_src/docker-entrypoint.sh  `alembic upgrade head` 후 uvicorn — 컨테이너 시작마다 스키마 동기화
 ```
 
 ## 규칙
 
 1. **라우터는 HTTP만.** 파싱·응답 형태·상태코드·SSE 직렬화. 로직은 `service.py`.
-   서비스는 전송을 모른다 — `chat.service.answer()`는 `(event, payload)` 튜플을 내고
-   라우터가 SSE 문자열로 바꾼다. 테스트와 미래의 websocket이 같은 서비스를 쓴다.
+   서비스는 전송을 모른다 — `chat.service.answer()`는 `(event, payload)` 튜플을 내는
+   **async 제너레이터**이고 라우터가 SSE 문자열로 바꾼다. 챗 경로는 DB 조회(asyncpg)와
+   Anthropic 스트리밍이 모두 async라 끝까지 async; CPU 작업(임베딩)만 `asyncio.to_thread`.
 2. **저장소는 인터페이스 뒤에.** 휘발 상태는 `core.cache.get_cache()`, 영속은 `core.db.get_session`.
    클라이언트 라이브러리(redis, sqlite)를 기능 코드가 직접 import하지 않는다.
    구현 선택은 환경변수(`REDIS_URL`, `DATABASE_URL`) 하나로.
@@ -59,16 +63,29 @@ be_src/docker-entrypoint.sh  `alembic upgrade head` 후 uvicorn — 컨테이너
    | 상태                              | 수명      | 자리                                 |
    | --------------------------------- | --------- | ------------------------------------ |
    | 파생 콘텐츠 (corpus.json)         | 배포 단위 | 파일 → 메모리 (`content.repository`) |
-   | ML 런타임 (임베딩 행렬)           | 프로세스  | 메모리, lifespan warmup              |
+   | ML 런타임 (임베딩 모델)           | 프로세스  | 메모리, lifespan warmup              |
    | 세션/휘발 (챗 히스토리, 카운터)   | TTL       | `core.cache`                         |
    | 영속 사용자 데이터 (좋아요, 댓글) | 영구      | `core.db` (Postgres)                 |
-   | 청크 벡터 (2단계 예정)             | 콘텐츠 해시 | `core.db` (pgvector 컬럼)          |
+   | 청크 벡터 (corpus.json의 인덱스)   | 콘텐츠 해시 | `rag_chunks.embedding` (pgvector) — 시작 시 증분 sync |
 
 5. **새 기능 추가 절차.** `app/<feature>/{router,service,schemas}.py` 생성 → `main.py`에
    `include_router(..., prefix="/api")` 한 줄 → `tests/`에 스모크 1개.
    DB 모델은 `app/<feature>/models.py`에 두고 `migrations/env.py`에서 import →
    `alembic revision --autogenerate -m "..."`. 마이그레이션은 Postgres/SQLite 양쪽에서
    돌아야 한다 (Postgres 전용 SQL은 `dialect.name` 분기).
+
+6. **모듈이 커지면 같은 이름의 패키지로.** 한 파일이 길어지거나 나눠야 할 때 새 이름을 만들지 말고
+   `retrieval.py` → `retrieval/` 폴더로 승격해 하위 모듈로 쪼갠다. `__init__.py`가 기존 공개 함수를
+   re-export하므로 호출부 import(`from .retrieval import retrieve`)는 그대로.
+
+   ```
+   chat/retrieval.py            →   chat/retrieval/__init__.py   (retrieve, warmup, edges re-export)
+                                    chat/retrieval/dense.py      (pgvector 검색)
+                                    chat/retrieval/hybrid.py     (BM25 + RRF)
+                                    chat/retrieval/edges.py      (그래프 엣지)
+   chat/models.py               →   chat/models/__init__.py, models/rag.py, models/log.py
+   ```
+   기준: 파일이 ~300줄을 넘거나, 서로 다른 이유로 바뀌는 코드가 한 파일에 섞이기 시작할 때.
 
 ## API 표면
 
@@ -90,6 +107,9 @@ POST /api/social/posts/{slug}/likes  GET/POST /api/social/posts/{slug}/comments
   `shared_buffers=64MB`·`max_connections=20` 설정으로 상한 ~150MB, Redis `maxmemory 64mb`(allkeys-lru).
   합계 ~1GB → 4GB Pi에서도 여유. 8GB면 `shared_buffers`/`effective_cache_size`를 올려도 됨
 - 스키마: 컨테이너 entrypoint가 `alembic upgrade head` 실행 → 배포 = 마이그레이션 자동 적용
+- RAG 인덱스: 시작 시 `retrieval.warmup()`이 corpus.json과 `rag_chunks`를 해시로 대조해 바뀐 청크만 임베딩
+  (첫 부팅 30청크 2.6s, 이후 0.0s). 임베딩 모델을 바꾸면 해시가 전부 달라져 자동 재임베딩 — 단 차원이
+  바뀌면(384→1024) `vector(N)` 컬럼·HNSW 인덱스 마이그레이션이 먼저 필요
 - 로컬: `docker-compose.local.yml`(프로덕션 동형, Postgres 5433·Redis 6380 노출) / `docker-compose.dev.yml`(핫 리로드).
   Docker 없이 `pytest`·uvicorn만 돌리면 SQLite + MemoryCache로 폴백
 - 2026-08-29 이전의 `backend-data` 볼륨(SQLite)은 더 이상 마운트하지 않음 — 데이터 없었음(social 미구현)

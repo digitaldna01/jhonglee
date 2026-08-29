@@ -6,6 +6,8 @@ holds domain-free infrastructure (settings, db, cache, deps, lifespan).
 Every feature mounts under `/api/<feature>`. To add one, create the
 package with a `router.py` exposing `router` and register it below.
 """
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -17,6 +19,7 @@ from .demos.kmeans.router import router as kmeans_router
 
 
 def create_app() -> FastAPI:
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s:     %(name)s: %(message)s")
     settings = get_settings()
     app = FastAPI(title="jhonglee backend", version="0.2.0", lifespan=lifespan)
 

@@ -1,35 +1,46 @@
 """Semantic retrieval over the portfolio corpus — the "R" in RAG.
 
-Chunk-level retrieval with contextual embedding (Anthropic-style, but
-template-generated — the frontmatter is rich enough that no LLM is
-needed to write the chunk context):
-
-  passage = "From {title} ({kind}; {tags}): {chunk text}"
-
-Every doc also gets a synthetic summary chunk, so a doc is findable
-even when its body is thin. A document's score is the max over its
+Chunk-level retrieval with template-generated contextual embeddings
+(see ingest.passage_text). A document's score is the max over its
 chunks; the best chunk rides along for the answer context.
 
-Embeddings come from fastembed (ONNX, no torch — Raspberry-Pi
-friendly); the Docker image pre-downloads the model at build time.
+Embeddings come from fastembed (ONNX, no torch — Raspberry-Pi friendly);
+vectors live in the store selected by DATABASE_URL (pgvector in
+production, numpy in-process otherwise — see store.py). `warmup()` loads
+the model, syncs the index incrementally and derives the graph edges.
 """
 from __future__ import annotations
 
-import threading
+import asyncio
+import logging
 
 import numpy as np
 
+from ..content.repository import NODES, by_id
 from ..core.config import get_settings
-from ..content.repository import DOCS as KNOWLEDGE
-from ..content.repository import NODES
+from . import ingest
+from .store import VectorStore, select_store
+
+log = logging.getLogger(__name__)
 
 # Each graph node links to its top-MAX most similar peers. Real-embedding
 # cosines cluster high, so raw scores are rescaled into the weight band
 # the force layout was tuned for.
 _EDGE_MAX_PER_NODE = 2
 
-_lock = threading.Lock()
-_state: dict | None = None  # {model, chunks, chunk_vecs, doc_vecs, edges}
+_model = None
+_store: VectorStore | None = None
+_edges: list[dict] | None = None
+
+
+def _load_model():
+    from fastembed import TextEmbedding
+
+    return TextEmbedding(get_settings().embed_model)
+
+
+def _embed_passages(texts: list[str]) -> np.ndarray:
+    return np.stack([np.asarray(v, dtype=np.float32) for v in _model.passage_embed(texts)])
 
 
 def _cosine(a: np.ndarray, b: np.ndarray) -> float:
@@ -37,27 +48,14 @@ def _cosine(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.dot(a, b)) / denom
 
 
-def _passage_text(doc: dict, text: str) -> str:
-    if doc["kind"] == "bio":
-        # question-shaped surface so "who are you?"-style queries land here
-        return f"Who are you? Who is Jae Hong Lee? About me: {text}"
-    tags = ", ".join(doc["tags"])
-    return f"From {doc['title']} ({doc['kind']}; {tags}): {text}"
-
-
-def _doc_chunks(doc: dict) -> list[dict]:
-    """Body chunks plus a synthetic summary chunk."""
-    summary = {"id": f"{doc['id']}#summary", "heading": None, "text": doc["summary"]}
-    return [summary, *doc["chunks"]]
-
-
 def _build_edges(doc_vecs: dict[str, np.ndarray]) -> list[dict]:
+    nodes = [d for d in NODES if d["id"] in doc_vecs]  # corpus order → stable output
     raw: dict[tuple[int, int], float] = {}
-    for ai, a in enumerate(NODES):
+    for ai, a in enumerate(nodes):
         sims = sorted(
             (
                 (bi, _cosine(doc_vecs[a["id"]], doc_vecs[b["id"]]))
-                for bi, b in enumerate(NODES)
+                for bi, b in enumerate(nodes)
                 if bi != ai
             ),
             key=lambda x: x[1],
@@ -73,79 +71,58 @@ def _build_edges(doc_vecs: dict[str, np.ndarray]) -> list[dict]:
     span = (hi - lo) or 1.0
     return [
         {
-            "a": NODES[ai]["id"],
-            "b": NODES[bi]["id"],
+            "a": nodes[ai]["id"],
+            "b": nodes[bi]["id"],
             "w": round(0.15 + 0.7 * ((s - lo) / span), 3),
         }
         for (ai, bi), s in sorted(raw.items())
     ]
 
 
-def _ensure_ready() -> dict:
-    global _state
-    if _state is not None:
-        return _state
-    with _lock:
-        if _state is not None:
-            return _state
-        from fastembed import TextEmbedding
-
-        settings = get_settings()
-        model = TextEmbedding(settings.embed_model)
-
-        chunks: list[tuple[dict, dict]] = [  # (doc, chunk)
-            (doc, chunk) for doc in KNOWLEDGE for chunk in _doc_chunks(doc)
-        ]
-        passages = [_passage_text(doc, chunk["text"]) for doc, chunk in chunks]
-        chunk_vecs = np.stack([np.asarray(v) for v in model.passage_embed(passages)])
-
-        # doc-level vectors (for graph edges): the summary chunk's vector
-        doc_vecs = {
-            doc["id"]: chunk_vecs[i]
-            for i, (doc, chunk) in enumerate(chunks)
-            if chunk["id"].endswith("#summary")
-        }
-
-        _state = {
-            "model": model,
-            "chunks": chunks,
-            "chunk_vecs": chunk_vecs,
-            "edges": _build_edges(doc_vecs),
-        }
-        return _state
-
-
-def warmup() -> None:
-    """Load the model and embed the corpus (called at app startup)."""
-    _ensure_ready()
+async def warmup() -> ingest.SyncReport:
+    """Load the model, sync the vector index, derive graph edges (app startup)."""
+    global _model, _store, _edges
+    settings = get_settings()
+    if _model is None:
+        _model = await asyncio.to_thread(_load_model)
+    if _store is None:
+        _store = select_store(settings.database_url)
+    report = await ingest.sync(_store, _embed_passages, settings.embed_model)
+    _edges = _build_edges(await _store.summary_vectors())
+    log.info("%s [%s]", report, type(_store).__name__)
+    return report
 
 
 def edges() -> list[dict]:
-    return _ensure_ready()["edges"]
+    if _edges is None:
+        raise RuntimeError("retrieval.warmup() has not run")
+    return _edges
 
 
-def retrieve(question: str, k: int = 4) -> list[dict]:
+async def retrieve(question: str, k: int = 4) -> list[dict]:
     """Top-k documents for a question, scored by their best chunk.
 
-    Returns [{id, kind, title, score, chunk: {id, heading, text}}] where
+    Returns [{id, kind, title, score, chunk: {heading, text}}] where
     `chunk` is the best-matching body chunk (None if the summary won).
     """
-    state = _ensure_ready()
-    qvec = np.asarray(next(iter(state["model"].query_embed(question))))
-
-    norms = np.linalg.norm(state["chunk_vecs"], axis=1) * (np.linalg.norm(qvec) or 1.0)
-    scores = state["chunk_vecs"] @ qvec / np.where(norms == 0, 1.0, norms)
-
-    best: dict[str, dict] = {}
-    for (doc, chunk), s in zip(state["chunks"], scores):
-        cur = best.get(doc["id"])
-        if cur is None or s > cur["score"]:
-            is_summary = chunk["id"].endswith("#summary")
-            best[doc["id"]] = {
+    if _store is None:
+        await warmup()
+    # bge models want a query prefix; fastembed's query_embed adds it
+    qvec = await asyncio.to_thread(
+        lambda: np.asarray(next(iter(_model.query_embed(question))), dtype=np.float32)
+    )
+    out = []
+    for hit in await _store.search(qvec, k):
+        doc = by_id(hit.doc_id)
+        if doc is None:  # index ahead of corpus.json (shouldn't happen after sync)
+            continue
+        out.append(
+            {
                 "id": doc["id"],
                 "kind": doc["kind"],
                 "title": doc["title"],
-                "score": float(s),
-                "chunk": None if is_summary else chunk,
+                "score": hit.score,
+                "chunk": None if hit.is_summary else {"heading": hit.heading, "text": hit.text},
             }
-    return sorted(best.values(), key=lambda x: x["score"], reverse=True)[:k]
+        )
+    return out

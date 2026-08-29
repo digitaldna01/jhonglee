@@ -46,10 +46,15 @@ def get_engine():
     return _engine
 
 
-async def get_session() -> AsyncIterator[AsyncSession]:
+def session_factory() -> async_sessionmaker[AsyncSession]:
+    """For internal callers (stores, startup jobs) that are not FastAPI endpoints."""
     get_engine()
     assert _sessionmaker is not None
-    async with _sessionmaker() as session:
+    return _sessionmaker
+
+
+async def get_session() -> AsyncIterator[AsyncSession]:
+    async with session_factory()() as session:
         yield session
 
 

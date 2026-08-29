@@ -11,14 +11,17 @@
 ## 0. 현재 아키텍처 (요약)
 
 ```
-질문 → 임베딩(fastembed bge-small-en-v1.5, ONNX)
-     → 코사인 top-4  (numpy 행렬 in-memory — P2에서 pgvector로 이전, §2 벡터 DB 행)
+시작 → corpus.json 청크 해시 vs rag_chunks 대조 → 바뀐 청크만 임베딩 (chat/ingest.py)
+질문 → 임베딩(fastembed bge-small-en-v1.5, ONNX, query prefix)
+     → pgvector `ORDER BY embedding <=> q` (문서별 최고 청크 DISTINCT ON → top-4)
+       (DATABASE_URL이 SQLite면 numpy MemoryStore로 동일 동작)
      → 컨텍스트 조립(desc + bio 상시 포함)
      → Claude Haiku 4.5 스트리밍 (키 없으면 추출식 폴백)
      → SSE: sources → delta → done
 ```
 
-- 코드: `be_src/app/chat/retrieval.py`(검색·엣지), `chat/router.py`(SSE), `chat/prompts.py`(프롬프트)
+- 코드: `chat/ingest.py`(증분 sync), `chat/store.py`(pgvector | numpy), `chat/retrieval.py`(검색·엣지),
+  `chat/router.py`(SSE), `chat/prompts.py`(프롬프트)
 - 그래프 엣지도 같은 임베딩에서 파생 (노드당 top-2 유사 이웃, 가중치 0.15–0.85 리스케일)
 
 ## 1. 문서 스키마 방향 (결정됨)
@@ -48,7 +51,7 @@ relations:                  # 온톨로지-라이트 (§3)
 본문 → 섹션 단위 청킹되어 검색 대상
 ```
 
-파이프라인: `posts/*.mdx + content/*.md → (npm run corpus) → corpus.json → be_src 시작 시 청킹·임베딩`.
+파이프라인: `posts/*.mdx + content/*.md → (npm run corpus) → corpus.json → be_src 시작 시 해시 대조 → 바뀐 청크만 임베딩 → rag_chunks`.
 새 글 작성 = 새 노드 + 새 검색 문서. 별도 등록 없음.
 
 ### 코퍼스 전용 문서 — `src/content/`
@@ -86,12 +89,30 @@ relations:                  # 온톨로지-라이트 (§3)
 | **ColBERT / late interaction** | 토큰 단위 다중 벡터 매칭 | 정밀도↑, 저장량 수십 배 | ❌ 과함 |
 | **질문 재작성 / HyDE** | 멀티턴에서 후속 질문을 독립 질문으로 재작성 | 멀티턴 RAG 정확도↑ | 🤔 **후보** — "그거 더 알려줘" 류 후속 질문 검색이 약해지면 도입 (Haiku로 재작성 1콜) |
 
-### 임베딩 모델 메모
+### 임베딩 모델 (2026-08-29 실측)
 
-- 현재: `BAAI/bge-small-en-v1.5` (fastembed/ONNX, ~33MB) — **영어 전용**. 한국어 질문 검색이 약함
-- 업그레이드 후보: `intfloat/multilingual-e5-small` (fastembed 지원, ~120MB) — 한국어 질문 대응. 코드 변경 없이 `EMBED_MODEL` 환경변수만 교체 (Dockerfile 베이크 라인도 함께)
-- bge 계열은 질문에 query prefix가 필요 → fastembed의 `query_embed`/`passage_embed`가 처리 (직접 `embed()` 쓰지 말 것)
-- 참고: bio 문서는 passage를 질문 형태로 보강해 검색률을 올림 ("Who are you? Who is Jae Hong Lee? …" — retrieval.py `_passage_text`)
+| 항목 | 값 |
+|---|---|
+| 모델 | `BAAI/bge-small-en-v1.5` — fastembed가 받는 실제 파일은 Qdrant의 ONNX **양자화판** `qdrant/bge-small-en-v1.5-onnx-q` |
+| 차원 / 크기 | **384** / 65MB, 출력 L2 정규화(norm 1 → 코사인 = 내적) |
+| 런타임 | fastembed → onnxruntime CPU (torch 없음; Pi에서 도는 이유). 프로세스 메모리 ~0.7GB의 대부분 |
+| 언어 | **영어 전용**, 512토큰 절단 |
+| 파일 위치 | `/tmp/fastembed_cache/` — Dockerfile이 빌드 시 다운로드해 이미지에 포함. 로컬 venv는 첫 실행 때 같은 경로로 |
+| 쓰이는 곳 | ① ingest: `passage_embed(청크들)` → `rag_chunks.embedding` ② 요청: `query_embed(질문)` → pgvector `<=>` |
+
+- 저장과 검색은 **반드시 같은 모델**. `rag_chunks.model` 컬럼 + 해시에 모델명이 들어가서 `EMBED_MODEL`을 바꾸면 다음 시작 때 전부 자동 재임베딩
+- 단 **차원이 바뀌면** `vector(384)` 컬럼·HNSW 인덱스 마이그레이션이 먼저 필요 (`chat/models.py EMBED_DIM`, 0002 참고)
+- bge 계열은 query prefix 관례 → fastembed의 `query_embed`/`passage_embed`를 쓴다 (직접 `embed()` 쓰지 말 것)
+- bio 문서는 passage를 질문 형태로 보강해 검색률을 올림 ("Who are you? Who is Jae Hong Lee? …" — ingest.py `passage_text`)
+
+**한국어 질문 대응 후보** (fastembed 0.8 `list_supported_models()` 실측 — 이전 메모의 `multilingual-e5-small`은 목록에 **없음**):
+
+| 모델 | 차원 | 크기 | 판정 |
+|---|---|---|---|
+| `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` | **384** | 225MB | 🥇 차원 동일 → **마이그레이션 없이 `EMBED_MODEL` + Dockerfile 라인만 교체**. 품질은 bge-small 대비 소폭 낮을 수 있어 골든셋으로 비교 후 결정 |
+| `sentence-transformers/paraphrase-multilingual-mpnet-base-v2` | 768 | 1GB | 컬럼 마이그레이션 + Pi 메모리 부담 |
+| `intfloat/multilingual-e5-large` | 1024 | 2.3GB | Pi 불가 |
+| `BAAI/bge-m3` | 1024 | — | 이 fastembed 버전 미지원. 지원되면 최우선 후보 |
 
 ## 3. 온톨로지 / 지식그래프 판정
 
@@ -124,11 +145,12 @@ relations:
       청크 = `##` 섹션(≤2200자), passage = "From {title} ({kind}; {tags}): {chunk}",
       문서 점수 = max(청크), summary 합성 청크로 본문 빈약한 문서도 검색 가능
 - [x] **P2-0** 인프라: Postgres+pgvector, Redis, Alembic, compose 3종 — 2026-08-29
-- [ ] **P2-1** 청크 테이블 + 벡터 컬럼, `chat/ingest.py`(내용 해시 sync), retrieval을 DB 조회로 — 청크 id를 내용 해시 기반으로(build-corpus.mjs)
+- [x] **P2-1** rag_documents/rag_chunks(vector(384), HNSW) + `chat/ingest.py` 해시 sync + retrieval→pgvector, 챗 경로 async — 2026-08-29
+      청크 id = `{doc}#{sha256(model+passage)[:12]}` (DB 쪽에서 생성 — build-corpus.mjs 수정 불필요)
 - [ ] **P2-2** 서버 세션(Redis, history.py) + 레이트 리밋 + 대화/검색 로그 테이블
 - [ ] **P2** 하이브리드 검색 (pgvector + tsvector, RRF) + 골든셋 평가 스크립트
 - [ ] **P2** `relations` 선언 엣지 + 그래프 표시 구분
-- [ ] **P3** multilingual-e5-small 교체 (한국어 질문)
+- [ ] **P3** 다국어 임베딩 교체 (한국어 질문) — 1순위 `paraphrase-multilingual-MiniLM-L12-v2`(384, 무마이그레이션), 골든셋으로 bge-small과 비교
 - [ ] **P3** 리랭커 (fastembed rerank) — 검색 품질 문제가 실측되면
 - [ ] **P3** 멀티턴 질문 재작성 — 후속 질문 검색 실패가 보이면
 

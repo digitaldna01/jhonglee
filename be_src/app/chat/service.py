@@ -7,7 +7,7 @@ driven by tests or a future websocket without change.
 from __future__ import annotations
 
 import time
-from collections.abc import Iterator
+from collections.abc import AsyncIterator
 
 from ..content import service as content
 from ..core.config import get_settings
@@ -42,9 +42,9 @@ def graph() -> dict:
     }
 
 
-def answer(question: str, history: list[dict]) -> Iterator[tuple[str, dict]]:
+async def answer(question: str, history: list[dict]) -> AsyncIterator[tuple[str, dict]]:
     t0 = time.perf_counter()
-    retrieved = retrieval.retrieve(question, k=TOP_K)
+    retrieved = await retrieval.retrieve(question, k=TOP_K)
     retrieval_ms = (time.perf_counter() - t0) * 1000
 
     yield "sources", {
@@ -56,11 +56,5 @@ def answer(question: str, history: list[dict]) -> Iterator[tuple[str, dict]]:
         "retrieval_model": retrieval_label(),
     }
 
-    gen = generation.generate(question, retrieved, history[-HISTORY_MAX:])
-    while True:
-        try:
-            chunk = next(gen)
-        except StopIteration as done:
-            yield "done", {"model": done.value}
-            return
-        yield "delta", {"text": chunk}
+    async for event in generation.generate(question, retrieved, history[-HISTORY_MAX:]):
+        yield event

@@ -7,8 +7,12 @@
 #
 # Open http://localhost:5173. Re-run with --build only after changing
 # dependencies (package-lock.json / requirements.txt). Migrations run on
-# every backend start (entrypoint); to write a new one:
+# every backend *start* (entrypoint) — uvicorn's code reload does not re-run
+# them, so after adding a migration: `docker compose -f docker-compose.dev.yml restart backend`.
+# To write a new one:
 #   docker compose -f docker-compose.dev.yml exec backend alembic revision --autogenerate -m "..."
+# The RAG index syncs on every start too (only changed chunks are re-embedded);
+# by hand: `docker compose -f docker-compose.dev.yml exec backend python -m app.chat.ingest`
 #
 # For production-parity (nginx serving the static build + /api proxy), use
 # docker-compose.local.yml instead.

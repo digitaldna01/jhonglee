@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from app.core.config import get_settings
 from app.core.db import Base, ensure_sqlite_dir
+from app.chat import models as _chat_models  # noqa: F401  (registers rag_* tables)
 
 config = context.config
 if config.config_file_name is not None:

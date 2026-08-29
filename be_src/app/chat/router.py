@@ -28,13 +28,15 @@ def _sse(event: str, data: dict) -> str:
 
 
 @router.post("/stream")
-def stream(req: ChatRequest):
+async def stream(req: ChatRequest):
     history = [t.model_dump() for t in req.history]
-    events = (
-        _sse(name, payload) for name, payload in service.answer(req.question, history)
-    )
+
+    async def events():
+        async for name, payload in service.answer(req.question, history):
+            yield _sse(name, payload)
+
     return StreamingResponse(
-        events,
+        events(),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
