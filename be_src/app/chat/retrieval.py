@@ -4,8 +4,8 @@ Chunk-level retrieval with template-generated contextual embeddings
 (see ingest.passage_text). A document's score is the max over its
 chunks; the best chunk rides along for the answer context.
 
-Embeddings come from fastembed (ONNX, no torch — Raspberry-Pi friendly);
-vectors live in the store selected by DATABASE_URL (pgvector in
+Embeddings come from fastembed (ONNX, no torch — Raspberry-Pi friendly;
+model selection and custom registrations in embedding.py); vectors live in the store selected by DATABASE_URL (pgvector in
 production, numpy in-process otherwise — see store.py). `warmup()` loads
 the model, syncs the index incrementally and derives the graph edges.
 """
@@ -18,7 +18,7 @@ import numpy as np
 
 from ..content.repository import NODES, by_id
 from ..core.config import get_settings
-from . import ingest
+from . import embedding, ingest
 from .store import VectorStore, select_store
 
 log = logging.getLogger(__name__)
@@ -33,14 +33,8 @@ _store: VectorStore | None = None
 _edges: list[dict] | None = None
 
 
-def _load_model():
-    from fastembed import TextEmbedding
-
-    return TextEmbedding(get_settings().embed_model)
-
-
 def _embed_passages(texts: list[str]) -> np.ndarray:
-    return np.stack([np.asarray(v, dtype=np.float32) for v in _model.passage_embed(texts)])
+    return embedding.embed_passages(_model, texts)
 
 
 def _cosine(a: np.ndarray, b: np.ndarray) -> float:
@@ -84,7 +78,7 @@ async def warmup() -> ingest.SyncReport:
     global _model, _store, _edges
     settings = get_settings()
     if _model is None:
-        _model = await asyncio.to_thread(_load_model)
+        _model = await asyncio.to_thread(embedding.load, settings.embed_model)
     if _store is None:
         _store = select_store(settings.database_url)
     report = await ingest.sync(_store, _embed_passages, settings.embed_model)
@@ -107,10 +101,7 @@ async def retrieve(question: str, k: int = 4) -> list[dict]:
     """
     if _store is None:
         await warmup()
-    # bge models want a query prefix; fastembed's query_embed adds it
-    qvec = await asyncio.to_thread(
-        lambda: np.asarray(next(iter(_model.query_embed(question))), dtype=np.float32)
-    )
+    qvec = await asyncio.to_thread(embedding.embed_query, _model, question)
     out = []
     for hit in await _store.search(qvec, k):
         doc = by_id(hit.doc_id)

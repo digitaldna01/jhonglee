@@ -32,7 +32,8 @@ be_src/app/
   chat/                 축 ①: 랜딩 RAG  (content에 의존, 역방향 없음)
     router.py           HTTP만: /graph, /stream(SSE 직렬화)
     service.py          retrieve → context → generate 오케스트레이션, (event, payload) 이벤트 생성
-    retrieval.py        모델 로드·warmup(인덱스 sync + 엣지)·retrieve() — 저장소는 store.py에 위임
+    retrieval.py        warmup(인덱스 sync + 엣지)·retrieve() — 모델은 embedding.py, 저장소는 store.py에 위임
+    embedding.py        fastembed 로드 + 카탈로그 밖 모델 등록(CUSTOM). app import 없음 → Dockerfile이 직접 실행해 사전 다운로드
     store.py            VectorStore 인터페이스: PgVectorStore(pgvector) | MemoryStore(numpy, SQLite 폴백)
     ingest.py           corpus.json → 청크 계획(해시) → 바뀐 것만 임베딩·삽입, 사라진 것 삭제. `python -m app.chat.ingest`
     models.py           rag_documents · rag_chunks (vector(384), HNSW) — corpus.json의 파생 인덱스
@@ -111,9 +112,10 @@ POST /api/social/posts/{slug}/likes  GET/POST /api/social/posts/{slug}/comments
     이게 없으면 `docker stats`가 0B이고 compose `mem_limit`도 무시됨
   - 스왑 200MB → **1GB** (`/etc/dphys-swapfile` `CONF_SWAPSIZE=1024`)
   - 데스크톱 종료: `systemctl set-default multi-user.target` (GUI가 ~260MB를 먹고 있었음)
-  - 결과: OS + dockerd + Actions 러너 기본 사용량 **~250MB**. 새 스택 예산 ≈ backend 0.7GB + Postgres/Redis/nginx 0.15GB → ~1.2GB/1.8GB
+  - 결과: OS + dockerd + Actions 러너 기본 사용량 **~250MB**. 새 스택 예산 ≈ backend ~1.1GB(다국어 int8 모델) + Postgres/Redis/nginx 0.15GB → ~1.5GB/1.8GB
+    (여유 ~300MB — 리랭커 자리 없음. 스왑 사용이 보이면 `EMBED_MODEL=BAAI/bge-small-en-v1.5`로 회귀, −350MB)
   - **VS Code Remote-SSH를 Pi에 붙이면 +~420MB** (node 서버 4개). 배포 중엔 끊을 것; 평소엔 터미널 ssh 권장
-  - compose `mem_limit`: backend 1100m · postgres 256m · redis 96m · web 64m
+  - compose `mem_limit`: backend 1300m · postgres 256m · redis 96m · web 64m
   - 네트워크: Wi-Fi 5GHz(`KT_GiGA_5G_F48D`, ch149), IP 172.30.1.5 (공유기가 공인 IP:22022 → 이 주소로 포트포워딩하므로 사실상 고정,
     MAC d8:3a:dd:27:c7:04). 맥 `~/.ssh/config`: `ssh raspberrypi`(LAN) / `ssh rpi-external`(외부, 키 인증)
   - **Wi-Fi 프로필 우선순위**: 2026-08-29 재부팅 장애의 원인은 `KT_GiGA_5G_MAX`(다른 AP, 다른 서브넷) 프로필이
@@ -129,8 +131,8 @@ POST /api/social/posts/{slug}/likes  GET/POST /api/social/posts/{slug}/comments
     `cmdline.txt` 끝에 `systemd.run=/boot/firmware/firstrun.sh systemd.run_success_action=reboot systemd.unit=kernel-command-line.target`
     을 붙이면 첫 부팅에서 한 번 실행됨. macOS는 bootfs(FAT)만 마운트 가능, rootfs(ext4)는 못 읽음
   - Postgres `shared_buffers=32MB`·`max_connections=10`, Redis `maxmemory 48mb`
-  - backend ~0.6–0.8GB(onnxruntime + bge-small 65MB)가 최대 소비자. **225MB급 다국어 임베딩 모델(+560MB)은 이 Pi에 불가** →
-    한국어 대응은 질문 재작성(Haiku 번역, 메모리 0) 또는 양자화 모델로 (rag-design-notes §임베딩 모델)
+  - backend가 최대 소비자(onnxruntime + 임베딩 모델). fp32 다국어 모델(+560MB)은 불가라 **int8 양자화판(+354MB)** 채택
+    (rag-design-notes §임베딩 모델)
 - 스키마: 컨테이너 entrypoint가 `alembic upgrade head` 실행 → 배포 = 마이그레이션 자동 적용
 - RAG 인덱스: 시작 시 `retrieval.warmup()`이 corpus.json과 `rag_chunks`를 해시로 대조해 바뀐 청크만 임베딩
   (첫 부팅 30청크 2.6s, 이후 0.0s). 임베딩 모델을 바꾸면 해시가 전부 달라져 자동 재임베딩 — 단 차원이

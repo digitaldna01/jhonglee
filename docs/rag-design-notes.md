@@ -12,7 +12,7 @@
 
 ```
 시작 → corpus.json 청크 해시 vs rag_chunks 대조 → 바뀐 청크만 임베딩 (chat/ingest.py)
-질문 → 임베딩(fastembed bge-small-en-v1.5, ONNX, query prefix)
+질문 → 임베딩(fastembed, multilingual-MiniLM-L12 int8 — chat/embedding.py)
      → pgvector `ORDER BY embedding <=> q` (문서별 최고 청크 DISTINCT ON → top-4)
        (DATABASE_URL이 SQLite면 numpy MemoryStore로 동일 동작)
      → 컨텍스트 조립(desc + bio 상시 포함)
@@ -89,30 +89,37 @@ relations:                  # 온톨로지-라이트 (§3)
 | **ColBERT / late interaction** | 토큰 단위 다중 벡터 매칭 | 정밀도↑, 저장량 수십 배 | ❌ 과함 |
 | **질문 재작성 / HyDE** | 멀티턴에서 후속 질문을 독립 질문으로 재작성 | 멀티턴 RAG 정확도↑ | 🤔 **후보** — "그거 더 알려줘" 류 후속 질문 검색이 약해지면 도입 (Haiku로 재작성 1콜) |
 
-### 임베딩 모델 (2026-08-29 실측)
+### 임베딩 모델 (2026-08-29 교체)
 
 | 항목 | 값 |
 |---|---|
-| 모델 | `BAAI/bge-small-en-v1.5` — fastembed가 받는 실제 파일은 Qdrant의 ONNX **양자화판** `qdrant/bge-small-en-v1.5-onnx-q` |
-| 차원 / 크기 | **384** / 65MB, 출력 L2 정규화(norm 1 → 코사인 = 내적) |
-| 런타임 | fastembed → onnxruntime CPU (torch 없음; Pi에서 도는 이유). 프로세스 메모리 ~0.7GB의 대부분 |
-| 언어 | **영어 전용**, 512토큰 절단 |
-| 파일 위치 | `/tmp/fastembed_cache/` — Dockerfile이 빌드 시 다운로드해 이미지에 포함. 로컬 venv는 첫 실행 때 같은 경로로 |
-| 쓰이는 곳 | ① ingest: `passage_embed(청크들)` → `rag_chunks.embedding` ② 요청: `query_embed(질문)` → pgvector `<=>` |
+| 모델 | **`Xenova/paraphrase-multilingual-MiniLM-L12-v2-q8`** — sentence-transformers 다국어 MiniLM-L12의 **int8 ONNX**. fastembed 카탈로그에 없어 `chat/embedding.py`의 `CUSTOM`에 등록(add_custom_model) |
+| 이전 | `BAAI/bge-small-en-v1.5` (영어 전용, 65MB). 한국어 질문 recall@4 64%라 교체 |
+| 차원 / 크기 | **384**(동일 → 스키마 무변경) / 118MB, mean pooling, L2 정규화 |
+| 런타임 | fastembed → onnxruntime CPU. peak RSS 622MB (bge 268MB, 원본 fp32 830MB) |
+| 언어 | 50+개 언어, 한국어 포함. 질문(KO) → 문서(EN) cross-lingual 검색 |
+| 파일 위치 | `/tmp/fastembed_cache/` — Dockerfile이 `ARG EMBED_MODEL`로 빌드 시 다운로드(`python app/chat/embedding.py <model>`), 같은 값이 런타임 기본값 |
+| 쓰이는 곳 | ① ingest: `embed_passages` → `rag_chunks.embedding` ② 요청: `embed_query` → pgvector `<=>` |
+| 평가 | `scripts/eval_retrieval.py` + `scripts/golden_set.json` (EN 12 / KO 14) — 모델·청킹 바꿀 때마다 같은 숫자로 비교 |
 
 - 저장과 검색은 **반드시 같은 모델**. `rag_chunks.model` 컬럼 + 해시에 모델명이 들어가서 `EMBED_MODEL`을 바꾸면 다음 시작 때 전부 자동 재임베딩
 - 단 **차원이 바뀌면** `vector(384)` 컬럼·HNSW 인덱스 마이그레이션이 먼저 필요 (`chat/models.py EMBED_DIM`, 0002 참고)
 - bge 계열은 query prefix 관례 → fastembed의 `query_embed`/`passage_embed`를 쓴다 (직접 `embed()` 쓰지 말 것)
 - bio 문서는 passage를 질문 형태로 보강해 검색률을 올림 ("Who are you? Who is Jae Hong Lee? …" — ingest.py `passage_text`)
 
-**한국어 질문 대응 후보** (fastembed 0.8 `list_supported_models()` 실측 — 이전 메모의 `multilingual-e5-small`은 목록에 **없음**):
+**골든셋 비교 (2026-08-29, 실제 코퍼스 30청크)**
 
-| 모델 | 차원 | 크기 | 판정 |
-|---|---|---|---|
-| `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` | **384** | 225MB | 🥇 차원 동일 → **마이그레이션 없이 `EMBED_MODEL` + Dockerfile 라인만 교체**. 품질은 bge-small 대비 소폭 낮을 수 있어 골든셋으로 비교 후 결정 |
-| `sentence-transformers/paraphrase-multilingual-mpnet-base-v2` | 768 | 1GB | 컬럼 마이그레이션 + Pi 메모리 부담 |
-| `intfloat/multilingual-e5-large` | 1024 | 2.3GB | Pi 불가 |
-| `BAAI/bge-m3` | 1024 | — | 이 fastembed 버전 미지원. 지원되면 최우선 후보 |
+| 모델 | EN r@1 / r@4 | KO r@1 / r@4 | 질문 1개 | peak RSS |
+|---|---|---|---|---|
+| bge-small-en-v1.5 (이전) | 92% / 100% | 43% / 64% | — | 268MB |
+| multilingual-MiniLM-L12 fp32 | 83% / 100% | 79% / 93% | 9ms | 830MB |
+| **multilingual-MiniLM-L12 int8 (채택)** | 83% / 100% | 93% / 93% | 2ms | **622MB** |
+
+- 양자화 품질 손실 없음. EN recall@1 −1은 애매한 질문(Blender/illustration), recall@4는 동일 100%
+- fp32 원본(+560MB)은 2GB Pi에 불가 → int8(+354MB)로. 예산 ≈ 250 + 1.1GB + 150 = 1.5GB/1.8GB, backend mem_limit 1300m
+- 남은 KO 실패 1건 "일러스트 작품 보여줘": visualArtPortfolio 본문 청크 0개 → 콘텐츠 보강으로 해결
+- 대안으로 검토했던 것: Haiku 질문 재작성(메모리 0, API 의존) → 멀티턴 후속 질문 재작성 용도로 보류. `bge-m3`(1024-d)는 fastembed 0.8 미지원
+- 되돌리기: `EMBED_MODEL=BAAI/bge-small-en-v1.5` (Dockerfile ARG 동일) → 해시가 바뀌어 다음 시작에 자동 재임베딩
 
 ## 3. 온톨로지 / 지식그래프 판정
 
@@ -153,11 +160,11 @@ relations:
       아티팩트로 포함하거나 `POST /api/admin/ingest`로 전달. 동기화를 사람 기억에서 CI로.
       그다음 `/api/content/*`도 rag_documents를 읽게 하면 corpus.json 자체가 사라질 수 있음
 - [ ] **P2** `relations` 선언 엣지 + 그래프 표시 구분
-- [ ] **P3** 한국어 질문 대응 — 골든셋(EN 12/KO 14) 실측: bge-small KO recall@4 64%, multilingual-MiniLM 93%·EN 손실 없음.
-      그러나 **Pi가 2GB라 +560MB 모델 교체 불가**. 채택 경로: **질문 재작성(Haiku가 한국어→영어 독립 질문, 메모리 0,
-      멀티턴 재작성과 한 호출)** → bge-small 유지. 대안: 양자화 int8 다국어 모델(`add_custom_model`, +150~250MB 추정, 재측정 필요)
+- [x] **P3 → 완료 2026-08-29** 한국어 질문 대응 — 골든셋 실측 후 **multilingual-MiniLM-L12 int8**로 교체
+      (KO recall@4 64%→93%, EN 100% 유지, +354MB). `chat/embedding.py` 커스텀 등록, `scripts/eval_retrieval.py` 편입.
+      Pi 첫 배포 후 `docker stats` 실측 → 스왑 사용 시 bge-small + Haiku 질문 재작성으로 회귀
 - [ ] **P3** 리랭커 (fastembed rerank) — 검색 품질 문제가 실측되면
-- [ ] **P3** 멀티턴 질문 재작성 — 위 한국어 재작성과 같은 `chat/rewrite.py` 한 호출로 (후속 질문 → 독립 영어 질문)
+- [ ] **P3** 멀티턴 질문 재작성 (`chat/rewrite.py`, Haiku 1콜: 후속 질문 → 독립 질문) — 후속 질문 검색 실패가 보이면
 
 ## Sources
 

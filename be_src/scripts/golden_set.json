@@ -1,0 +1,33 @@
+{
+  "_comment": "Retrieval golden set: question → acceptable doc ids (any one counts). Keep EN/KO balanced; add a case whenever a real question fails.",
+  "en": [
+    {"q": "What did you build with k-means?", "expect": ["kmeansVisualizer"]},
+    {"q": "Tell me about your quantum computing project", "expect": ["quantumSimulator"]},
+    {"q": "Have you used XGBoost?", "expect": ["handPoseEstimation"]},
+    {"q": "What's your typography work?", "expect": ["gillSans", "designStudy"]},
+    {"q": "How did you build the smart factory dashboard?", "expect": ["smartfactoryDashboard"]},
+    {"q": "Who are you?", "expect": ["bio"]},
+    {"q": "Did you make anything with Blender?", "expect": ["cogsAndGears"]},
+    {"q": "Show me your illustration work", "expect": ["visualArtPortfolio"]},
+    {"q": "What do you do for a living?", "expect": ["bio"]},
+    {"q": "Did you use Claude Code to design a dashboard?", "expect": ["smartfactoryDashboard"]},
+    {"q": "book layout design project", "expect": ["designStudy"]},
+    {"q": "gesture recognition in real time", "expect": ["handPoseEstimation"]}
+  ],
+  "ko": [
+    {"q": "k-means로 뭘 만들었어?", "expect": ["kmeansVisualizer"]},
+    {"q": "양자 컴퓨팅 프로젝트 설명해줘", "expect": ["quantumSimulator"]},
+    {"q": "XGBoost 써본 적 있어?", "expect": ["handPoseEstimation"]},
+    {"q": "타이포그래피 작업 있어?", "expect": ["gillSans", "designStudy"]},
+    {"q": "스마트 팩토리 대시보드는 어떻게 만들었어?", "expect": ["smartfactoryDashboard"]},
+    {"q": "너는 누구야?", "expect": ["bio"]},
+    {"q": "블렌더로 만든 거 있어?", "expect": ["cogsAndGears"]},
+    {"q": "일러스트 작품 보여줘", "expect": ["visualArtPortfolio"]},
+    {"q": "무슨 일 해?", "expect": ["bio"]},
+    {"q": "클로드 코드로 대시보드 디자인했어?", "expect": ["smartfactoryDashboard"]},
+    {"q": "책 편집 디자인 프로젝트", "expect": ["designStudy"]},
+    {"q": "실시간 손동작 인식", "expect": ["handPoseEstimation"]},
+    {"q": "군집화 알고리즘 시각화 있어?", "expect": ["kmeansVisualizer"]},
+    {"q": "시를 인터랙티브하게 만든 작업", "expect": ["cogsAndGears"]}
+  ]
+}

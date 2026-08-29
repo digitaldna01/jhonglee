@@ -18,7 +18,7 @@ mdx 포스트 ──(npm run corpus)──▶ corpus.json ──▶ 백엔드 �
 ```
 
 - 지식의 원본은 `fe_src/src/posts/*.mdx` + `fe_src/src/content/*.md` 하나뿐. 사이트 페이지·그래프 노드·챗 검색이 모두 여기서 파생
-- 임베딩: fastembed(ONNX) `BAAI/bge-small-en-v1.5`, 384차원 — 영어 전용. 세부는 `docs/rag-design-notes.md`
+- 임베딩: fastembed(ONNX) 다국어 MiniLM-L12 **int8**, 384차원 — 한국어 질문 → 영어 문서 cross-lingual 검색. 세부는 `docs/rag-design-notes.md`
 
 ## 실행
 

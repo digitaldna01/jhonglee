@@ -22,7 +22,8 @@ app/
   chat/                   /api/chat/* — the RAG pipeline
     router.py             HTTP only (SSE serialisation)
     service.py            retrieve → context → generate, as (event, payload) async events
-    retrieval.py          embedding model, warmup (index sync + graph edges), retrieve()
+    retrieval.py          warmup (index sync + graph edges), retrieve()
+    embedding.py          fastembed loader + custom (non-catalog) model registry; run directly by the Dockerfile
     store.py              VectorStore: PgVectorStore (pgvector) | MemoryStore (numpy fallback)
     ingest.py             corpus → chunk plan (content hash) → embed only what changed
     models.py             rag_documents, rag_chunks (vector(384), HNSW)
@@ -32,6 +33,7 @@ app/
 migrations/               Alembic; env.py reads DATABASE_URL. 0001 pgvector ext, 0002 rag tables
 docker-entrypoint.sh      `alembic upgrade head`, then uvicorn
 tests/                    smoke (TestClient), cache, ingest (+ Postgres test via TEST_DATABASE_URL)
+scripts/eval_retrieval.py golden-set retrieval eval (recall@1/@4 EN+KO, timing, peak RSS) — run before changing model/chunking
 ```
 
 When a module outgrows one file, turn it into a package of the same name
@@ -63,7 +65,7 @@ pytest                                      # add TEST_DATABASE_URL=postgresql+a
 | `REDIS_URL` | *(unset → in-memory)* | compose: `redis://redis:6379/0` |
 | `ANTHROPIC_API_KEY` | *(unset → extractive answers)* | |
 | `CHAT_MODEL` | `claude-haiku-4-5` | |
-| `EMBED_MODEL` | `BAAI/bge-small-en-v1.5` | must match the Dockerfile pre-download; dimension is baked into `rag_chunks.embedding` |
+| `EMBED_MODEL` | `Xenova/paraphrase-multilingual-MiniLM-L12-v2-q8` | fastembed catalog name or a `chat/embedding.CUSTOM` key; the Dockerfile `ARG` bakes the same default. 384-d is baked into `rag_chunks.embedding` |
 
 ## API surface
 

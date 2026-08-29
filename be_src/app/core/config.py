@@ -5,8 +5,9 @@
   ANTHROPIC_API_KEY   enables real chat generation; without it the chat API
                       still works but answers extractively from retrieval only
   CHAT_MODEL          Anthropic model id for answer generation
-  EMBED_MODEL         fastembed model for retrieval (must match the model
-                      pre-downloaded in the Docker image)
+  EMBED_MODEL         embedding model for retrieval (fastembed catalog name or a
+                      key of chat/embedding.CUSTOM). The Dockerfile bakes the same
+                      default; changing it re-embeds the corpus on next start
   DATABASE_URL        SQLAlchemy async URL. SQLite file by default (dev without
                       Docker); production is Postgres + pgvector:
                       postgresql+asyncpg://user:pass@db:5432/jhonglee
@@ -26,7 +27,7 @@ class Settings:
 
         self.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY", "")
         self.chat_model = os.getenv("CHAT_MODEL", "claude-haiku-4-5")
-        self.embed_model = os.getenv("EMBED_MODEL", "BAAI/bge-small-en-v1.5")
+        self.embed_model = os.getenv("EMBED_MODEL", "Xenova/paraphrase-multilingual-MiniLM-L12-v2-q8")
 
         self.database_url = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./data/app.db")
         self.redis_url = os.getenv("REDIS_URL", "")
