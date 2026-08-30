@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { LangProvider, useLang } from '../utils/lang';
+import { fmtDate } from '../utils/format';
 import Lightbox from '../components/Lightbox';
 import { markZoomable, zoomTarget } from '../components/Lightbox/zoomable';
 import '../styles/work.css';
@@ -41,7 +42,7 @@ function PostTitle({ meta }) {
     pickLocaleValue(meta.title, locale, fallback) ??
     "";
   return (
-    <div className="text-[length:var(--h2)] text-center mb-2 break-keep text-balance">
+    <h1 className="post-title">
       {display.split("\n").map((line, i, arr) => (
         <span key={i}>
           {line}
@@ -53,7 +54,7 @@ function PostTitle({ meta }) {
           )}
         </span>
       ))}
-    </div>
+    </h1>
   );
 }
 
@@ -97,13 +98,24 @@ export default function Post() {
     <LangProvider initial={initial}>
       <section className="w-full pt-20 md:pt-24 font-sans overflow-x-clip">
         <div className="max-w-4xl mx-auto px-5 sm:px-8">
-          <PostTitle meta={meta} />
-          <div className="post-meta-row">
-            <p className="text-[length:var(--caption)] text-center post-meta-text">
-              {meta.category} | {meta.date}
-            </p>
-            {locales && locales.length > 1 && <LangToggle locales={locales} />}
-          </div>
+          <header className="post-head">
+            <PostTitle meta={meta} />
+            <div className="post-meta-row">
+              {/* what · when · built with — the same facts the WORK card and the graph show */}
+              <p className="post-meta-text">
+                {meta.category}
+                <span className="sep">·</span>
+                {fmtDate(meta.date)}
+                {meta.stack && (
+                  <>
+                    <span className="sep">·</span>
+                    {meta.stack}
+                  </>
+                )}
+              </p>
+              {locales && locales.length > 1 && <LangToggle locales={locales} />}
+            </div>
+          </header>
           {Component && (
             <div
               className="post-body"
