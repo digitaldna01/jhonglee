@@ -58,10 +58,11 @@ function toPlainText(md) {
     .trim();
 }
 
-/* split on ## headings; oversized sections split again on paragraphs */
+/* split on ## / ### headings (posts write sections as ###); oversized
+   sections split again on paragraphs */
 function toChunks(id, text) {
   const stripHeadings = (s) => s.replace(/^#{1,6}\s+/gm, '').trim();
-  const parts = text.split(/^##\s+/m);
+  const parts = text.split(/^###?\s+/m);
   const sections = [];
   if (parts[0].trim()) sections.push({ heading: null, text: stripHeadings(parts[0]) });
   for (const part of parts.slice(1)) {
