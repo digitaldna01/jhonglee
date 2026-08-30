@@ -47,10 +47,6 @@ export default function Info() {
     else graphRef.current?.setHover(null);
   }, []);
 
-  const onCiteClick = useCallback(() => {
-    /* project detail panel lands in the next step */
-  }, []);
-
   return (
     <div className={`landing${chat.inChat ? ' is-chat' : ''}`}>
       {graphData && (
@@ -71,7 +67,6 @@ export default function Info() {
           messages={chat.messages}
           activeCite={activeCite}
           onCiteHover={onCiteHover}
-          onCiteClick={onCiteClick}
         />
       </section>
 

@@ -9,7 +9,7 @@
    the on-device stand-in (data/retrieval + rag/generate) takes
    over with the same message shape — the UI never special-cases.
    ============================================================ */
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { RateLimitError, streamAnswer } from './rag/client';
 import { embed, retrieve } from './data/retrieval';
 import { answer as localAnswer, HISTORY_MAX } from './rag/generate';
@@ -19,12 +19,29 @@ import { answer as localAnswer, HISTORY_MAX } from './rag/generate';
 const SESSION_ID = crypto.randomUUID();
 let nextId = 1;
 
+/* The conversation outlives the landing route: following a source to its
+   post unmounts Info, and "‹ back to chat" must find the thread where it
+   was. Module state, not storage — a reload starts fresh, like the session. */
+const saved = { messages: [], convo: [] };
+export function forgetChat() {
+  saved.messages = [];
+  saved.convo = [];
+}
+
 export default function useChat(graphRef) {
-  const [inChat, setInChat] = useState(false);
+  const [inChat, setInChat] = useState(saved.messages.length > 0);
   const [busy, setBusy] = useState(false);
-  const [messages, setMessages] = useState([]);
-  const convoRef = useRef([]); // [{role, content}] — multiturn context
+  // an answer that was still streaming when we left is kept as far as it got
+  const [messages, setMessages] = useState(() =>
+    saved.messages.map((m) => (m.streaming ? { ...m, streaming: false } : m)),
+  );
+  const convoRef = useRef(saved.convo); // [{role, content}] — multiturn context
   const revealTimer = useRef(0);
+
+  useEffect(() => {
+    saved.messages = messages;
+    saved.convo = convoRef.current;
+  }, [messages]);
 
   const patchMessage = useCallback((id, patch) => {
     setMessages((ms) =>
@@ -133,6 +150,7 @@ export default function useChat(graphRef) {
     setBusy(false);
     setMessages([]);
     convoRef.current = [];
+    forgetChat();
     graphRef.current?.setIntro(true);
   }, [graphRef]);
 

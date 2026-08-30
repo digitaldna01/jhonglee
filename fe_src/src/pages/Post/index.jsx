@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { LangProvider } from '../../utils/lang';
 import useLang from '../../hooks/useLang';
@@ -65,6 +65,8 @@ function PostTitle({ meta }) {
 
 export default function Post() {
   const { slug } = useParams();
+  // reached from a chat citation → the way back is the conversation, not WORK
+  const fromChat = useLocation().state?.from === 'chat';
   const [state, setState] = useState({ status: 'loading', meta: null, Component: null });
   const [zoomed, setZoomed] = useState(null);
   const bodyRef = useRef(null);
@@ -115,7 +117,11 @@ export default function Post() {
       <section className="w-full pt-20 md:pt-24 font-sans overflow-x-clip">
         <div className="max-w-4xl mx-auto px-5 sm:px-8">
           <header className="post-head">
-            <BackLink to="/work" inFlow>back to work</BackLink>
+            {fromChat ? (
+              <BackLink to="/" inFlow>back to chat</BackLink>
+            ) : (
+              <BackLink to="/work" inFlow>back to work</BackLink>
+            )}
             <PostTitle meta={meta} />
             <div className="post-meta-row">
               {/* what · when · built with — the same facts the WORK card and the graph show */}

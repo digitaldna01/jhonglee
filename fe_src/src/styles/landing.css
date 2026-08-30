@@ -223,10 +223,17 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 116px var(--gutter) 168px;
+  padding: 116px var(--gutter) 116px;
   scroll-behavior: auto;
 }
-.thread-inner { max-width: 680px; margin: 0 auto; }
+.thread-inner {
+  max-width: 680px;
+  min-height: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
 
 /* message rows */
 .msg { margin: 0 0 26px; }
@@ -247,57 +254,17 @@
   text-wrap: pretty;
 }
 
-.msg.bot {
-  background: var(--panel);
-  border: 1px solid var(--hairline);
-  border-radius: 5px 16px 16px 16px;
-  box-shadow: var(--shadow);
-  overflow: hidden;
-  max-width: 92%;
-}
-.msg.bot .sources {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 7px;
-  padding: 11px 14px;
-  border-bottom: 1px solid var(--line-soft);
-  font-family: var(--font-mono);
-  font-size: var(--text-label);
-  color: var(--fg-3);
-}
-.msg.bot .sources .lead { letter-spacing: 0.02em; }
-.msg.bot .sources .dim { color: var(--fg-3); }
-
-.cite {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: var(--accent-bg);
-  color: var(--accent-2);
-  border-radius: 6px;
-  padding: 3px 8px;
-  cursor: pointer;
-  transition: background 0.15s var(--ease-out);
-}
-.cite::before {
-  content: '';
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: currentColor;
-}
-.cite:hover,
-.cite.active { background: rgba(var(--accent-rgb), 0.18); }
-
+/* The answer is not a card: it is the page speaking. Left, bare, on the
+   reading measure (40em ≈ 600px at 15px). Sources and the machine stats
+   follow as one footnote line in the same voice as a post's meta. */
+.msg.bot { max-width: 40em; }
 .msg.bot .body {
-  padding: 14px 16px 14px;
   font-size: 15px;
-  line-height: 1.6;
+  line-height: 1.65;
   color: var(--fg-1);
   letter-spacing: -0.006em;
 }
-.msg.bot .body p { margin: 0 0 10px; text-wrap: pretty; }
+.msg.bot .body p { margin: 0 0 12px; text-wrap: pretty; }
 .msg.bot .body p:last-child { margin-bottom: 0; }
 .msg.bot .body .dim { color: var(--fg-3); }
 .msg.bot .body .icite {
@@ -321,19 +288,32 @@
 }
 @keyframes blink { 50% { opacity: 0; } }
 
-.msg.bot .foot {
+/* footnote: "sources  Gill Sans · Cogs and Gears      105 ms · haiku 4.5" */
+.msg.bot .meta {
   display: flex;
-  align-items: center;
-  gap: 8px 12px;
+  align-items: baseline;
   flex-wrap: wrap;
-  padding: 9px 14px;
-  border-top: 1px solid var(--line-soft);
+  gap: 4px 14px;
+  margin-top: 12px;
   font-family: var(--font-mono);
-  font-size: var(--text-hint);
-  color: var(--fg-2);
+  font-size: var(--text-label);
+  color: var(--fg-3);
 }
-.msg.bot .foot .timing { color: var(--accent-2); }
-.msg.bot .foot .dotsep { color: var(--hairline); }
+.msg.bot .meta .sources { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 4px 7px; }
+.msg.bot .meta .lead { letter-spacing: 0.04em; margin-right: 3px; }
+.msg.bot .meta .stat { margin-left: auto; white-space: nowrap; }
+.msg.bot .meta .dotsep { color: var(--fg-4); }
+/* a cited title is a link to that post — and, on hover, lights its node */
+.cite {
+  color: var(--accent-2);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  text-decoration-color: transparent;
+  transition: text-decoration-color 0.15s var(--ease-out);
+}
+.cite:hover,
+.cite.active { text-decoration-color: currentColor; }
 
 /* seed chips */
 .seeds { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; }

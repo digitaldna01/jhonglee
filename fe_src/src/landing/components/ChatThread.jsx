@@ -1,4 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { Fragment, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
+
+// the post page reads this to offer "‹ back to chat" instead of "‹ back to work"
+const FROM_CHAT = { from: 'chat' };
 
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -10,7 +14,7 @@ function citeSegments(text, cited) {
   return text.split(re);
 }
 
-function BotBody({ msg, activeCite, onCiteHover, onCiteClick }) {
+function BotBody({ msg, activeCite, onCiteHover }) {
   if (msg.streaming) {
     return (
       <p className="stream">
@@ -25,15 +29,16 @@ function BotBody({ msg, activeCite, onCiteHover, onCiteClick }) {
       {citeSegments(para, msg.sources).map((seg, si) => {
         const src = si % 2 === 1 ? byTitle.get(seg) : null;
         return src ? (
-          <span
+          <Link
             key={si}
+            to={`/posts/${src.id}`}
+            state={FROM_CHAT}
             className={`icite${activeCite === src.id ? ' active' : ''}`}
             onMouseEnter={() => onCiteHover(src.id)}
             onMouseLeave={() => onCiteHover(null)}
-            onClick={() => onCiteClick(src.id)}
           >
             {seg}
-          </span>
+          </Link>
         ) : (
           seg
         );
@@ -42,48 +47,52 @@ function BotBody({ msg, activeCite, onCiteHover, onCiteClick }) {
   ));
 }
 
-function BotMessage({ msg, activeCite, onCiteHover, onCiteClick }) {
+/* "claude-haiku-4-5-20251001" → "haiku 4.5" */
+const shortModel = (m) =>
+  (m ?? '').replace(/^claude-/, '').replace(/-\d{8}$/, '').replace(/(\d)-(\d)/g, '$1.$2').replace(/-/g, ' ');
+
+function BotMessage({ msg, activeCite, onCiteHover }) {
   const f = msg.foot;
+  const sources = msg.sources ?? [];
   return (
     <div className="msg bot">
-      <div className="sources">
-        <span className="lead">sources</span>
-        {msg.sources && msg.sources.length === 0 && (
-          <span className="lead dim">— no strong match</span>
-        )}
-        {msg.sources?.map((s) => (
-          <span
-            key={s.id}
-            className={`cite${activeCite === s.id ? ' active' : ''}`}
-            onMouseEnter={() => onCiteHover(s.id)}
-            onMouseLeave={() => onCiteHover(null)}
-            onClick={() => onCiteClick(s.id)}
-          >
-            {s.title}
-          </span>
-        ))}
-      </div>
       <div className="body">
-        <BotBody msg={msg} activeCite={activeCite} onCiteHover={onCiteHover} onCiteClick={onCiteClick} />
+        <BotBody msg={msg} activeCite={activeCite} onCiteHover={onCiteHover} />
       </div>
-      <div className="foot">
-        {f.retrievalMs != null && (
-          <>
-            <span className="timing">
-              {f.retrievalMs.toFixed(f.retrievalMs < 1 ? 2 : 1)} ms
+      {msg.sources && (
+        <div className="meta">
+          <span className="sources">
+            <span className="lead">sources</span>
+            {sources.length === 0 && <span>no strong match</span>}
+            {sources.map((s, i) => (
+              <Fragment key={s.id}>
+                {i > 0 && <span className="dotsep">·</span>}
+                <Link
+                  to={`/posts/${s.id}`}
+                  state={FROM_CHAT}
+                  className={`cite${activeCite === s.id ? ' active' : ''}`}
+                  onMouseEnter={() => onCiteHover(s.id)}
+                  onMouseLeave={() => onCiteHover(null)}
+                >
+                  {s.title}
+                </Link>
+              </Fragment>
+            ))}
+          </span>
+          {f.retrievalMs != null && (
+            <span className="stat" title={`retrieval: ${f.retrievalModel}`}>
+              {f.retrievalMs < 1 ? f.retrievalMs.toFixed(2) : Math.round(f.retrievalMs)} ms
+              <span className="dotsep"> · </span>
+              {msg.streaming ? 'generating…' : shortModel(f.model)}
             </span>
-            <span className="dotsep">•</span>
-            <span>retrieval {f.retrievalModel}</span>
-            <span className="dotsep">•</span>
-            <span>{msg.streaming ? 'generating…' : f.model}</span>
-          </>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-export default function ChatThread({ messages, activeCite, onCiteHover, onCiteClick }) {
+export default function ChatThread({ messages, activeCite, onCiteHover }) {
   const threadRef = useRef(null);
 
   // drive the scroll container directly — never scrollIntoView
@@ -106,7 +115,6 @@ export default function ChatThread({ messages, activeCite, onCiteHover, onCiteCl
               msg={m}
               activeCite={activeCite}
               onCiteHover={onCiteHover}
-              onCiteClick={onCiteClick}
             />
           ),
         )}
