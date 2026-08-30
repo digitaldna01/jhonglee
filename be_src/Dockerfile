@@ -17,7 +17,8 @@ COPY alembic.ini docker-entrypoint.sh ./
 COPY migrations ./migrations
 COPY app ./app
 COPY scripts ./scripts
-ENV PYTHONPATH=/app # so `python scripts/usage_report.py` in the container finds `app` (the scripts import it)
+# so `python scripts/usage_report.py` in the container finds `app` (the scripts import it)
+ENV PYTHONPATH=/app
 
 EXPOSE 8000
 ENTRYPOINT ["./docker-entrypoint.sh"]

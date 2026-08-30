@@ -131,6 +131,15 @@ relations:                  # 온톨로지-라이트 (§3)
 - 대안으로 검토했던 것: Haiku 질문 재작성(메모리 0, API 의존) → 멀티턴 후속 질문 재작성 용도로 보류. `bge-m3`(1024-d)는 fastembed 0.8 미지원
 - 되돌리기: `EMBED_MODEL=BAAI/bge-small-en-v1.5` (Dockerfile ARG 동일) → 해시가 바뀌어 다음 시작에 자동 재임베딩
 
+### 배포 전 실측 — 임베딩 배치가 메모리를 정한다 (2026-08-30)
+
+프로덕션 compose를 arm64 이미지로 Mac에서 그대로 띄워 보니 백엔드 RSS가 **1.25 GB**(한도 1.27 GB에 밀착). 모델을 bge-small로 바꿔도 1.25 GB —
+모델이 아니었다. 단계별로 재 보니 모델 로드 491 MB(MiniLM int8; bge 184 MB), 패시지 8건 578 MB, **코퍼스 40건을 한 배치로 넣는 순간 1.7 GB**
+(bge 1.3 GB): fastembed 기본 batch 256 = 전체를 onnxruntime 한 번에, ORT 아레나는 그 피크로 커진 뒤 안 줄어든다. 배치 8 → 822 MB, 4 → 665,
+2 → 584, **1 → 541 MB이고 오히려 가장 빠름**(1.3 s vs 1.7 s — CPU 추론은 배칭 이득이 없다). `embedding.EMBED_BATCH = 1`. 풀스택(pgvector·Redis·
+nginx) 실측: backend 575 MB · db 25 · redis 10 · web 12 → Pi 기본 사용 ~380 MB를 더해 ≈ 1.0 GB / 1.8 GB, 스왑 없이 들어간다. 로드맵의
+"스왑 쓰면 bge-small로 회귀"는 필요 없어짐 — 재작성이 실패해도 한국어를 받는 MiniLM을 유지.
+
 ## 2.5 후속 질문 처리 (Conversational RAG) — 2026-08-29
 
 검색 결과는 **요청 단위 첨부물**(이번 user 메시지의 `Context:`에만), 대화 기록은 **세션 단위 기억**(Redis, 질문/답만).
@@ -495,7 +504,7 @@ v3에서 잡은 둘. ① "Who are you?"가 스마트 팩토리 후속으로 오�
 - [ ] **P2** `relations` 선언 엣지 + 그래프 표시 구분
 - [x] **P3 → 완료 2026-08-29** 한국어 질문 대응 — 골든셋 실측 후 **multilingual-MiniLM-L12 int8**로 교체
       (KO recall@4 64%→93%, EN 100% 유지, +354MB). `chat/embedding.py` 커스텀 등록, `scripts/eval_retrieval.py` 편입.
-      Pi 첫 배포 후 `docker stats` 실측 → 스왑 사용 시 bge-small + Haiku 질문 재작성으로 회귀
+      배포 전 arm64 실측(§2 임베딩 배치): 백엔드 575 MB — 스왑 없이 들어감, bge-small 회귀 불필요
 - [ ] **P3** 리랭커 (fastembed rerank) — 검색 품질 문제가 실측되면
 - [x] **P2-3** 후속 질문 1단계: 골든셋 `followup` + 제목 앵커 가중 RRF — 2026-08-29 (§2.5)
 - [x] **답변 프롬프트 v3 — 2026-08-30** 주인의 보이스 가이드를 프롬프트로, 판정 18/6/3, 해요체 슬립 0, 근거 없는 주장 유지 (§2.11).
