@@ -350,6 +350,24 @@
   box-shadow: var(--shadow), 0 0 0 3px var(--accent-fill-bg);
 }
 .composer input:focus-visible { outline: none; }
+/* someone else's conversation (or none): the composer's box, a sentence instead */
+.composer.is-readonly {
+  justify-content: space-between;
+  padding: 12px 16px;
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.04em;
+  color: var(--fg-3);
+}
+.composer.is-readonly a { color: var(--accent-2); text-decoration: none; white-space: nowrap; }
+.composer.is-readonly a:hover { text-decoration: underline; text-underline-offset: 0.2em; }
+.thread-note {
+  margin: 0 0 26px;
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.04em;
+  color: var(--fg-3);
+}
 .composer .glyph { color: var(--fg-3); display: grid; place-items: center; }
 .composer .glyph svg { width: 16px; height: 16px; }
 .composer input {

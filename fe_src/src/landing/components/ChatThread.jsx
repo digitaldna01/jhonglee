@@ -1,9 +1,6 @@
 import { Fragment, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 
-// the post page reads this to offer "‹ back to chat" instead of "‹ back to work"
-const FROM_CHAT = { from: 'chat' };
-
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /* Split text so exact mentions of cited project titles become inline
@@ -14,7 +11,7 @@ function citeSegments(text, cited) {
   return text.split(re);
 }
 
-function BotBody({ msg, activeCite, onCiteHover }) {
+function BotBody({ msg, activeCite, onCiteHover, back }) {
   if (msg.streaming) {
     return (
       <p className="stream">
@@ -32,7 +29,7 @@ function BotBody({ msg, activeCite, onCiteHover }) {
           <Link
             key={si}
             to={`/posts/${src.id}`}
-            state={FROM_CHAT}
+            state={back}
             className={`icite${activeCite === src.id ? ' active' : ''}`}
             onMouseEnter={() => onCiteHover(src.id)}
             onMouseLeave={() => onCiteHover(null)}
@@ -51,13 +48,13 @@ function BotBody({ msg, activeCite, onCiteHover }) {
 const shortModel = (m) =>
   (m ?? '').replace(/^claude-/, '').replace(/-\d{8}$/, '').replace(/(\d)-(\d)/g, '$1.$2').replace(/-/g, ' ');
 
-function BotMessage({ msg, activeCite, onCiteHover }) {
+function BotMessage({ msg, activeCite, onCiteHover, back }) {
   const f = msg.foot;
   const sources = msg.sources ?? [];
   return (
     <div className="msg bot">
       <div className="body">
-        <BotBody msg={msg} activeCite={activeCite} onCiteHover={onCiteHover} />
+        <BotBody msg={msg} activeCite={activeCite} onCiteHover={onCiteHover} back={back} />
       </div>
       {msg.sources && (
         <div className="meta">
@@ -69,7 +66,7 @@ function BotMessage({ msg, activeCite, onCiteHover }) {
                 {i > 0 && <span className="dotsep">·</span>}
                 <Link
                   to={`/posts/${s.id}`}
-                  state={FROM_CHAT}
+                  state={back}
                   className={`cite${activeCite === s.id ? ' active' : ''}`}
                   onMouseEnter={() => onCiteHover(s.id)}
                   onMouseLeave={() => onCiteHover(null)}
@@ -80,7 +77,7 @@ function BotMessage({ msg, activeCite, onCiteHover }) {
             ))}
           </span>
           {f.retrievalMs != null && (
-            <span className="stat" title={`retrieval: ${f.retrievalModel}`}>
+            <span className="stat" title={f.retrievalModel ? `retrieval: ${f.retrievalModel}` : undefined}>
               {f.retrievalMs < 1 ? f.retrievalMs.toFixed(2) : Math.round(f.retrievalMs)} ms
               <span className="dotsep"> · </span>
               {msg.streaming ? 'generating…' : shortModel(f.model)}
@@ -92,8 +89,10 @@ function BotMessage({ msg, activeCite, onCiteHover }) {
   );
 }
 
-export default function ChatThread({ messages, activeCite, onCiteHover }) {
+export default function ChatThread({ sid, messages, missing = false, activeCite, onCiteHover }) {
   const threadRef = useRef(null);
+  // the post page reads this to offer "‹ back to chat" — back to this address
+  const back = { from: 'chat', sid };
 
   // drive the scroll container directly — never scrollIntoView
   useEffect(() => {
@@ -104,6 +103,7 @@ export default function ChatThread({ messages, activeCite, onCiteHover }) {
   return (
     <div className="thread" role="log" aria-live="polite" ref={threadRef}>
       <div className="thread-inner">
+        {missing && <p className="thread-note">No conversation at this address.</p>}
         {messages.map((m) =>
           m.role === 'user' ? (
             <div className="msg user" key={m.id}>
@@ -115,6 +115,7 @@ export default function ChatThread({ messages, activeCite, onCiteHover }) {
               msg={m}
               activeCite={activeCite}
               onCiteHover={onCiteHover}
+              back={back}
             />
           ),
         )}

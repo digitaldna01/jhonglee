@@ -12,12 +12,14 @@ import NotFound from './pages/NotFound';
 function Layout() {
   // the landing is a fixed full-viewport page — a flow footer would
   // surface right under the navbar there
-  const isLanding = useLocation().pathname === '/';
+  const { pathname } = useLocation();
+  const isLanding = pathname === '/' || pathname.startsWith('/chat/');
   return (
     <>
       <Navbar />
       <Routes>
         <Route path="/" element={<Info />} />
+        <Route path="/chat/:sid" element={<Info />} />
         <Route path="/cv" element={<Cv />} />
         <Route path="/work" element={<Work />} />
         <Route path="/blog" element={<Navigate to="/work" replace />} />

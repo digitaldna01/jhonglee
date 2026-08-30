@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 const SEEDS = [
   { label: 'machine-learning work', q: 'What machine-learning work have you done?' },
@@ -8,7 +9,7 @@ const SEEDS = [
 
 /* Seed chips + composer. The composer is SHARED between map and chat
    modes — it stays docked at the bottom across the transition. */
-export default function Dock({ inChat, busy, onAsk, inputRef }) {
+export default function Dock({ inChat, busy, onAsk, inputRef, readOnly = false, note = 'read only' }) {
   const [value, setValue] = useState('');
 
   const submit = (q) => {
@@ -27,6 +28,12 @@ export default function Dock({ inChat, busy, onAsk, inputRef }) {
         ))}
       </div>
 
+      {readOnly ? (
+        <div className="composer is-readonly" role="note">
+          <span>{note}</span>
+          <Link to="/">ask your own →</Link>
+        </div>
+      ) : (
       <div className="composer">
         <span className="glyph" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
@@ -62,6 +69,7 @@ export default function Dock({ inChat, busy, onAsk, inputRef }) {
           </svg>
         </button>
       </div>
+      )}
     </div>
   );
 }

@@ -1,47 +1,90 @@
 /* ============================================================
    Landing — chat session state machine
    ------------------------------------------------------------
-   Owns the conversation: entering/leaving chat mode, message
-   list, streaming updates, and the intro handoff (the map slides
-   out while a chat is open — see landing.css .is-chat).
+   Owns the conversation: entering/leaving chat mode, the message
+   list, streaming updates, the intro handoff (the map slides out
+   while a chat is open — see landing.css .is-chat), and its address
+   (/chat/:sid — loaded from the server when arrived at by URL).
 
    Answer path: backend SSE first; if the backend is unreachable
    the on-device stand-in (data/retrieval + rag/generate) takes
    over with the same message shape — the UI never special-cases.
    ============================================================ */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { RateLimitError, streamAnswer } from './rag/client';
+import { useNavigate } from 'react-router-dom';
+import { ForbiddenError, NotFoundError, RateLimitError, fetchConversation, streamAnswer } from './rag/client';
 import { embed, retrieve } from './data/retrieval';
 import { answer as localAnswer, HISTORY_MAX } from './rag/generate';
+import { historyFromTurns, messagesFromTurns, nonBio } from './transcript';
 
-
-// one server-side chat session per page load (see be_src chat/history.py)
-const SESSION_ID = crypto.randomUUID();
 let nextId = 1;
+const mint = () => crypto.randomUUID();
 
-/* The conversation outlives the landing route: following a source to its
-   post unmounts Info, and "‹ back to chat" must find the thread where it
-   was. Module state, not storage — a reload starts fresh, like the session. */
-const saved = { messages: [], convo: [] };
-export function forgetChat() {
-  saved.messages = [];
-  saved.convo = [];
-}
-
-export default function useChat(graphRef) {
-  const [inChat, setInChat] = useState(saved.messages.length > 0);
+/* `sid` is the conversation the URL names (undefined on "/"). The address is
+   the state: a conversation opened by link, reload or the back button is
+   loaded from the server; one started here gets its address after the
+   first answer (navigate replace), and leaving for "/" resets the room. */
+export default function useChat(graphRef, sid) {
+  const navigate = useNavigate();
+  const [inChat, setInChat] = useState(Boolean(sid));
   const [busy, setBusy] = useState(false);
-  // an answer that was still streaming when we left is kept as far as it got
-  const [messages, setMessages] = useState(() =>
-    saved.messages.map((m) => (m.streaming ? { ...m, streaming: false } : m)),
-  );
-  const convoRef = useRef(saved.convo); // [{role, content}] — multiturn context
+  const [messages, setMessages] = useState([]);
+  const [canContinue, setCanContinue] = useState(true);
+  const [missing, setMissing] = useState(false); // the URL names a conversation that does not exist
+  const sessionRef = useRef(sid ?? null); // the address of the current conversation, minted on the first ask
+  const selfNavRef = useRef(null); // the sid we put in the URL ourselves — consumed once, so that arrival is not a reload
+  const prevSidRef = useRef(sid);
+  const convoRef = useRef([]); // [{role, content}] — multiturn context
   const revealTimer = useRef(0);
 
+  const reset = useCallback(() => {
+    clearInterval(revealTimer.current);
+    setInChat(false);
+    setBusy(false);
+    setMessages([]);
+    setCanContinue(true);
+    setMissing(false);
+    convoRef.current = [];
+    sessionRef.current = null;
+    graphRef.current?.setIntro(true);
+  }, [graphRef]);
+
+  // (refs, not the marker alone: StrictMode runs this twice in dev and a
+  // guard that survives the rerun would swallow the load)
   useEffect(() => {
-    saved.messages = messages;
-    saved.convo = convoRef.current;
-  }, [messages]);
+    const prev = prevSidRef.current;
+    prevSidRef.current = sid;
+    if (!sid) {
+      if (prev) reset(); // back to "/" from an address: the map again, a fresh room
+      return undefined;
+    }
+    if (selfNavRef.current === sid) {
+      selfNavRef.current = null; // our own navigation after the first answer — already on screen
+      return undefined;
+    }
+    sessionRef.current = sid;
+    setInChat(true);
+    setMissing(false);
+    graphRef.current?.setIntro(false);
+    let cancelled = false;
+    fetchConversation(sid)
+      .then((c) => {
+        if (cancelled) return;
+        setMessages(messagesFromTurns(c.turns));
+        convoRef.current = historyFromTurns(c.turns, HISTORY_MAX);
+        setCanContinue(c.canContinue);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setMessages([]);
+        setCanContinue(false);
+        setMissing(true);
+        if (!(err instanceof NotFoundError)) console.warn(err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [sid, graphRef, reset]);
 
   const patchMessage = useCallback((id, patch) => {
     setMessages((ms) =>
@@ -71,7 +114,8 @@ export default function useChat(graphRef) {
 
   const ask = useCallback(async (question) => {
     const q = (question || '').trim();
-    if (!q || busy) return;
+    if (!q || busy || !canContinue) return;
+    const address = sessionRef.current ?? (sessionRef.current = mint());
 
     setInChat(true);
     setBusy(true);
@@ -95,9 +139,8 @@ export default function useChat(graphRef) {
     };
 
     const onSources = (payload) => {
-      const projects = payload.sources.filter((s) => s.kind !== 'bio');
       patchMessage(botId, {
-        sources: projects,
+        sources: nonBio(payload.sources),
         foot: {
           retrievalMs: payload.retrieval_ms,
           retrievalModel: payload.retrieval_model,
@@ -109,7 +152,7 @@ export default function useChat(graphRef) {
       let answerText = '';
       const done = await streamAnswer({
         question: q,
-        sessionId: SESSION_ID,
+        sessionId: address,
         history,
         onSources,
         onDelta: (chunk) => {
@@ -119,7 +162,17 @@ export default function useChat(graphRef) {
       });
       record(answerText);
       finishBot(botId, { model: done.model });
+      if (sid !== address) {
+        selfNavRef.current = address; // the URL catches up with what is on screen
+        navigate(`/chat/${address}`, { replace: true });
+      }
     } catch (err) {
+      if (err instanceof ForbiddenError) {
+        setCanContinue(false);
+        reveal(botId, 'This conversation was started in another browser — it is read-only here.',
+          () => finishBot(botId, { model: 'not yours' }));
+        return;
+      }
       if (err instanceof RateLimitError) {
         const wait = Math.ceil(err.retryAfter / 60);
         const text =
@@ -142,17 +195,14 @@ export default function useChat(graphRef) {
       record(res.text);
       reveal(botId, res.text, () => finishBot(botId, { model: res.label }));
     }
-  }, [busy, graphRef, patchMessage, reveal, finishBot]);
+  }, [busy, canContinue, sid, navigate, graphRef, patchMessage, reveal, finishBot]);
 
+  /* "back to map": from an address, go home and let the URL effect reset;
+     on "/" (before the first answer) reset directly */
   const exitChat = useCallback(() => {
-    clearInterval(revealTimer.current);
-    setInChat(false);
-    setBusy(false);
-    setMessages([]);
-    convoRef.current = [];
-    forgetChat();
-    graphRef.current?.setIntro(true);
-  }, [graphRef]);
+    if (sid) navigate('/');
+    else reset();
+  }, [sid, navigate, reset]);
 
-  return { inChat, busy, messages, ask, exitChat };
+  return { inChat, busy, messages, canContinue, missing, sessionId: sessionRef.current, ask, exitChat };
 }

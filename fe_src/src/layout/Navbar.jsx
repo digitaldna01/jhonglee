@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import useTheme from '../hooks/useTheme';
-import { forgetChat } from '../landing/useChat';
 import '../styles/navbar.css';
 
 const NAV = [
@@ -50,7 +49,6 @@ export default function Navbar() {
           className="wordmark"
           onClick={() => {
             setOpen(false);
-            forgetChat(); // a kept conversation would otherwise resume on "/"
             // already home → the landing listens and resets its chat session
             if (pathname === '/') window.dispatchEvent(new Event('jhl:home'));
           }}

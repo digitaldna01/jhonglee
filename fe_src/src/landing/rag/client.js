@@ -21,7 +21,8 @@ export async function fetchGraph({ signal } = {}) {
  *   onDelta(text) per chunk; resolves with the `done` payload {model}.
  *   Throws RateLimitError (429) when the visitor has asked too much —
  *   scope 'visitor' | 'ip' (wait a minute) or 'global' (the site-wide
- *   daily budget is spent; back tomorrow).
+ *   daily budget is spent; back tomorrow) — and ForbiddenError (403) when
+ *   sessionId names a conversation another browser started.
  */
 export class RateLimitError extends Error {
   constructor(retryAfter, scope = 'visitor') {
@@ -32,6 +33,31 @@ export class RateLimitError extends Error {
   }
 }
 
+/** The conversation at an address — {id, title, canContinue, turns}. Throws
+ *  NotFoundError for an unknown id; any other failure is an outage. */
+export class NotFoundError extends Error {
+  constructor(sid) {
+    super(`no conversation ${sid}`);
+    this.name = 'NotFoundError';
+  }
+}
+
+export async function fetchConversation(sid, { signal } = {}) {
+  const res = await fetch(`/api/chat/sessions/${encodeURIComponent(sid)}`, { signal });
+  if (res.status === 404) throw new NotFoundError(sid);
+  if (!res.ok) throw new Error(`conversation fetch failed: ${res.status}`);
+  const c = await res.json();
+  return { id: c.id, title: c.title, canContinue: c.can_continue, turns: c.turns };
+}
+
+/** Continuing a conversation another browser started. */
+export class ForbiddenError extends Error {
+  constructor() {
+    super('not your conversation');
+    this.name = 'ForbiddenError';
+  }
+}
+
 export async function streamAnswer({ question, sessionId, history = [], onSources, onDelta, signal }) {
   const res = await fetch('/api/chat/stream', {
     method: 'POST',
@@ -39,6 +65,7 @@ export async function streamAnswer({ question, sessionId, history = [], onSource
     body: JSON.stringify({ question, session_id: sessionId, history }),
     signal,
   });
+  if (res.status === 403) throw new ForbiddenError();
   if (res.status === 429) {
     throw new RateLimitError(
       Number(res.headers.get('Retry-After')) || 60,

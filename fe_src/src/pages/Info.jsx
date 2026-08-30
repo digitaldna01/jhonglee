@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import useTheme from '../hooks/useTheme';
 import useChat from '../landing/useChat';
 import MapLayer from '../landing/components/MapLayer';
@@ -12,11 +13,13 @@ import '../styles/landing.css';
 
 /* Landing — full-viewport similarity map with a RAG chat session.
    The first question slides the map up and opens the thread; back to
-   map (or Esc, or the wordmark) reverses everything. */
+   map (or Esc, or the wordmark) reverses everything. The same page
+   serves /chat/:sid — a conversation opened by its address. */
 export default function Info() {
   const { theme } = useTheme();
   const graphRef = useRef(null);
-  const chat = useChat(graphRef);
+  const { sid } = useParams(); // /chat/:sid — undefined on "/"
+  const chat = useChat(graphRef, sid);
   const graphData = useGraphData();
   const [activeCite, setActiveCite] = useState(null);
   const composerRef = useRef(null);
@@ -64,13 +67,22 @@ export default function Info() {
       <section className="chat" aria-label="Conversation">
         <BackLink onClick={chat.exitChat}>back to map</BackLink>
         <ChatThread
+          sid={chat.sessionId}
           messages={chat.messages}
+          missing={chat.missing}
           activeCite={activeCite}
           onCiteHover={onCiteHover}
         />
       </section>
 
-      <Dock inChat={chat.inChat} busy={chat.busy} onAsk={chat.ask} inputRef={composerRef} />
+      <Dock
+        inChat={chat.inChat}
+        busy={chat.busy}
+        onAsk={chat.ask}
+        inputRef={composerRef}
+        readOnly={chat.inChat && !chat.canContinue}
+        note={chat.missing ? 'nothing at this address' : 'read only'}
+      />
       <ContactCorner />
     </div>
   );

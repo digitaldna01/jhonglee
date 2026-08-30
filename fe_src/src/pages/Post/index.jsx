@@ -65,8 +65,9 @@ function PostTitle({ meta }) {
 
 export default function Post() {
   const { slug } = useParams();
-  // reached from a chat citation → the way back is the conversation, not WORK
-  const fromChat = useLocation().state?.from === 'chat';
+  // reached from a chat citation → the way back is that conversation, not WORK
+  const from = useLocation().state;
+  const chatAddress = from?.from === 'chat' ? (from.sid ? `/chat/${from.sid}` : '/') : null;
   const [state, setState] = useState({ status: 'loading', meta: null, Component: null });
   const [zoomed, setZoomed] = useState(null);
   const bodyRef = useRef(null);
@@ -117,8 +118,8 @@ export default function Post() {
       <section className="w-full pt-20 md:pt-24 font-sans overflow-x-clip">
         <div className="max-w-4xl mx-auto px-5 sm:px-8">
           <header className="post-head">
-            {fromChat ? (
-              <BackLink to="/" inFlow>back to chat</BackLink>
+            {chatAddress ? (
+              <BackLink to={chatAddress} inFlow>back to chat</BackLink>
             ) : (
               <BackLink to="/work" inFlow>back to work</BackLink>
             )}
