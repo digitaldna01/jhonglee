@@ -1,5 +1,5 @@
 node_modules
-dist
+# dist is NOT ignored: Dockerfile.deploy copies the runner-built bundle
 .vite
 .DS_Store
 Dockerfile

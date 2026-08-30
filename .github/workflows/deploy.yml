@@ -20,6 +20,22 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      # The web bundle is built natively here (x86) — building it inside the
+      # arm64 image under QEMU took >17 minutes; the image step below only
+      # copies dist/ into nginx (fe_src/Dockerfile.deploy).
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: fe_src/package-lock.json
+
+      - name: Build web bundle
+        working-directory: fe_src
+        run: |
+          npm ci
+          npm run build
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -34,6 +50,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./fe_src
+          file: ./fe_src/Dockerfile.deploy
           platforms: linux/arm64
           push: true
           tags: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
