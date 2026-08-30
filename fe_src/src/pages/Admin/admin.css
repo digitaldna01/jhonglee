@@ -1,0 +1,61 @@
+/* ── /admin — owner's door + conversation list ─────────────
+   Same masthead grammar as a post; the list is a mono ledger. */
+.admin-door, .admin-head { margin-bottom: 28px; }
+.admin-field { display: grid; gap: 8px; margin: 28px 0 14px; }
+.admin-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+.admin-field input {
+  font: inherit;
+  padding: 10px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  background: var(--mat);
+  color: var(--fg-1);
+}
+.admin-field input:focus-visible { outline: none; border-color: var(--accent-fill); box-shadow: 0 0 0 3px var(--accent-fill-bg); }
+.admin-error { margin: 0 0 14px; color: var(--fg-2); font-size: 14px; }
+.admin-btn {
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--hairline);
+  background: var(--panel);
+  color: var(--fg-1);
+  cursor: pointer;
+}
+.admin-btn:hover { border-color: var(--fg-3); }
+.admin-btn:disabled { opacity: 0.4; cursor: default; }
+.admin-link { all: unset; cursor: pointer; color: var(--accent-2); }
+.admin-link:hover { text-decoration: underline; }
+
+.admin-list { list-style: none; margin: 0 auto 24px; padding: 0; max-width: 34em; border-top: 1px solid var(--hairline); }
+.admin-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--hairline);
+  color: var(--fg-1);
+  text-decoration: none;
+}
+.admin-row:hover .admin-title { color: var(--accent-2); }
+.admin-title { font-size: 15px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-title em { color: var(--fg-3); font-style: normal; }
+.admin-meta {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+.admin-meta .sep { margin: 0 6px; color: var(--fg-4); }
+@media (max-width: 560px) {
+  .admin-row { flex-direction: column; gap: 4px; }
+}
