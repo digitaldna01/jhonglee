@@ -17,5 +17,11 @@
 .post-body .prose { word-break: keep-all; }
 .post-body .prose pre { font-size: 0.85em; }
 
+/* section headings (###): the global --h4 is 24px between 768 and 1279,
+   only 1.33× an 18px body — a bold paragraph, not a heading. Hold ≈1.5× */
+@media (min-width: 768px) and (max-width: 1279px) {
+  .post-body .prose h3 { font-size: 27px; }
+}
+
 /* the old full-bleed hero now takes the column like everything else */
 .post-body .prose img.img-wide { width: 100%; max-width: 100%; }

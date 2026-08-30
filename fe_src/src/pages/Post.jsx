@@ -1,6 +1,8 @@
 import { useParams } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { LangProvider, useLang } from '../utils/lang';
+import Lightbox from '../components/Lightbox';
+import { markZoomable, zoomTarget } from '../components/Lightbox/zoomable';
 import '../styles/work.css';
 import '../styles/post.css';
 
@@ -58,6 +60,8 @@ function PostTitle({ meta }) {
 export default function Post() {
   const { slug } = useParams();
   const [state, setState] = useState({ status: 'loading', meta: null, Component: null });
+  const [zoomed, setZoomed] = useState(null);
+  const bodyRef = useRef(null);
 
   useEffect(() => {
     const loader = postModules[`../posts/${slug}.mdx`];
@@ -71,6 +75,17 @@ export default function Post() {
   }, [slug]);
 
   const { status, meta, Component } = state;
+
+  // every image worth enlarging gets a zoom cursor — re-checked whenever the
+  // body changes (language toggle swaps the whole tree)
+  useEffect(() => {
+    const root = bodyRef.current;
+    if (!root) return undefined;
+    markZoomable(root);
+    const mo = new MutationObserver(() => markZoomable(root));
+    mo.observe(root, { childList: true, subtree: true });
+    return () => mo.disconnect();
+  }, [status]);
 
   if (status === 'loading') return <p className="pt-24 text-center">Loading…</p>;
   if (status === '404' || !meta) return <p className="pt-24 text-center">404 - Post Not Found</p>;
@@ -89,7 +104,24 @@ export default function Post() {
             </p>
             {locales && locales.length > 1 && <LangToggle locales={locales} />}
           </div>
-          {Component && <div className="post-body"><div className="prose"><Component /></div></div>}
+          {Component && (
+            <div
+              className="post-body"
+              ref={bodyRef}
+              onClick={(e) => {
+                const target = zoomTarget(e);
+                if (target) { e.preventDefault(); setZoomed(target); }
+              }}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter' && e.key !== ' ') return;
+                const target = zoomTarget(e);
+                if (target) { e.preventDefault(); setZoomed(target); }
+              }}
+            >
+              <div className="prose"><Component /></div>
+            </div>
+          )}
+          <Lightbox image={zoomed} onClose={() => setZoomed(null)} />
         </div>
       </section>
     </LangProvider>
