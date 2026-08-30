@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import useTheme from '../hooks/useTheme';
 import useChat from '../landing/useChat';
 import MapLayer from '../landing/components/MapLayer';
@@ -20,6 +20,11 @@ export default function Info() {
   const graphRef = useRef(null);
   const { sid } = useParams(); // /chat/:sid — undefined on "/"
   const chat = useChat(graphRef, sid);
+  // opened from the owner's list: "back" means that list, not the map
+  const fromAdmin = useLocation().state?.from === 'admin';
+  const navigate = useNavigate();
+  const exitChat = chat.exitChat;
+  const leave = useCallback(() => (fromAdmin ? navigate('/admin') : exitChat()), [fromAdmin, navigate, exitChat]);
   const graphData = useGraphData();
   const [activeCite, setActiveCite] = useState(null);
   const composerRef = useRef(null);
@@ -33,7 +38,7 @@ export default function Info() {
   // Esc and the JHL. wordmark both end the session and restore the map
   useEffect(() => {
     const onKey = (e) => {
-      if (e.key === 'Escape' && chat.inChat) chat.exitChat();
+      if (e.key === 'Escape' && chat.inChat) leave();
     };
     const onHome = () => chat.exitChat();
     document.addEventListener('keydown', onKey);
@@ -42,7 +47,7 @@ export default function Info() {
       document.removeEventListener('keydown', onKey);
       window.removeEventListener('jhl:home', onHome);
     };
-  }, [chat]);
+  }, [chat, leave]);
 
   const onCiteHover = useCallback((id) => {
     setActiveCite(id);
@@ -65,7 +70,11 @@ export default function Info() {
       <Intro gone={chat.inChat} onAsk={() => composerRef.current?.focus()} />
 
       <section className="chat" aria-label="Conversation">
-        <BackLink onClick={chat.exitChat}>back to map</BackLink>
+        {fromAdmin ? (
+          <BackLink to="/admin">back to conversations</BackLink>
+        ) : (
+          <BackLink onClick={chat.exitChat}>back to map</BackLink>
+        )}
         <ChatThread
           sid={chat.sessionId}
           messages={chat.messages}

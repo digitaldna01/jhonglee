@@ -116,7 +116,7 @@ function Conversations({ onLeave }) {
       <ol className="admin-list">
         {rows.map((c) => (
           <li key={c.id}>
-            <Link to={`/chat/${c.id}`} className="admin-row">
+            <Link to={`/chat/${c.id}`} state={{ from: 'admin' }} className="admin-row">
               <span className="admin-title">{c.title || <em>— no question yet —</em>}</span>
               <span className="admin-meta">
                 <span>{c.turn_count} {c.turn_count === 1 ? 'turn' : 'turns'}</span>
