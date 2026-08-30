@@ -53,8 +53,9 @@ scripts/mine_golden.py    chat_logs → golden_candidates.json (real questions +
 scripts/usage_report.py   chat_logs → per-day questions / answered / tokens / USD at list price, 30-day projection
 scripts/eval_retrieval.py --rewrite  adds a "hybrid + rewrite" row: the production query rewrite (Korean / referring
                           follow-ups → English question) before ranking; needs ANTHROPIC_API_KEY, ~$0.01
-scripts/judge_answers.py  answer-quality A/B: two system prompts, same retrieval, Sonnet 5 judge (faithfulness per
-                          claim + pairwise rubric verdict with shuffled order); scripts/eval_questions.json is the set
+scripts/judge_answers.py  answer-quality A/B: two system prompts ("current" = prompts.SYSTEM_PROMPT, "v1" = the one it
+                          replaced), same retrieval, Sonnet 5 judge (faithfulness per claim + pairwise rubric verdict
+                          with shuffled order); scripts/eval_questions.json is the 27-question set, ~$0.55 a run
 ```
 
 When a module outgrows one file, turn it into a package of the same name

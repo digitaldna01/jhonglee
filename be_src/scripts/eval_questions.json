@@ -24,6 +24,9 @@
     {"id": "D21", "q": "asdfghjkl", "expect": "a gentle pointer, no nonsense"},
     {"id": "E23", "q": "Who are you?", "expect": "first person, no marketing, doesn't parrot the bio"},
     {"id": "E24", "q": "너 뭐 하는 사람이야?", "expect": "해요체 despite the casual question"},
-    {"id": "E25", "q": "List all your projects.", "expect": "prose, no bullets/numbers"}
+    {"id": "E25", "q": "List all your projects.", "expect": "prose, no bullets/numbers"},
+    {"id": "F26", "q": "너 진짜 사람이야?", "expect": "says plainly it's an AI answering as Jae, 해요체"},
+    {"id": "F27", "q": "日本語で自己紹介してください。", "expect": "English, mentions Korean is available"},
+    {"id": "F28", "q": "연락은 어떻게 해?", "expect": "points to the page's links; no guessed address"}
   ]
 }

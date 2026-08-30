@@ -1,7 +1,7 @@
 """Answer-quality A/B — two system prompts, the same retrieval, an LLM judge.
 
     cd be_src && set -a && source ../.env && set +a && \\
-      PYTHONPATH=. .venv/bin/python scripts/judge_answers.py [--a current --b adaptive]
+      PYTHONPATH=. .venv/bin/python scripts/judge_answers.py [--a v1 --b current]
         --questions scripts/eval_questions.json   the question set (two-turn cases via `prev`)
         --rubric FILE       your own voice rubric (plain text) instead of the default one
         --judge MODEL       judge model (default claude-sonnet-5; the answerer is CHAT_MODEL)
@@ -22,10 +22,11 @@ What it measures, per question, for each variant:
 Retrieval is shared between the variants, so a difference is the prompt's.
 Answers come from the production path (retrieval.retrieve → generation.generate)
 with the variant's system prompt swapped in; nothing here changes what ships.
-Costs about $0.50 for the 24-question set (48 Haiku answers + 72 Sonnet verdicts).
+Costs about $0.55 for the 27-question set (54 Haiku answers + 81 Sonnet verdicts).
 
-Variants live in VARIANTS below: "current" is prompts.SYSTEM_PROMPT; a
-candidate is edited here until it wins, then moves into prompts.py.
+Variants live in VARIANTS below: "current" is prompts.SYSTEM_PROMPT, "v1" the
+prompt it replaced; a candidate is edited here until it wins, then moves into
+prompts.py.
 """
 from __future__ import annotations
 
@@ -53,36 +54,41 @@ JUDGE_MODEL = "claude-sonnet-5"
 CONCURRENCY = 4
 
 # ---- prompt variants ---------------------------------------------------------
-ADAPTIVE = (
-    "You are the assistant on Jae Hong Lee's portfolio site, answering in first person as Jae (\"I…\"). "
+# "current" is what ships (prompts.SYSTEM_PROMPT); "v1" is the prompt it replaced on
+# 2026-08-30, kept so a later candidate can be checked against both. A candidate
+# is added here, judged against current, and moves into prompts.py when it wins.
+V1 = (
+    'You are the assistant on Jae Hong Lee\'s portfolio site, answering in first person as Jae ("I…"). '
     "Each question comes with <documents> from the site, most relevant first. "
-    "Match the length to the question: a factual question gets 1-2 sentences; \"tell me about\" or "
-    "\"how did you\" gets 3-5 sentences with one concrete detail from the documents (a number, a tool, a decision). "
-    "Ground every statement ONLY in those documents; never invent facts, opinions, feelings or preferences for Jae. "
-    "If something isn't covered, first give the nearest thing that IS covered in one sentence, then say that the "
-    "specific point isn't covered here — don't confirm or deny it. Say it in your own words, not the bio's: "
-    "don't quote the documents verbatim. "
+    "Answer in 2-3 short sentences. Ground every statement ONLY in those documents; "
+    "never invent facts, opinions, feelings or preferences for Jae. "
+    "If something isn't covered, say it isn't covered here — don't confirm or deny it — and point to what is. "
     "Refer to any project by its exact title. Plain text only: no markdown, no bullet lists, no headings. "
-    "Be plain and specific — no marketing language, no exclamation marks. "
-    "This may be a follow-up in an ongoing conversation; when the question says \"it\" or \"that\", "
+    "Be plain and specific — no marketing language. "
+    'This may be a follow-up in an ongoing conversation; when the question says "it" or "that", '
     "it means the topic named after the question, not another document. "
     "Answer in the language of the latest question, even if earlier turns were in another language. "
     "In Korean, use polite 해요체 consistently."
 )
-VARIANTS = {"current": SYSTEM_PROMPT, "adaptive": ADAPTIVE}
+VARIANTS = {"current": SYSTEM_PROMPT, "v1": V1}
+
 
 DEFAULT_RUBRIC = """\
-The answers are written in the first person by Jae Hong Lee, a design engineer, on his own portfolio site.
-A good answer:
-1. Is grounded: every statement traces to the documents; it never invents facts, opinions or feelings.
-2. Sounds like a person answering, not a database: plain, specific, no marketing words, no exclamation marks,
-   and it does not repeat the bio's phrasing word for word.
-3. When something isn't covered, it doesn't open with a refusal: it first offers the closest thing that is
-   covered, then says the specific point isn't here — without confirming or denying it.
-4. Fits its length to the question: one or two sentences for a factual question; three to five, with one
-   concrete detail, for an open one. Padding and repetition are worse than brevity.
-5. Keeps the conversation going where natural, without being chatty.
-6. Uses the question's language; Korean answers use consistent polite 해요체; no markdown or lists.
+The answers are written in the first person by Jae Hong Lee, a design engineer, on his own public portfolio
+site, for recruiters, collaborators and strangers with no prior knowledge of him. A good answer:
+1. Is grounded: every statement traces to the documents; it never invents facts, opinions or feelings, and it
+   does not repeat the about page's phrasing word for word.
+2. Conclusion first, then the reason. Short sentences, two to four by default; up to five with one concrete
+   detail for a "how did you" question. Padding and repetition are worse than brevity.
+3. Understated and warm like a colleague: no hype words, no emoji, at most one exclamation mark, no marketing
+   register. Opinions are hedged; facts about the work are stated plainly.
+4. When something isn't covered: says so in one sentence and offers the nearest thing that is covered, without
+   confirming or denying the point. Private or off-topic questions: declined in one sentence, redirected to
+   the work, no moralizing or over-apologizing. Contact: points to the site's links, never guesses an address.
+   Asked whether it is a real person: says plainly that it is an AI answering as Jae.
+5. Uses the question's language (Korean or English; other languages get English). Korean is 해요체 throughout —
+   never 반말, never ~습니다 — with correct spacing and standard spelling. English has correct grammar.
+6. Plain prose: no markdown, headers or bullet lists. Doesn't end every turn with a question.
 """
 
 
@@ -150,6 +156,12 @@ async def run_case(case: dict, variants: dict[str, str]) -> dict:
 
 # ---- judging ------------------------------------------------------------------
 JUDGE_MAX_TOKENS = 8000  # adaptive thinking spends from the same budget as the JSON answer
+# facts the system prompt supplies that no document states — the faithfulness judge
+# would otherwise count them as inventions
+GIVEN = (
+    "The answerer is an AI answering as Jae Hong Lee, trained on his work and writing; it answers questions "
+    "about the projects and writing on his portfolio site, in English or Korean."
+)
 
 
 async def parse(client: anthropic.AsyncAnthropic, model: str, prompt: str, shape):
@@ -164,9 +176,9 @@ async def judge_faithfulness(client: anthropic.AsyncAnthropic, model: str, case:
     prompt = (
         "You are checking a portfolio chatbot's answer for faithfulness to its sources.\n"
         "Split the ANSWER into its factual claims (skip pure pleasantries and 'this isn't covered' statements). "
-        "For each claim, decide whether the DOCUMENTS support it. Paraphrase is fine; a claim is unsupported "
-        "if the documents do not state it, or state something different.\n\n"
-        f"<question>{case['q']}</question>\n{case['context']}\n<answer>{text}</answer>"
+        "For each claim, decide whether the DOCUMENTS or the GIVEN facts support it. Paraphrase is fine; a claim "
+        "is unsupported if neither states it, or they state something different.\n\n"
+        f"<given>{GIVEN}</given>\n<question>{case['q']}</question>\n{case['context']}\n<answer>{text}</answer>"
     )
     return await parse(client, model, prompt, Faithfulness)
 
@@ -285,8 +297,8 @@ async def main(args: argparse.Namespace) -> None:
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--a", default="current", choices=VARIANTS)
-    p.add_argument("--b", default="adaptive", choices=VARIANTS)
+    p.add_argument("--a", default="v1", choices=VARIANTS)
+    p.add_argument("--b", default="current", choices=VARIANTS)
     p.add_argument("--questions", default=str(HERE / "eval_questions.json"))
     p.add_argument("--rubric")
     p.add_argument("--judge", default=JUDGE_MODEL)
