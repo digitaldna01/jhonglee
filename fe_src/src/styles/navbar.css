@@ -1,0 +1,197 @@
+/* ── Navbar ──────────────────────────────────────────────
+   Reference: v2-design-handoff/design/shared/chrome.css
+   Pages whose ground differs from --color-bg override the
+   navbar background via --nav-bg (e.g. WORK sets --ground-2). */
+
+.site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--nav-bg, var(--color-bg));
+  border-bottom: 1px solid var(--hairline);
+  font-family: var(--font-sans);
+}
+.site-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  padding: 0 var(--gutter);
+}
+.site-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+/* ---- Wordmark ---------------------------------------------- */
+.wordmark {
+  font-size: var(--text-wordmark);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  color: var(--fg-2);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1px;
+  transition: color 260ms var(--ease-out);
+}
+.wordmark:hover { color: var(--fg-1); }
+.wordmark .dot { color: var(--accent); }
+/* the visible route home — types itself out on hover, the way the chat's
+   answers arrive: one mono cell per step, accent caret blinking after.
+   Two spans: the outer owns the box and the fade, the inner is clipped.
+   (A single box that shrinks under the pointer drops :hover and flickers.) */
+.wordmark .home {
+  --n: 15;                                  /* characters in "ask me anything" */
+  --ls: 0.08em;
+  /* mono advances round unevenly at this size — a cell of slack instead of
+     an exact width, so the last letter is never clipped */
+  --w: calc((var(--n) + 1) * (1ch + var(--ls)));
+  display: inline-block;
+  min-width: var(--w);
+  margin-left: 10px;
+  font-family: var(--font-mono);
+  font-size: var(--text-hint);
+  font-weight: 400;
+  letter-spacing: var(--ls);
+  color: var(--fg-3);
+  opacity: 0;
+  transition: opacity 200ms var(--ease-out);
+}
+.wordmark .home > span {
+  display: inline-block;
+  overflow: hidden;                         /* moves the baseline — hence bottom */
+  vertical-align: bottom;
+  max-width: var(--w);
+  border-right: 5px solid var(--accent);    /* the caret; hidden with the fade */
+}
+.wordmark:is(:hover, :focus-visible) .home { opacity: 1; }
+.wordmark:is(:hover, :focus-visible) .home > span {
+  animation:
+    home-type 600ms steps(var(--n), end) both,
+    home-caret 1s steps(1) 600ms infinite;
+}
+@keyframes home-type { from { max-width: 0; } }
+@keyframes home-caret { 50% { border-color: transparent; } }
+@media (prefers-reduced-motion: reduce) {
+  .wordmark .home > span { animation: none !important; border-color: transparent; }
+}
+
+/* ---- Desktop links ----------------------------------------- */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.nav-link {
+  position: relative;
+  font-size: var(--text-ui);
+  color: var(--fg-2);
+  letter-spacing: -0.005em;
+  text-decoration: none;
+  transition: color 260ms var(--ease-out);
+}
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 100%;
+  bottom: -4px;
+  height: 1px;
+  background: var(--accent);
+  transition: right 0.32s var(--ease-out);
+}
+/* hover shifts colour only — the seal-red underline means "you are here" */
+.nav-link:hover { color: var(--fg-1); }
+.nav-link.active { color: var(--fg-1); font-weight: 500; }
+.nav-link.active::after { right: 0; }
+
+/* ---- Theme toggle ------------------------------------------ */
+.theme-toggle {
+  appearance: none;
+  border: 1px solid var(--hairline);
+  background: var(--panel);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--fg-2);
+  transition: color 200ms var(--ease-out), border-color 200ms var(--ease-out);
+}
+.theme-toggle:hover { color: var(--fg-1); border-color: var(--fg-3); }
+.theme-toggle svg { width: 14px; height: 14px; }
+
+/* ---- Mobile ------------------------------------------------ */
+.nav-burger {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 24px;
+  height: 17px;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.nav-burger span {
+  display: block;
+  height: 2px;
+  width: 100%;
+  background: var(--fg-2);
+  transition: transform var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out);
+  transform-origin: center;
+}
+.nav-burger.open span:nth-child(1) { transform: translateY(7.5px) rotate(45deg); }
+.nav-burger.open span:nth-child(2) { opacity: 0; }
+.nav-burger.open span:nth-child(3) { transform: translateY(-7.5px) rotate(-45deg); }
+
+.nav-drawer {
+  display: none;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out);
+}
+.nav-drawer.open { max-height: 160px; opacity: 1; }
+.nav-drawer ul {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+  border-top: 1px solid var(--hairline);
+}
+.drawer-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px var(--gutter);
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.12em;
+  color: var(--fg-2);
+  text-decoration: none;
+  transition: color 200ms var(--ease-out);
+}
+.drawer-link:hover { color: var(--fg-1); }
+.drawer-link.active { color: var(--fg-1); font-weight: 500; }
+.drawer-link.active::before {
+  content: "";
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+@media (max-width: 719px) {
+  .nav-links { display: none; }
+  .nav-burger { display: flex; }
+  .nav-drawer { display: block; }
+}

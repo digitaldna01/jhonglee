@@ -57,8 +57,20 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Pull and restart container
+      # actions/checkout runs `git clean -ffdx`, which deletes any .env left in
+      # the checkout — so runtime secrets come from repository secrets and are
+      # written fresh on every deploy (Settings → Secrets and variables → Actions).
+      # OWNER_TOKEN is the site owner's login (POST /api/auth/owner); optional.
+      # POSTGRES_PASSWORD must never change after the first deploy: the
+      # database volume keeps the password it was initialised with.
+      - name: Write runtime secrets
+        run: |
+          umask 077
+          printf 'ANTHROPIC_API_KEY=%s\nPOSTGRES_PASSWORD=%s\nOWNER_TOKEN=%s\n' \
+            "${{ secrets.ANTHROPIC_API_KEY }}" "${{ secrets.POSTGRES_PASSWORD }}" "${{ secrets.OWNER_TOKEN }}" > .env
+
+      - name: Pull and restart containers
         run: |
           docker compose pull
-          docker compose up -d
+          docker compose up -d --remove-orphans
           docker image prune -f

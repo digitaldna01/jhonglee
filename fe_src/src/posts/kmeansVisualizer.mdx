@@ -1,28 +1,33 @@
+---
+title: KMeans Clustering
+displayTitle:
+  ko: 인터랙티브 KMeans 클러스터링
+  en: Interactive KMeans Clustering
+date: '2024-09-27'
+category: POST
+subcategory: blog
+medium: figure
+thumbnail: /images/projects/kmeans-visualizer/cover.png
+excerpt: >-
+  A from-scratch KMeans clustering visualizer — four init methods, step-by-step Lloyd's iterations —
+  rebuilt as a stateless JSON API and embedded as a live, interactive demo right in the post.
+keywords:
+  - kmeans
+  - clustering
+  - machine learning
+  - lloyd's algorithm
+  - data visualization
+locales:
+  - en
+  - ko
+defaultLocale: en
+lean: ml
+stack: FastAPI · React
+---
+
 import { Lang } from "../utils/lang";
 import KMeansDemo from "../components/KMeansDemo";
 
-export const metadata = {
-  title: "KMeans Clustering",
-  displayTitle: {
-    ko: "인터랙티브 KMeans 클러스터링",
-    en: "Interactive KMeans Clustering",
-  },
-  date: "2024-09-27",
-  category: "POST",
-  subcategory: "blog",
-  thumbnail: "/images/projects/kmeans-visualizer/cover.png",
-  excerpt:
-    "A from-scratch KMeans clustering visualizer — four init methods, step-by-step Lloyd's iterations — rebuilt as a stateless JSON API and embedded as a live, interactive demo right in the post.",
-  keywords: [
-    "kmeans",
-    "clustering",
-    "machine learning",
-    "lloyd's algorithm",
-    "data visualization",
-  ],
-  locales: ["en", "ko"],
-  defaultLocale: "en",
-};
 
 <p className="not-prose text-sm tracking-widest uppercase text-center text-gray-400 my-4">
   assign · update · repeat
@@ -163,9 +168,10 @@ why the next section is about initialization.
 
 ### Four ways to start
 
-Lloyd's algorithm only ever walks downhill, so the starting centroids decide which local minimum
-you settle into — initialization is the single biggest lever on the result. There are many ways to
-seed it; here are four of the most common:
+Initialization is the single biggest lever on the result: Lloyd's algorithm only ever walks
+downhill, so the starting centroids decide which local minimum you settle into. There are many
+ways to seed them; the visualizer ships the four initialization methods you meet most often —
+Random, Farthest First, KMeans++ and Manual:
 
 - **Random.** Pick _k_ of the actual data points at random and call them the starting
   centroids. The catch is variance:
@@ -225,8 +231,9 @@ Lloyd 알고리즘은 $J$를 낮추는 쪽으로만 움직이므로, 어느 지�
 
 ### Where KMeans breaks
 
-Good initialization cures bad luck — but two failure modes are baked into the algorithm
-itself, and no amount of restarting fixes them. Switch the dataset above to see each one:
+Good initialization cures bad luck — but there are two cases where KMeans itself doesn't work
+well, clusters of very different sizes and non-globular shapes, and no amount of restarting fixes
+them: the failure is baked into the algorithm. Switch the dataset above to see each one:
 
 - **Clusters of very different sizes.** Pick **Uneven blobs**: the big, loosely spread cluster
   gets carved up, because its outer points sit closer to a neighboring centroid than to their

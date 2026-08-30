@@ -1,0 +1,35 @@
+/* ── Back link — "‹ back to map" / "‹ back to work" ─────────
+   One grammar for the whole site: the chevron always means one
+   level up. Ghost mono link pinned under the navbar, top-left;
+   the chevron takes the accent on hover. */
+
+.back-link {
+  position: fixed;
+  top: 70px;
+  left: var(--gutter);
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--fg-2);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.2s var(--ease-out);
+}
+.back-link:hover { color: var(--fg-1); }
+.back-link:hover svg { color: var(--accent); }
+.back-link svg { width: 13px; height: 13px; transition: color 0.2s var(--ease-out); }
+
+/* below ~1120px a pinned link would float over the page: the reading
+   column (phones) or a `wide` block such as the flip-book (tablets) reach
+   under it — let it sit in flow above the title instead */
+@media (max-width: 1119px) {
+  .back-link.in-flow { position: static; margin-bottom: 22px; }
+}

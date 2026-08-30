@@ -1,0 +1,235 @@
+/* ── Post — reading column ───────────────────────────────
+   One width for everything: text, figures, code, maths and
+   embedded demos share the column, so the page keeps a single
+   rhythm. The body flows 16 → 17px between 640 and 1440px and
+   the column is set in em (34em ≈ 75 characters of Avenir, measured), so
+   the line length stays the same whatever the size resolves to:
+   544px at 16px, 578px at 17px. Phones: 16px, 20px gutters. */
+
+.post-head,
+.post-body {
+  /* the column in px, computed once from the body size — `34em` itself would
+     re-resolve against each child's own font-size (a heading's 34em ≈ 990px) */
+  --post-fs: clamp(16px, 15.2px + 0.125vw, 17px);
+  --col: calc(34 * var(--post-fs));
+  font-size: var(--post-fs);
+  line-height: 1.7;
+}
+.post-head { max-width: var(--col); margin: 0 auto; }
+
+/* ---- Width is the block's to declare: content · wide · full ---------
+   The body spans the post container; each block is held to the reading
+   column unless it says otherwise. Flow, not a named-line grid, so the
+   prose's vertical margins keep collapsing.
+     (default)        content — the 34em column, same as the text
+     className="wide" the post container (≈ 830–900px): demos, the book
+     className="full" edge to edge of the viewport: a bleed image */
+.post-body .prose > *,
+.post-body .prose > figure[data-rehype-pretty-code-figure] {
+  max-width: var(--col);
+  margin-inline: auto;
+}
+.post-body .prose > .wide { max-width: none; }
+.post-body .prose > .full {
+  max-width: none;
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
+}
+
+/* ---- Masthead: same voice as WORK and CV — left, 600, tight ------ */
+.post-title {
+  margin: 0 0 14px;
+  /* --h2 tops out at 48px, sized for the wide WORK header; on a 34em
+     column that runs long titles to three heavy lines — 40px holds two */
+  font-size: clamp(28px, 24px + 1.111vw, 40px);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+  color: var(--fg-1);
+  word-break: keep-all;
+  text-wrap: balance;
+}
+
+.post-body .prose p { text-wrap: pretty; }
+/* Korean never breaks inside a word; harmless for Latin text */
+.post-body .prose { word-break: keep-all; }
+.post-body .prose pre { font-size: 0.85em; }
+
+/* section headings (###): ≈1.5–1.75× the body, flowing 24 → 30px */
+.post-body .prose h3 { font-size: clamp(24px, 22px + 0.556vw, 30px); }
+
+/* the old `img-wide` class is inert: an image is `content` unless it says `wide`/`full` */
+
+/* ── Post meta + language toggle ────────────────────────── */
+.post-meta-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-bottom: 36px;
+}
+.post-meta-text {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-meta);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+}
+.post-meta-text .sep { margin: 0 8px; color: var(--fg-3); }
+
+/* the hand-written line above the intro (a tagline) sits on the same axis
+   and in the same voice as the meta — overrides its inline Tailwind classes */
+.post-body .prose > p.not-prose {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: var(--text-meta);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  margin: 0 auto 20px;
+}
+
+.post-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding-left: 12px;
+  border-left: 1px solid var(--hairline);
+}
+.post-lang-btn {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--fg-2);
+  background: none;
+  border: 0;
+  padding: 2px 6px;
+  cursor: pointer;
+  position: relative;
+  transition: color var(--dur-base) var(--ease-out);
+}
+.post-lang-btn:hover { color: var(--fg-1); }
+.post-lang-btn.is-active { color: var(--fg-1); }
+.post-lang-btn.is-active::after {
+  content: "";
+  position: absolute;
+  left: 6px; right: 6px; bottom: -2px;
+  height: 1px;
+  background: var(--accent, currentColor);
+}
+
+/* ---- Related: the landing map, hovered on this post ---------------- */
+.related {
+  max-width: 34em;
+  margin: 64px auto 0;
+  font-size: clamp(16px, 15.2px + 0.125vw, 17px); /* same em as the column */
+  padding-top: 22px;
+  border-top: 1px solid var(--hairline);
+}
+.related-h {
+  margin: 0 0 6px;
+  font-family: var(--font-mono);
+  font-size: var(--text-meta);
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+.related-map { position: relative; }
+.related-canvas {
+  display: block;
+  width: 100%;
+  height: 260px;   /* room for eight nodes; labels dodge each other in the renderer */
+  touch-action: none;
+}
+@media (max-width: 720px) { .related-canvas { height: 230px; } }
+/* screen-reader / keyboard list of the same neighbours (surfaces on focus) */
+.related-sr {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+.related-sr a {
+  position: absolute;
+  width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  color: var(--fg-2);
+  text-decoration: none;
+}
+.related-sr a:focus-visible {
+  position: static; width: auto; height: auto; clip: auto; overflow: visible;
+  color: var(--fg-1);
+}
+
+/* ---- Newer / older ------------------------------------------------ */
+.post-nav {
+  max-width: 34em;
+  margin: 40px auto 0;
+  font-size: clamp(16px, 15.2px + 0.125vw, 17px); /* same em as the column */
+  padding-top: 22px;
+  border-top: 1px solid var(--hairline);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.post-nav-link {
+  display: grid;
+  gap: 6px;
+  text-decoration: none;
+  color: var(--fg-1);
+  min-width: 0;
+}
+.post-nav-link.is-older { text-align: right; }
+.post-nav-link .k {
+  font-family: var(--font-mono);
+  font-size: var(--text-meta);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.post-nav-link .t {
+  font-size: 1em;
+  font-weight: 500;
+  line-height: 1.35;
+  text-wrap: balance;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.post-nav-link:hover .t,
+.post-nav-link:hover .k { color: var(--accent-2); }
+.post-nav-link:focus-visible { outline-offset: 6px; }
+@media (max-width: 480px) {
+  .post-nav { grid-template-columns: 1fr; gap: 18px; }
+  .post-nav-link.is-older { text-align: left; }
+}
+
+/* ── Loading / not found ─────────────────────────────────
+   Loading: the word appears only after 400ms so a normal load never
+   flashes it. Not found: the post masthead with the failed address in
+   the meta slot and the newest posts where the body would be. */
+.post-loading {
+  opacity: 0;
+  animation: post-loading-in 0.3s var(--ease-out) 0.4s forwards;
+}
+@keyframes post-loading-in { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .post-loading { animation-duration: 0s; }
+}
+
+.nf-address { margin-bottom: 28px; text-transform: none; }
+.nf-address .nf-code { text-transform: uppercase; }
+.nf-address .nf-path { color: var(--fg-1); overflow-wrap: anywhere; }
+.nf-lead { margin: 0; color: var(--fg-2); text-wrap: pretty; }
+.nf-latest {
+  display: grid;
+  gap: 18px;
+  margin-top: 36px;
+  padding-top: 22px;
+  border-top: 1px solid var(--hairline);
+}

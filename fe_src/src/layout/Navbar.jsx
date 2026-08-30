@@ -1,105 +1,111 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import useTheme from '../hooks/useTheme';
+import '../styles/navbar.css';
 
 const NAV = [
   { label: 'CV', path: '/cv' },
-  { label: 'PROJECTS', path: '/projects' },
-  { label: 'BLOG', path: '/blog' },
+  { label: 'WORK', path: '/work' },
 ];
+
+function SunIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.5" />
+      <line x1="12" y1="2" x2="12" y2="4.5" />
+      <line x1="12" y1="19.5" x2="12" y2="22" />
+      <line x1="4.9" y1="4.9" x2="6.7" y2="6.7" />
+      <line x1="17.3" y1="17.3" x2="19.1" y2="19.1" />
+      <line x1="2" y1="12" x2="4.5" y2="12" />
+      <line x1="19.5" y1="12" x2="22" y2="12" />
+      <line x1="4.9" y1="19.1" x2="6.7" y2="17.3" />
+      <line x1="17.3" y1="6.7" x2="19.1" y2="4.9" />
+    </svg>
+  );
+}
+
+function MoonIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
+    </svg>
+  );
+}
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
-  const location = useLocation();
+  const { theme, toggle } = useTheme();
+  const { pathname } = useLocation();
 
-  const isActive = (path) => location.pathname === path;
+  // a post page belongs to WORK, so the underline stays there
+  const isActive = (path) =>
+    pathname === path || (path === '/work' && pathname.startsWith('/posts/'));
 
   return (
-    <>
-      <nav className="fixed top-0 z-50 w-full bg-white font-sans" aria-label="Main">
-        {/* Top bar */}
-        <div className="relative flex items-center h-[60px] w-full px-[var(--layout-margin)]">
-          {/* Logo */}
-          <Link
-            to="/"
-            className="text-[length:var(--body-lg)] font-bold tracking-[0.15em] no-underline text-black-1 hover:text-secondary transition-colors duration-300"
-            onClick={() => setOpen(false)}
-          >
-            JAY
-          </Link>
+    <nav className="site-nav" aria-label="Main">
+      <div className="site-nav-bar">
+        <Link
+          to="/"
+          className="wordmark"
+          onClick={() => {
+            setOpen(false);
+            // already home → the landing listens and resets its chat session
+            if (pathname === '/') window.dispatchEvent(new Event('jhl:home'));
+          }}
+        >
+          JHL<span className="dot">.</span>
+          <span className="home"><span>ask me anything</span></span>
+        </Link>
 
-          {/* Desktop links — centered absolutely */}
-          <ul className="hidden md:flex absolute left-1/2 -translate-x-1/2 gap-8 list-none m-0 p-0">
+        <div className="site-nav-right">
+          <ul className="nav-links">
             {NAV.map(({ label, path }) => (
               <li key={path}>
-                <Link
-                  to={path}
-                  className={`text-[length:var(--body-md)] no-underline tracking-[0.05em] transition-colors duration-300 ${
-                    isActive(path)
-                      ? 'text-secondary-dark font-semibold'
-                      : 'text-black-2 hover:text-secondary-light'
-                  }`}
-                >
+                <Link to={path} className={`nav-link${isActive(path) ? ' active' : ''}`}>
                   {label}
                 </Link>
               </li>
             ))}
           </ul>
 
-          {/* Hamburger — mobile only */}
           <button
-            className="md:hidden ml-auto flex flex-col justify-between w-6 h-[17px] bg-transparent border-0 rounded-none p-0 cursor-pointer"
+            type="button"
+            className="theme-toggle"
+            onClick={toggle}
+            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+          >
+            {theme === 'dark' ? <MoonIcon /> : <SunIcon />}
+          </button>
+
+          <button
+            type="button"
+            className={`nav-burger${open ? ' open' : ''}`}
             onClick={() => setOpen((o) => !o)}
             aria-label="Toggle menu"
             aria-expanded={open}
           >
-            <span
-              className={`block h-[2px] w-full bg-black-2 transition-all duration-[250ms] origin-center ${
-                open ? 'translate-y-[7.5px] rotate-45' : ''
-              }`}
-            />
-            <span
-              className={`block h-[2px] w-full bg-black-2 transition-all duration-[250ms] ${
-                open ? 'opacity-0' : ''
-              }`}
-            />
-            <span
-              className={`block h-[2px] w-full bg-black-2 transition-all duration-[250ms] origin-center ${
-                open ? '-translate-y-[7.5px] -rotate-45' : ''
-              }`}
-            />
+            <span />
+            <span />
+            <span />
           </button>
         </div>
+      </div>
 
-        {/* Mobile dropdown */}
-        <div
-          className={`md:hidden overflow-hidden transition-all duration-[250ms] ${
-            open ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
-          }`}
-          style={{ transitionTimingFunction: 'cubic-bezier(0.22,0.61,0.36,1)' }}
-        >
-          <ul className="flex flex-col list-none m-0 p-0 bg-white border-t border-black-5 py-1">
-            {NAV.map(({ label, path }) => (
-              <li key={path}>
-                <Link
-                  to={path}
-                  className={`flex items-center gap-2 px-[var(--layout-margin)] py-[10px] text-[11px] font-semibold tracking-[0.12em] uppercase no-underline transition-colors duration-200 ${
-                    isActive(path)
-                      ? 'text-secondary-dark'
-                      : 'text-black-3 hover:text-black-1'
-                  }`}
-                  onClick={() => setOpen(false)}
-                >
-                  {isActive(path) && (
-                    <span className="w-1 h-1 rounded-full bg-secondary-dark flex-shrink-0" />
-                  )}
-                  {label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </nav>
-
-    </>
+      <div className={`nav-drawer${open ? ' open' : ''}`}>
+        <ul>
+          {NAV.map(({ label, path }) => (
+            <li key={path}>
+              <Link
+                to={path}
+                className={`drawer-link${isActive(path) ? ' active' : ''}`}
+                onClick={() => setOpen(false)}
+              >
+                {label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </nav>
   );
 }

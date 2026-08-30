@@ -1,14 +1,9 @@
 @import "tailwindcss";
 
 /* ── Design tokens → Tailwind utilities ──────────────────
-   text-primary, bg-secondary, border-black-5, font-sans …  */
+   text-primary, bg-secondary, border-black-5, font-sans …
+   primary = the accent as a mark, secondary = the accent as a fill. */
 @theme {
-  --color-primary:          #12406a;
-  --color-primary-dark:     #0b263e;
-  --color-primary-light:    #195a96;
-  --color-secondary:        #ff8c00;
-  --color-secondary-dark:   #cc7000;
-  --color-secondary-light:  #ffa333;
   --color-black-1:          #000000;
   --color-black-2:          #333333;
   --color-black-3:          #666666;
@@ -17,45 +12,98 @@
 
   --font-sans:  Avenir, Inter, Helvetica, Arial, sans-serif;
   --font-noto:  "Noto Sans KR", Arial, sans-serif;
+  --font-mono:  "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+}
+/* Brand utilities follow the theme-switching tokens below (inline so
+   text-primary compiles to color: var(--accent), i.e. theme-aware). */
+@theme inline {
+  --color-primary:          var(--accent);
+  --color-primary-dark:     var(--accent-2);
+  --color-primary-light:    var(--accent);
+  --color-secondary:        var(--accent-fill);
+  --color-secondary-dark:   var(--accent-fill-2);
+  --color-secondary-light:  var(--accent-fill);
 }
 
-/* ── Responsive type & layout tokens ─────────────────────
-   These change per breakpoint; reference with var(--h1) etc. */
+/* ── Fluid type & layout tokens ──────────────────────────
+   Display sizes flow with the viewport instead of stepping at
+   breakpoints: each clamp() is a straight line from its minimum
+   at 360px to its maximum at 1440px, held flat beyond. Body/UI
+   sizes stay fixed — chrome should not breathe with the window.
+   (slope = (max − min) / 10.8 per vw; intercept = min − 3.6 × slope) */
 :root {
-  --d1: 48px;  --h1: 36px;  --h2: 30px;  --h3: 24px;  --h4: 20px;
+  --d1: clamp(40px, 29.33px + 2.963vw, 72px);   /* 40 → 72 */
+  --h1: clamp(32px, 22.67px + 2.593vw, 60px);   /* 32 → 60 */
+  --h2: clamp(28px, 21.33px + 1.852vw, 48px);   /* 28 → 48 */
+  --h3: clamp(22px, 17.33px + 1.296vw, 36px);   /* 22 → 36 */
+  --h4: clamp(20px, 16.67px + 0.926vw, 30px);   /* 20 → 30 */
   --body-lg: 18px;  --body-md: 16px;  --body-sm: 14px;  --caption: 12px;
-  --layout-width: 375px;  --layout-margin: 16px;  --layout-gutter: 16px;
-}
-@media (min-width: 376px) and (max-width: 1279px) {
-  :root {
-    --d1: 60px;  --h1: 48px;  --h2: 36px;  --h3: 30px;  --h4: 24px;
-    --layout-width: 800px;  --layout-margin: 32px;  --layout-gutter: 24px;
-  }
-}
-@media (min-width: 1280px) {
-  :root {
-    --d1: 72px;  --h1: 60px;  --h2: 48px;  --h3: 36px;  --h4: 30px;
-    --layout-width: 1280px;  --layout-margin: 80px;  --layout-gutter: 24px;
-  }
+  --layout-margin: clamp(20px, 6vw, 80px);          /* page side padding */
+  --layout-gutter: clamp(16px, 12px + 1vw, 24px);   /* grid gaps */
+
+  /* v2 chrome type scale + fixed page gutter (navbar, CV, landing dock) */
+  --text-wordmark: 15px;
+  --text-ui: 13px;        /* nav links, seed chips */
+  --text-label: 11px;     /* mono labels: node labels, cite chips, drawer links */
+  --text-meta: 11.5px;    /* mono meta: eyebrows, CV dates + section labels, contact corner */
+  --text-hint: 10.5px;    /* wordmark home hint, chat foot */
+  --gutter: 22px;
 }
 
-/* ── Semantic aliases (used by brain view and other components) ── */
+/* ── Semantic aliases ────────────────────────────────────
+   Colour rule (see v2-design-handoff/DESIGN_RULES.md):
+   ONE accent — ink blue (ultramarine). Thin things (links,
+   1px underlines, the hot node, focus rings) use --accent;
+   large filled controls use --accent-fill. Both grounds carry
+   the accent's hue at near-zero chroma, so light is a cool
+   paper and dark is ink-navy, never black — the page is drained
+   so the work (images) is the only saturated thing on it. */
 :root {
-  --fg-1: #000000;
-  --fg-2: #333333;
-  --fg-3: #666666;
-  --fg-4: #999999;
-  --hairline: #cccccc;
-  --accent:        #ff8c00;
-  --accent-strong: #cc7000;
-  --accent-soft:   #ffa333;
-  --color-bg:     #ffffff;
-  --color-bg-alt: #fcfcfc;
-  --shadow-card:  0 0 8px rgba(0,0,0,0.08);
-  --dur-fast:     250ms;
-  --dur-base:     300ms;
-  --dur-slow:     400ms;
-  --ease-out:     cubic-bezier(0.22, 0.61, 0.36, 1);
+  color-scheme: light;
+
+  --fg-1: #16181f;  --fg-2: #5b5f6c;  --fg-3: #767b8a;  --fg-4: #a4a8b4;   /* fg-3 ≈ 3.9:1 — decoration only; small text that carries information uses fg-2 */
+  --hairline: rgba(22,24,40,0.12);
+  --line-soft: rgba(22,24,40,0.06);
+  --color-bg: #f3f4f7;          /* cool paper, NOT white */
+  --ground-2: #eceef2;          /* one step below — WORK, so white plates read as blocks */
+  --color-bg-alt: #ffffff;
+  --panel: #ffffff;  --panel-2: #fafafc;
+  --mat: #ffffff;               /* what every image hangs on */
+
+  /* ACCENT — ink blue. Marks: links, underlines, one hot node, focus rings. */
+  --accent: #1a47d6;
+  --accent-2: #0f34b0;          /* hover / pressed (deeper) */
+  --accent-rgb: 26,71,214;
+  --accent-bg: rgba(26,71,214,0.08);
+
+  /* the same blue as a FIELD: filled buttons, large controls that light up */
+  --accent-fill: #1a47d6;  --accent-fill-2: #0f34b0;  --accent-fill-fg: #ffffff;
+  --accent-fill-bg: rgba(26,71,214,0.12);
+
+  --ease-out: cubic-bezier(0.22,0.61,0.36,1);
+  --dur-fast: 250ms;  --dur-base: 300ms;  --dur-slow: 400ms;
+
+  --shadow-card: 0 0 8px rgba(0,0,0,0.08);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --fg-1: #e9ebf0;  --fg-2: #9aa0ae;  --fg-3: #737988;  --fg-4: #4b505c;
+  --hairline: rgba(233,235,240,0.13);
+  --line-soft: rgba(233,235,240,0.07);
+  --color-bg: #11151c;          /* ink-navy: the accent with the colour drained out */
+  --ground-2: #11151c;
+  --color-bg-alt: #181d26;
+  --panel: #181d26;  --panel-2: #141820;
+  --mat: #262c37;
+
+  --accent: #6f9bff;  --accent-2: #8fb1ff;   /* hover / pressed (lighter) */
+  --accent-rgb: 111,155,255;  --accent-bg: rgba(111,155,255,0.14);
+
+  /* the light-blue mark can't hold white text, so fills use a deeper blue */
+  --accent-fill: #2f5fe0;  --accent-fill-2: #3f6ff2;  --accent-fill-fg: #ffffff;
+  --accent-fill-bg: rgba(111,155,255,0.20);
 }
 
 /* ── MDX prose content ───────────────────────────────── */
@@ -72,8 +120,8 @@
 .prose h3 { font-size: var(--h4); }
 .prose h4, .prose h5 { font-size: var(--body-lg); }
 .prose p  { margin: 0 0 1em; }
-.prose a  { color: var(--color-primary); text-underline-offset: 3px; }
-.prose a:hover { color: var(--color-secondary); }
+.prose a  { color: var(--accent); text-underline-offset: 3px; }
+.prose a:hover { color: var(--accent-2); }
 .prose img { display: block; max-width: 100%; height: auto; border-radius: 4px; margin: 1.5em auto; }
 .prose ul, .prose ol { padding-left: 1.5em; margin: 0 0 1em; }
 .prose li { margin-bottom: 0.4em; }
@@ -101,17 +149,17 @@
 }
 
 /* ── Global base ──────────────────────────────────────── */
+/* Theme is driven by data-theme on <html> (persisted as `pf-theme`),
+   never by prefers-color-scheme — the design ships light-first. */
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
   font-family: var(--font-sans);
-  color-scheme: light dark;
+  background-color: var(--color-bg);
+  color: var(--fg-1);
 }
 
-@media (prefers-color-scheme: light) {
-  body {
-    color: #213547;
-    background-color: #ffffff;
-  }
-}
+::selection { background: var(--accent-bg); color: var(--accent-2); }
+/* thin rings are marks → --accent; a large control (the composer) lights its whole border with --accent-fill-bg instead */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }

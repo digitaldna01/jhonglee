@@ -1,0 +1,10 @@
+# Tooling config only (no [project]: the app is installed from requirements.txt).
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "scripts"]  # `import app`, and the scripts' pure functions in tests
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+extraPaths = ["scripts"]  # same resolution for Pylance

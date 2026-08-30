@@ -1,0 +1,127 @@
+"""RAG chat orchestration: retrieve → context → generate.
+
+Yields domain events as (name, payload) tuples; the router turns them
+into SSE. Keeping the transport out means the same generator can be
+driven by tests or a future websocket without change.
+"""
+from __future__ import annotations
+
+import time
+from collections.abc import AsyncIterator
+
+from ..content import service as content
+from ..core.config import get_settings
+from . import chatlog, generation, history, retrieval, rewrite
+
+TOP_K = 4
+
+
+def topic_named(query: str | None, fallback: str | None) -> str | None:
+    """The topic to tell the answering model about. When the rewrite named a
+    project, that is the topic — it resolved the visitor's reference. The
+    previous turn's top source is only the fallback: it can be a doc that
+    merely ranked first while the answer was about the second ("블렌더로 만든
+    거 있어?" ranked Smart Factory above Cogs and Gears; the answer was about
+    Cogs and Gears, and the next "그건…" was then explained as Smart Factory)."""
+    if query:
+        low = query.lower()
+        for d in content.nodes():
+            if d["title"].lower() in low:
+                return d["title"]
+    return fallback
+
+
+def retrieval_label() -> str:
+    return get_settings().embed_model.split("/")[-1] + ", server"
+
+
+def graph(z: float | None = None, k: int | None = None) -> dict:
+    """Everything the landing map needs, from the corpus's single source.
+    `z` / `k` re-derive the edges with another σ floor / mutual-kNN size
+    (see retrieval.edges)."""
+    return {
+        "projects": [
+            {
+                "id": d["id"],
+                "title": d["title"],
+                "year": d["year"] or "",
+                "lean": d["lean"] or d["kind"],
+                "tags": d["tags"],
+                "stack": d["stack"] or "",
+                "desc": d["summary"],
+                "url": d["url"] or "#",
+            }
+            for d in content.nodes()
+        ],
+        "edges": retrieval.edges(z, k),
+        "retrieval_model": retrieval_label(),
+    }
+
+
+async def answer(
+    question: str,
+    client_history: list[dict],
+    *,
+    visitor_id: str | None = None,
+    session_id: str | None = None,
+) -> AsyncIterator[tuple[str, dict]]:
+    """sources → delta* → done. With a session, the server-side transcript
+    wins over whatever the client sent; afterwards the exchange is appended
+    to the session and logged."""
+    turns = client_history[-history.HISTORY_MAX * 2 :]
+    context_title: str | None = None
+    if visitor_id and session_id:  # (not a bool flag: keeps the Optional narrowing for the type checker)
+        session = await history.load_session(visitor_id, session_id)
+        turns = session["turns"] or turns
+        if session["last_sources"]:
+            prev_top = content.get_any(session["last_sources"][0])
+            context_title = prev_top["title"] if prev_top else None
+
+    t0 = time.perf_counter()
+    # Korean or a follow-up → searched as a self-contained English query (see
+    # rewrite.py); the answer is still generated from the visitor's own words
+    query, anchor = await rewrite.search_plan(question, turns, topic=context_title)
+    # query None = nothing to look up (a greeting, thanks): the bio alone is the context
+    retrieved = await retrieval.retrieve(query, k=TOP_K, context_title=anchor) if query else []
+    retrieval_ms = round((time.perf_counter() - t0) * 1000, 1)
+
+    sources = [
+        {"id": r["id"], "kind": r["kind"], "title": r["title"], "score": round(r["score"], 3)}
+        for r in retrieved
+    ]
+    yield "sources", {
+        "sources": sources,
+        "retrieval_ms": retrieval_ms,
+        "retrieval_model": retrieval_label(),
+        **({"search_query": query or rewrite.NO_RETRIEVAL} if query != question else {}),
+    }
+
+    parts: list[str] = []
+    model = ""
+    usage: dict = {}
+    topic = topic_named(query, context_title) if query else None
+    async for name, payload in generation.generate(question, retrieved, turns, topic=topic):
+        if name == "delta":
+            parts.append(payload["text"])
+        elif name == "done":
+            model = payload["model"]
+            usage = {k: payload.get(k) for k in ("input_tokens", "output_tokens")}
+            payload = {**payload, "session_id": session_id}
+        yield name, payload
+
+    answer_text = "".join(parts)
+    if visitor_id and session_id:
+        await history.append(
+            visitor_id, session_id, question, answer_text, sources=[s["id"] for s in sources]
+        )
+    if visitor_id:
+        await chatlog.record(
+            visitor_id=visitor_id,
+            session_id=session_id,
+            question=question,
+            sources=sources,
+            answer=answer_text,
+            model=model,
+            retrieval_ms=retrieval_ms,
+            **usage,
+        )

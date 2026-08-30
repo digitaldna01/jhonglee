@@ -1,93 +1,80 @@
-import React from 'react';
 import cvData from '../data/cv.json';
+import { pad2 } from '../utils/format';
+import '../styles/cv.css';
 
-const { education: educationData, experience: experienceData, publication: publicationData, project: projectData } = cvData;
+const SECTIONS = [
+  { title: 'Education', items: cvData.education },
+  { title: 'Experience', items: cvData.experience },
+  { title: 'Publication', items: cvData.publication },
+  { title: 'Selected Projects', items: cvData.project },
+];
 
-function CvList({ items }) {
-  return items.map((item, index) => (
-    <div key={index} className="mb-3">
-      <p className="text-[length:var(--body-lg)] text-black-3 mb-1">{item.date}</p>
-      <div className="flex items-baseline gap-2">
-        {item.link ? (
-          <a
-            href={item.link}
-            className="text-secondary no-underline text-[1.2em] cursor-pointer"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            •
-          </a>
-        ) : (
-          <span className="text-black-3 text-[1.2em]">•</span>
-        )}
-        <p
-          className={`m-0 text-[length:var(--body-lg)] font-noto ${item.link ? 'cursor-pointer text-black-1' : ''}`}
-          onClick={() => item.link && window.open(item.link, '_blank')}
-        >
-          {item.degree}
-        </p>
-      </div>
-    </div>
-  ));
-}
+const CONTACTS = [
+  { label: 'Email', href: 'mailto:ll.leejaehong.ll@gmail.com' },
+  { label: 'LinkedIn', href: 'https://www.linkedin.com/in/hong-lee-0821/' },
+  { label: 'GitHub', href: 'https://github.com/digitaldna01' },
+  { label: 'Instagram', href: 'https://www.instagram.com/8.21j' },
+  { label: 'Resume', href: '/pdf/Jay_Resume.pdf' },
+];
 
-function Cv() {
+function CvRow({ item }) {
+  const title = (
+    <>
+      <span className="mk" aria-hidden="true" />
+      {item.degree}
+      {item.link && <span className="arr" aria-hidden="true">↗</span>}
+    </>
+  );
   return (
-    <section className="pt-20 md:pt-28 lg:pt-36 pb-16 px-[var(--layout-margin)]">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-[length:var(--h1)] font-normal text-center mb-0">Jae Hong Lee | 이재홍</h1>
-
-        <div className="h-12 md:h-16" />
-
-        <div className="mb-6">
-          <p className="text-[length:var(--body-md)] font-semibold font-sans">Engineer, Designer, Researcher</p>
-          <p className="text-[length:var(--body-md)] font-noto leading-7">
-            My name is Jae Hong Lee. I am a Computer Science Major with a Visual Arts Minor at Boston
-            University. I specialize in merging technical and creative disciplines to develop interactive
-            digital experiences that are both functional and visually compelling.
-            <br />
-            My background spans Algorithm design, AI &amp; Machine Learning, and Quantum Computing,
-            complemented by strong skills in visual design and creative tools.
-          </p>
-
-          <div className="h-6" />
-
-          <div className="flex flex-wrap gap-3 md:gap-5">
-            {[
-              { label: 'CV',        href: 'public/pdf/Jae_Hong_Lee_Resume.pdf' },
-              { label: 'Email',     href: 'mailto:ll.leejaehong@gmail.com' },
-              { label: 'LinkedIn',  href: 'https://www.linkedin.com/in/hong-lee-0821/' },
-              { label: 'GitHub',    href: 'https://github.com/digitaldna01' },
-              { label: 'Instagram', href: 'https://www.instagram.com//' },
-            ].map(({ label, href }) => (
-              <a
-                key={label}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-secondary no-underline hover:text-secondary-dark transition-colors duration-300 font-sans"
-              >
-                {label}
-              </a>
-            ))}
-          </div>
-        </div>
-
-        {[
-          { title: 'Education',    items: educationData },
-          { title: 'Experience',   items: experienceData },
-          { title: 'Publication',  items: publicationData },
-          { title: 'Project',      items: projectData },
-        ].map(({ title, items }) => (
-          <div key={title} className="mb-10">
-            <div className="h-6 md:h-10" />
-            <h2 className="text-[length:var(--body-md)] font-semibold font-sans mb-2">{title}</h2>
-            <CvList items={items} />
-          </div>
-        ))}
-      </div>
-    </section>
+    <div className="cv-row">
+      <div className="cv-date">{item.date}</div>
+      {item.link ? (
+        <a className="cv-title" href={item.link} target="_blank" rel="noreferrer">
+          {title}
+        </a>
+      ) : (
+        <div className="cv-title">{title}</div>
+      )}
+    </div>
   );
 }
 
-export default Cv;
+export default function Cv() {
+  return (
+    <main className="cv">
+      <div className="cv-masthead">
+        <p className="cv-eyebrow">Curriculum Vitae</p>
+        <h1 className="cv-name">
+          Jae Hong Lee <span className="ko">이재홍</span>
+        </h1>
+        <p className="cv-role">engineer · designer · researcher</p>
+        <p className="cv-intro">
+          My name is Jae Hong Lee. I am a Computer Science major with a Visual
+          Arts minor at Boston University. I specialize in merging technical and
+          creative disciplines to build interactive digital experiences that are
+          both functional and visually compelling. My background spans algorithm
+          design, AI &amp; Machine Learning, and Quantum Computing, complemented
+          by strong skills in visual design and creative tools.
+        </p>
+        <div className="cv-contacts">
+          {CONTACTS.map(({ label, href }) => (
+            <a key={label} href={href} target="_blank" rel="noreferrer">
+              {label}
+            </a>
+          ))}
+        </div>
+      </div>
+
+      {SECTIONS.map(({ title, items }) => (
+        <section className="cv-section" key={title}>
+          <p className="cv-label">
+            {title} <span className="count">{pad2(items.length)}</span>
+          </p>
+          {items.map((item) => (
+            <CvRow key={item.degree} item={item} />
+          ))}
+        </section>
+      ))}
+    </main>
+  );
+}

@@ -1,0 +1,128 @@
+/* ── CV ──────────────────────────────────────────────────
+   Reference: v2-design-handoff/design/CV.html
+   Small mono text throughout — marks, not fields — which is
+   exactly where seal red belongs. */
+
+.cv {
+  max-width: 880px;
+  margin: 0 auto;
+  /* prototype pads 124px under a fixed header; the sticky navbar
+     already takes 60px of flow, so 64px keeps the same offset */
+  padding: 64px var(--gutter) 120px;
+}
+
+/* ---- Masthead ---------------------------------------------- */
+.cv-masthead { margin-bottom: 52px; }
+.cv-eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-meta);
+  color: var(--fg-3);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 0 0 18px;
+}
+.cv-name {
+  margin: 0;
+  font-size: clamp(30px, 5vw, 46px);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.04;
+  color: var(--fg-1);
+}
+.cv-name .ko { font-family: var(--font-noto); color: var(--fg-3); font-weight: 500; }
+.cv-role {
+  margin: 18px 0 0;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  color: var(--accent-2);
+  text-transform: lowercase;
+}
+.cv-intro {
+  margin: 22px 0 0;
+  max-width: 62ch;
+  font-size: 15.5px;
+  line-height: 1.66;
+  color: var(--fg-2);
+  text-wrap: pretty;
+}
+.cv-contacts { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 26px; }
+.cv-contacts a {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--accent-2);
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+.cv-contacts a:hover { color: var(--accent); }
+
+/* ---- Sections ---------------------------------------------- */
+.cv-section { margin-top: 46px; }
+.cv-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-meta);
+  color: var(--fg-3);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 0 0 6px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.cv-label .count { color: var(--accent-2); font-size: var(--text-hint); }
+
+.cv-row {
+  display: grid;
+  grid-template-columns: 256px 1fr; /* fits the longest date cell in one line ("Sep 2016 – Jun 2019 / Rochester, NY") */
+  gap: 8px 24px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line-soft);
+  align-items: baseline;
+}
+.cv-date {
+  font-family: var(--font-mono);
+  font-size: var(--text-meta);
+  color: var(--fg-2); /* a recruiter reads dates — information, not decoration */
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.cv-title {
+  font-size: var(--body-md);
+  color: var(--fg-1);
+  line-height: 1.45;
+  text-wrap: pretty;
+  display: inline-flex;
+  gap: 9px;
+  align-items: baseline;
+  text-decoration: none;
+}
+a.cv-title { transition: color var(--dur-fast) var(--ease-out); }
+a.cv-title:hover { color: var(--accent-2); }
+
+/* dot marker: seal red on linked rows, neutral otherwise */
+.cv-title .mk {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--fg-3);
+  transform: translateY(-2px);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+a.cv-title .mk { background: var(--accent); }
+a.cv-title:hover .mk { background: var(--accent-2); }
+a.cv-title .arr {
+  opacity: 0;
+  margin-left: -2px;
+  color: var(--accent-2);
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+a.cv-title:hover .arr,
+a.cv-title:focus-visible .arr { opacity: 1; }
+
+@media (max-width: 640px) {
+  .cv-row { grid-template-columns: 1fr; gap: 4px; }
+  .cv-date { order: 2; white-space: normal; }
+}
