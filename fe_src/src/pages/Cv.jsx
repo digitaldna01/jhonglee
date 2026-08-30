@@ -1,4 +1,3 @@
-import React from 'react';
 import cvData from '../data/cv.json';
 import { pad2 } from '../utils/format';
 import '../styles/cv.css';

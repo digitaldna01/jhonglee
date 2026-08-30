@@ -21,13 +21,11 @@ function BotBody({ msg, activeCite, onCiteHover, onCiteClick }) {
   }
   const byTitle = new Map((msg.sources ?? []).map((s) => [s.title, s]));
   return msg.text.split(/\n{2,}/).map((para, pi) => (
-    // eslint-disable-next-line react/no-array-index-key
     <p key={pi}>
       {citeSegments(para, msg.sources).map((seg, si) => {
         const src = si % 2 === 1 ? byTitle.get(seg) : null;
         return src ? (
           <span
-            // eslint-disable-next-line react/no-array-index-key
             key={si}
             className={`icite${activeCite === src.id ? ' active' : ''}`}
             onMouseEnter={() => onCiteHover(src.id)}

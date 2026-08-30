@@ -1,6 +1,5 @@
-import { createContext, useContext, useState } from "react";
-
-const LangContext = createContext({ locale: "en", setLocale: () => {} });
+import { useState } from "react";
+import useLang, { LangContext } from "../hooks/useLang";
 
 export function LangProvider({ initial = "en", children }) {
   const [locale, setLocale] = useState(initial);
@@ -11,12 +10,10 @@ export function LangProvider({ initial = "en", children }) {
   );
 }
 
-export function useLang() {
-  return useContext(LangContext);
-}
-
+/* Renders its children only while `locale` is the active one. Posts wrap
+   each section in <Lang locale="en"> … <Lang locale="ko">. */
 export function Lang({ locale, children }) {
-  const { locale: active } = useContext(LangContext);
+  const { locale: active } = useLang();
   if (active !== locale) return null;
   return <>{children}</>;
 }

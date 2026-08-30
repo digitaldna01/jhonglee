@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
-import { LangProvider, useLang } from '../../utils/lang';
+import { LangProvider } from '../../utils/lang';
+import useLang from '../../hooks/useLang';
 import { fmtDate } from '../../utils/format';
 import PostNav from './PostNav';
 import Related from './Related';
