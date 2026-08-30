@@ -3,6 +3,11 @@ import { Link } from 'react-router-dom';
 
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+/* Where a citation links. Newer payloads carry `url` (null for page-less docs
+   such as the bio); logs from before 2026-08-30 lack the field, so fall back
+   to the post page for kinds that have one. */
+const sourceHref = (s) => (s.url !== undefined ? s.url : ['post', 'project'].includes(s.kind) ? `/posts/${s.id}` : null);
+
 /* Split text so exact mentions of cited project titles become inline
    citations. Returns alternating [plain, match, plain, …] segments. */
 function citeSegments(text, cited) {
@@ -25,10 +30,11 @@ function BotBody({ msg, activeCite, onCiteHover, back }) {
     <p key={pi}>
       {citeSegments(para, msg.sources).map((seg, si) => {
         const src = si % 2 === 1 ? byTitle.get(seg) : null;
-        return src ? (
+        const href = src && sourceHref(src);
+        return href ? (
           <Link
             key={si}
-            to={`/posts/${src.id}`}
+            to={href}
             state={back}
             className={`icite${activeCite === src.id ? ' active' : ''}`}
             onMouseEnter={() => onCiteHover(src.id)}
@@ -64,15 +70,19 @@ function BotMessage({ msg, activeCite, onCiteHover, back }) {
             {sources.map((s, i) => (
               <Fragment key={s.id}>
                 {i > 0 && <span className="dotsep">·</span>}
-                <Link
-                  to={`/posts/${s.id}`}
-                  state={back}
-                  className={`cite${activeCite === s.id ? ' active' : ''}`}
-                  onMouseEnter={() => onCiteHover(s.id)}
-                  onMouseLeave={() => onCiteHover(null)}
-                >
-                  {s.title}
-                </Link>
+                {sourceHref(s) ? (
+                  <Link
+                    to={sourceHref(s)}
+                    state={back}
+                    className={`cite${activeCite === s.id ? ' active' : ''}`}
+                    onMouseEnter={() => onCiteHover(s.id)}
+                    onMouseLeave={() => onCiteHover(null)}
+                  >
+                    {s.title}
+                  </Link>
+                ) : (
+                  <span className="cite plain">{s.title}</span>
+                )}
               </Fragment>
             ))}
           </span>

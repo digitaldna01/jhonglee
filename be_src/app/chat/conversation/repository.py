@@ -50,7 +50,8 @@ def _turn(row: ChatLog) -> Turn:
         question=row.question,
         answer=row.answer,
         sources=tuple(
-            Source(id=s["id"], title=s.get("title", s["id"]), kind=s.get("kind", ""), score=s.get("score"))
+            Source(id=s["id"], title=s.get("title", s["id"]), kind=s.get("kind", ""), score=s.get("score"),
+                   url=s.get("url"))
             for s in (row.sources or [])
         ),
         model=row.model,
@@ -106,7 +107,8 @@ class SqlConversationRepository:
                     session_id=sid,
                     question=turn.question,
                     sources=[
-                        {"id": x.id, "kind": x.kind, "title": x.title, "score": x.score} for x in turn.sources
+                        {"id": x.id, "kind": x.kind, "title": x.title, "score": x.score, "url": x.url}
+                        for x in turn.sources
                     ],
                     answer=turn.answer,
                     model=turn.model,

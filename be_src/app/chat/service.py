@@ -85,8 +85,9 @@ async def answer(
     retrieved = await retrieval.retrieve(query, k=TOP_K, context_title=anchor) if query else []
     retrieval_ms = round((time.perf_counter() - t0) * 1000, 1)
 
-    sources = [
-        {"id": r["id"], "kind": r["kind"], "title": r["title"], "score": round(r["score"], 3)}
+    sources = [  # url: where a citation links (None for page-less docs like the bio)
+        {"id": r["id"], "kind": r["kind"], "title": r["title"], "score": round(r["score"], 3),
+         "url": (content.get_any(r["id"]) or {}).get("url")}
         for r in retrieved
     ]
     yield "sources", {

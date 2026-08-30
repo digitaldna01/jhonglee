@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-30T13:22:14.665Z",
+  "generated": "2026-08-30T14:30:04.225Z",
   "docs": [
     {
       "id": "smartfactoryDashboard",
@@ -340,7 +340,7 @@
       "stack": null,
       "summary": "Jae Hong Lee's CV — where to reach him, where he studied, where he has worked and researched, and what he has published.",
       "thumbnail": null,
-      "url": null,
+      "url": "/cv",
       "node": false,
       "chunks": [
         {

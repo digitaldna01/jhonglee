@@ -98,7 +98,7 @@ pytest                                      # add TEST_DATABASE_URL=postgresql+a
 ```
 GET  /api/health
 GET  /api/content/posts            GET  /api/content/posts/{slug}
-GET  /api/chat/graph[?z=0.5&k=2]   POST /api/chat/stream   (SSE: sources{sources, search_query?: rewritten query | NO_RETRIEVAL} → delta* → done{model, session_id}; 429 + Retry-After when
+GET  /api/chat/graph[?z=0.5&k=2]   POST /api/chat/stream   (SSE: sources{sources[{id, kind, title, score, url|null}], search_query?: rewritten query | NO_RETRIEVAL} → delta* → done{model, session_id}; 429 + Retry-After when
      z = edge σ floor, k = mutual-kNN size (0 = off)          rate-limited; 403 when session_id is another visitor's conversation)
 GET  /api/chat/sessions/{sid}      the transcript — anyone with the id; can_continue only for the visitor who started it
 GET  /api/chat/sessions?scope=mine|all[&before=&limit=]   mine: this browser's; all: owner only (403)

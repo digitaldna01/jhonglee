@@ -27,7 +27,8 @@ async def record(
     turn = Turn(
         question=question,
         answer=answer,
-        sources=tuple(Source(s["id"], s.get("title", s["id"]), s.get("kind", ""), s.get("score")) for s in sources),
+        sources=tuple(Source(s["id"], s.get("title", s["id"]), s.get("kind", ""), s.get("score"), s.get("url"))
+                      for s in sources),
         model=model,
         retrieval_ms=retrieval_ms,
         created_at=now(),

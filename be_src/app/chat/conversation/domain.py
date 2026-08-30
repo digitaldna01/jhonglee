@@ -14,6 +14,7 @@ class Source:
     title: str
     kind: str = ""
     score: float | None = None
+    url: str | None = None  # None: cite without a link (bio); absent in logs before 2026-08-30
 
 
 @dataclass(frozen=True)

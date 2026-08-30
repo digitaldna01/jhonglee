@@ -113,7 +113,7 @@ for (const { dir, hasPage } of SOURCES) {
       stack: fm.stack ?? null,
       summary: (fm.excerpt ?? '').trim(),
       thumbnail: fm.thumbnail ?? null,
-      url: hasPage ? `/posts/${id}` : null,
+      url: fm.url ?? (hasPage ? `/posts/${id}` : null), // content docs may point at a page (cv.md → /cv)
       node: fm.rag?.node ?? hasPage,
       chunks: toChunks(id, toPlainText(englishBody(content))),
     });

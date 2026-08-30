@@ -9,14 +9,20 @@ from __future__ import annotations
 from . import repository
 
 
+def _has_page(d: dict) -> bool:
+    """A doc the site renders at /posts/{id} (posts/*.mdx). Corpus-only docs may
+    still carry a url for citations (cv.md → /cv) without being posts."""
+    return d["kind"] in ("post", "project")
+
+
 def list_posts() -> list[dict]:
     """Docs that have a page on the site (posts and projects)."""
-    return [d for d in repository.DOCS if d["url"]]
+    return [d for d in repository.DOCS if _has_page(d)]
 
 
 def get(slug: str) -> dict | None:
     doc = repository.by_id(slug)
-    return doc if doc and doc["url"] else None
+    return doc if doc and _has_page(doc) else None
 
 
 def exists(slug: str) -> bool:

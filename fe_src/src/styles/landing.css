@@ -314,6 +314,7 @@
 }
 .cite:hover,
 .cite.active { text-decoration-color: currentColor; }
+.cite.plain { text-decoration: none; cursor: default; } /* a source without a page (the bio): cited, not linked */
 
 /* seed chips */
 .seeds { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; }

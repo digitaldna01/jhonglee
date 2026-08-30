@@ -112,7 +112,7 @@ be_src/docker-entrypoint.sh  `alembic upgrade head` 후 uvicorn — 컨테이너
 GET  /api/health
 GET  /api/content/posts              GET /api/content/posts/{slug}
 GET  /api/chat/graph                 POST /api/chat/stream (SSE; body {question, session_id?, history?}; 429 + Retry-After; 403 남의 세션)
-GET  /api/chat/sessions/{sid}        전사 (id를 알면 누구나; can_continue는 시작한 방문자만)
+GET  /api/chat/sessions/{sid}        전사 (id를 알면 누구나; can_continue는 시작한 방문자만; sources[].url — 인용 링크, 페이지 없는 문서는 null)
 GET  /api/chat/sessions?scope=mine|all   내 것 / 전체(Owner만, 403)
 POST /api/auth/owner {token}         DELETE /api/auth/owner   GET /api/auth/me
 GET  /api/kmeans/dataset             POST /api/kmeans/run

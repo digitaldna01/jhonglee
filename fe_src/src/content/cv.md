@@ -20,6 +20,7 @@ keywords:
   - research
   - gpa
   - honors
+url: /cv
 rag:
   node: false
 ---

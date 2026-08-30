@@ -17,7 +17,9 @@ from .prompts import SYSTEM_PROMPT, build_context, user_message
 
 log = logging.getLogger(__name__)
 
-CHAT_MAX_TOKENS = 300  # 2-3 sentences — a spec, not a rate limit
+CHAT_MAX_TOKENS = 450  # a safety net, not the length spec (the prompt sets that): Korean
+# costs ~2× the tokens of English, and a five-sentence 해요체 answer hit 300 mid-sentence
+# on the first day in production (mean is ~70; nothing in the judge set passes 200)
 
 Event = tuple[str, dict]
 

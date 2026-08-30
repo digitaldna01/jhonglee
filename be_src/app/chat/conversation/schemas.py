@@ -14,6 +14,7 @@ class SourceOut(BaseModel):
     title: str
     kind: str = ""
     score: float | None = None
+    url: str | None = None
 
 
 class TurnOut(BaseModel):
