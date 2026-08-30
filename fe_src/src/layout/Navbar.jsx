@@ -54,7 +54,7 @@ export default function Navbar() {
           }}
         >
           JHL<span className="dot">.</span>
-          <span className="home">ask me anything</span>
+          <span className="home"><span>ask me anything</span></span>
         </Link>
 
         <div className="site-nav-right">

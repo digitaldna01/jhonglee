@@ -39,20 +39,45 @@
 }
 .wordmark:hover { color: var(--fg-1); }
 .wordmark .dot { color: var(--accent); }
-/* the visible route home — reveals on hover so the mark isn't a static logo */
+/* the visible route home — types itself out on hover, the way the chat's
+   answers arrive: one mono cell per step, accent caret blinking after.
+   Two spans: the outer owns the box and the fade, the inner is clipped.
+   (A single box that shrinks under the pointer drops :hover and flickers.) */
 .wordmark .home {
+  --n: 15;                                  /* characters in "ask me anything" */
+  --ls: 0.08em;
+  /* mono advances round unevenly at this size — a cell of slack instead of
+     an exact width, so the last letter is never clipped */
+  --w: calc((var(--n) + 1) * (1ch + var(--ls)));
+  display: inline-block;
+  min-width: var(--w);
+  margin-left: 10px;
   font-family: var(--font-mono);
   font-size: var(--text-hint);
   font-weight: 400;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--ls);
   color: var(--fg-3);
-  margin-left: 10px;
   opacity: 0;
-  transform: translateX(-4px);
-  transition: opacity 260ms var(--ease-out), transform 260ms var(--ease-out);
+  transition: opacity 200ms var(--ease-out);
 }
-.wordmark:hover .home,
-.wordmark:focus-visible .home { opacity: 1; transform: translateX(0); }
+.wordmark .home > span {
+  display: inline-block;
+  overflow: hidden;                         /* moves the baseline — hence bottom */
+  vertical-align: bottom;
+  max-width: var(--w);
+  border-right: 5px solid var(--accent);    /* the caret; hidden with the fade */
+}
+.wordmark:is(:hover, :focus-visible) .home { opacity: 1; }
+.wordmark:is(:hover, :focus-visible) .home > span {
+  animation:
+    home-type 600ms steps(var(--n), end) both,
+    home-caret 1s steps(1) 600ms infinite;
+}
+@keyframes home-type { from { max-width: 0; } }
+@keyframes home-caret { 50% { border-color: transparent; } }
+@media (prefers-reduced-motion: reduce) {
+  .wordmark .home > span { animation: none !important; border-color: transparent; }
+}
 
 /* ---- Desktop links ----------------------------------------- */
 .nav-links {
