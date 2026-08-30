@@ -18,6 +18,7 @@ mdx 포스트 ──(npm run corpus)──▶ corpus.json ──▶ 백엔드 �
 ```
 
 - 지식의 원본은 `fe_src/src/posts/*.mdx` + `fe_src/src/content/*.md` 하나뿐. 사이트 페이지·그래프 노드·챗 검색이 모두 여기서 파생
+  (+ 빌더가 생성하는 프로젝트 목록 문서 하나 — "뭐 만들었어?"에 전체 목록으로 답하기 위해)
 - 임베딩: fastembed(ONNX) 다국어 MiniLM-L12 **int8**, 384차원 — 한국어 질문 → 영어 문서 cross-lingual 검색. 세부는 `docs/rag-design-notes.md`
 - 대화는 주소를 갖는다: 첫 답변 뒤 URL이 `/chat/<id>`가 되고, 그 링크로 누구나 읽을 수 있다(이어 말하기는 시작한 브라우저만). 주인은 `/admin`에서 `OWNER_TOKEN`으로 로그인해 전체 대화를 본다
 

@@ -121,6 +121,36 @@ for (const { dir, hasPage } of SOURCES) {
 }
 
 docs.sort((a, b) => (b.date > a.date ? 1 : -1));
+
+/* one generated index document: the answer to "what have you made?" is the
+   whole list, but retrieval shows the model only its top few documents —
+   so the list is itself a document. Rebuilt with the corpus, it can't go
+   stale; node: false keeps it off the graph, like the bio. */
+const listed = docs.filter((d) => d.node);
+docs.push({
+  id: 'projectIndex',
+  kind: 'index',
+  title: 'All projects',
+  date: '',
+  year: null,
+  lean: null,
+  tags: ['all projects', 'list', 'overview', 'portfolio'],
+  stack: null,
+  summary: `A complete list of the ${listed.length} projects on this site: ${listed.map((d) => d.title).join(', ')}.`,
+  thumbnail: null,
+  url: null,
+  node: false,
+  chunks: [
+    {
+      id: 'projectIndex#0',
+      heading: 'Every project, one line each',
+      text: listed
+        .map((d) => `${d.title}${d.year ? ` (${d.year})` : ''}: ${d.summary}`)
+        .join('\n'),
+    },
+  ],
+});
+
 const payload = { generated: new Date().toISOString(), docs };
 for (const out of OUTPUTS) {
   mkdirSync(path.dirname(out), { recursive: true });

@@ -6,6 +6,7 @@
         --rubric FILE       your own voice rubric (plain text) instead of the default one
         --judge MODEL       judge model (default claude-sonnet-5; the answerer is CHAT_MODEL)
         --limit N           first N questions only (a cheap dry run)
+        --only A1,E25       just these question ids
         --out FILE          full transcript + verdicts as JSON (default scripts/judge_out.json)
         --reuse FILE        re-judge the answers saved in FILE (e.g. with another rubric) instead of
                             generating them again
@@ -244,6 +245,9 @@ async def main(args: argparse.Namespace) -> None:
     variants = {a: VARIANTS[a], b: VARIANTS[b]}
     rubric = Path(args.rubric).read_text() if args.rubric else DEFAULT_RUBRIC
     questions = json.loads(Path(args.questions).read_text())["questions"][: args.limit or None]
+    if args.only:
+        wanted = set(args.only.split(","))
+        questions = [q for q in questions if q["id"] in wanted]
 
     if not args.reuse:
         await retrieval.warmup()
@@ -283,6 +287,7 @@ if __name__ == "__main__":
     p.add_argument("--rubric")
     p.add_argument("--judge", default=JUDGE_MODEL)
     p.add_argument("--limit", type=int, default=0)
+    p.add_argument("--only")
     p.add_argument("--out", default=str(HERE / "judge_out.json"))
     p.add_argument("--reuse")
     asyncio.run(main(p.parse_args()))
