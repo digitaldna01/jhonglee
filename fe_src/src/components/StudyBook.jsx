@@ -30,7 +30,7 @@ const Page = forwardRef(function Page({ src, number, eager }, ref) {
   );
 });
 
-export default function StudyBook() {
+export default function StudyBook({ className = "" }) {
   const bookRef = useRef(null);
   const frameRef = useRef(null);
   const [page, setPage] = useState(0);
@@ -47,7 +47,7 @@ export default function StudyBook() {
   };
 
   return (
-    <figure ref={frameRef} className="sb-atelier not-prose">
+    <figure ref={frameRef} className={`sb-atelier not-prose ${className}`.trim()}>
       <header className="sb-masthead">
         <span>
           Studybook — <b>Design Study</b>
@@ -63,7 +63,7 @@ export default function StudyBook() {
               width={400}
               height={618}
               size="stretch"
-              minWidth={250}
+              minWidth={300}   /* a spread only when each page can be ≥ 300px; narrower → one page */
               maxWidth={600}
               minHeight={386}
               maxHeight={927}

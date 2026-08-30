@@ -8,10 +8,32 @@
 
 .post-head,
 .post-body {
-  max-width: 34em;
-  margin: 0 auto;
-  font-size: clamp(16px, 15.2px + 0.125vw, 17px);
+  /* the column in px, computed once from the body size — `34em` itself would
+     re-resolve against each child's own font-size (a heading's 34em ≈ 990px) */
+  --post-fs: clamp(16px, 15.2px + 0.125vw, 17px);
+  --col: calc(34 * var(--post-fs));
+  font-size: var(--post-fs);
   line-height: 1.7;
+}
+.post-head { max-width: var(--col); margin: 0 auto; }
+
+/* ---- Width is the block's to declare: content · wide · full ---------
+   The body spans the post container; each block is held to the reading
+   column unless it says otherwise. Flow, not a named-line grid, so the
+   prose's vertical margins keep collapsing.
+     (default)        content — the 34em column, same as the text
+     className="wide" the post container (≈ 830–900px): demos, the book
+     className="full" edge to edge of the viewport: a bleed image */
+.post-body .prose > *,
+.post-body .prose > figure[data-rehype-pretty-code-figure] {
+  max-width: var(--col);
+  margin-inline: auto;
+}
+.post-body .prose > .wide { max-width: none; }
+.post-body .prose > .full {
+  max-width: none;
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
 }
 
 /* ---- Masthead: same voice as WORK and CV — left, 600, tight ------ */
@@ -36,8 +58,7 @@
 /* section headings (###): ≈1.5–1.75× the body, flowing 24 → 30px */
 .post-body .prose h3 { font-size: clamp(24px, 22px + 0.556vw, 30px); }
 
-/* the old full-bleed hero now takes the column like everything else */
-.post-body .prose img.img-wide { width: 100%; max-width: 100%; }
+/* the old `img-wide` class is inert: an image is `content` unless it says `wide`/`full` */
 
 /* ── Post meta + language toggle ────────────────────────── */
 .post-meta-row {
@@ -66,7 +87,7 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--fg-3);
-  margin: 0 0 20px;
+  margin: 0 auto 20px;
 }
 
 .post-lang {

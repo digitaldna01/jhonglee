@@ -27,8 +27,9 @@
 .back-link:hover svg { color: var(--accent); }
 .back-link svg { width: 13px; height: 13px; transition: color 0.2s var(--ease-out); }
 
-/* on a phone the reading column starts at the gutter, so a pinned link
-   would float over the text — let it sit in flow above the title instead */
-@media (max-width: 720px) {
+/* below ~1120px a pinned link would float over the page: the reading
+   column (phones) or a `wide` block such as the flip-book (tablets) reach
+   under it — let it sit in flow above the title instead */
+@media (max-width: 1119px) {
   .back-link.in-flow { position: static; margin-bottom: 22px; }
 }
