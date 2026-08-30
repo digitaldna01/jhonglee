@@ -148,22 +148,24 @@ class SqlConversationRepository:
             ids = [r.id for r in rows]
             if not ids:
                 return []
-            counts = dict(
-                (await s.execute(
+            counts: dict[str | None, int] = {
+                sid: n
+                for sid, n in (await s.execute(
                     select(ChatLog.session_id, func.count()).where(ChatLog.session_id.in_(ids))
                     .group_by(ChatLog.session_id)
                 )).all()
-            )
+            }
             first_ids = (
                 await s.execute(
                     select(func.min(ChatLog.id)).where(ChatLog.session_id.in_(ids)).group_by(ChatLog.session_id)
                 )
             ).scalars().all()
-            firsts = dict(
-                (await s.execute(
+            firsts: dict[str | None, str] = {
+                sid: q
+                for sid, q in (await s.execute(
                     select(ChatLog.session_id, ChatLog.question).where(ChatLog.id.in_(first_ids))
                 )).all()
-            ) if first_ids else {}
+            } if first_ids else {}
         return [
             ConversationSummary(
                 id=r.id,

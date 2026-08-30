@@ -5,12 +5,15 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta, timezone
+from typing import cast
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import Table
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.chat.conversation import ConversationService, Forbidden, NotFound, Source, Turn, policy
+from app.chat.conversation.domain import Conversation
 from app.chat.conversation.repository import MemoryConversationRepository, SqlConversationRepository
 from app.chat.conversation.service import reset_service
 from app.chat.models import ChatLog, ChatSession
@@ -43,8 +46,14 @@ def _fresh_state(monkeypatch, tmp_path):
 # ------------------------------------------------------------ policy
 
 
+def _create_tables(conn) -> None:
+    for model in (ChatSession, ChatLog):
+        cast(Table, model.__table__).create(conn)
+
+
 def test_policy_table():
-    conv = object()
+    now = datetime.now(timezone.utc)
+    conv = Conversation(id="c", visitor_id=ANN.visitor_id, created_at=now, last_at=now)
     assert policy.can_read(BOB, conv) and policy.can_read(ANN, conv) and policy.can_read(BOSS, conv)
     assert not policy.can_read(BOSS, None)  # unknown is unknown even to the owner
     assert policy.can_continue(ANN, None)  # unclaimed: first asker takes it
@@ -140,8 +149,7 @@ def test_sql_repository_roundtrip(tmp_path):
     async def run():
         engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path}/c.db")
         async with engine.begin() as conn:
-            await conn.run_sync(lambda c: ChatSession.__table__.create(c))
-            await conn.run_sync(lambda c: ChatLog.__table__.create(c))
+            await conn.run_sync(_create_tables)
         repo = SqlConversationRepository(async_sessionmaker(engine, expire_on_commit=False))
 
         assert await repo.owner_of("s1") is None and await repo.get("s1") is None
@@ -185,8 +193,7 @@ def client(monkeypatch, tmp_path):
     async def create():
         engine = create_async_engine(url)
         async with engine.begin() as conn:
-            await conn.run_sync(lambda c: ChatSession.__table__.create(c))
-            await conn.run_sync(lambda c: ChatLog.__table__.create(c))
+            await conn.run_sync(_create_tables)
         await engine.dispose()
 
     asyncio.run(create())
