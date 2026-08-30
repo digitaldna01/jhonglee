@@ -17,9 +17,10 @@ from .prompts import SYSTEM_PROMPT, build_context, user_message
 
 log = logging.getLogger(__name__)
 
-CHAT_MAX_TOKENS = 450  # a safety net, not the length spec (the prompt sets that): Korean
-# costs ~2× the tokens of English, and a five-sentence 해요체 answer hit 300 mid-sentence
-# on the first day in production (mean is ~70; nothing in the judge set passes 200)
+CHAT_MAX_TOKENS = 800  # a safety net, not the length spec (the prompt sets that: 2-4 sentences,
+# more only when asked). Korean costs ~2× the tokens of English; a five-sentence answer hit
+# the old cap of 300 mid-sentence on the first day in production, and an "explain in
+# detail" reply in Korean can reach ~600. Worst case at 800 is ≈ $0.004 an answer.
 
 Event = tuple[str, dict]
 
