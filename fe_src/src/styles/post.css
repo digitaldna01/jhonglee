@@ -99,10 +99,57 @@
   background: var(--accent, currentColor);
 }
 
+/* ---- Related: the landing map, hovered on this post ---------------- */
+.related {
+  max-width: 34em;
+  margin: 64px auto 0;
+  font-size: clamp(16px, 15.2px + 0.125vw, 17px); /* same em as the column */
+  padding-top: 22px;
+  border-top: 1px solid var(--hairline);
+}
+.related-h {
+  margin: 0 0 6px;
+  font-family: var(--font-mono);
+  font-size: var(--text-meta);
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+.related-map { position: relative; }
+.related-canvas {
+  display: block;
+  width: 100%;
+  height: 260px;   /* room for eight nodes; labels dodge each other in the renderer */
+  touch-action: none;
+}
+@media (max-width: 720px) { .related-canvas { height: 230px; } }
+/* screen-reader / keyboard list of the same neighbours (surfaces on focus) */
+.related-sr {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+.related-sr a {
+  position: absolute;
+  width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  color: var(--fg-2);
+  text-decoration: none;
+}
+.related-sr a:focus-visible {
+  position: static; width: auto; height: auto; clip: auto; overflow: visible;
+  color: var(--fg-1);
+}
+
 /* ---- Newer / older ------------------------------------------------ */
 .post-nav {
   max-width: 34em;
-  margin: 64px auto 0;
+  margin: 40px auto 0;
   font-size: clamp(16px, 15.2px + 0.125vw, 17px); /* same em as the column */
   padding-top: 22px;
   border-top: 1px solid var(--hairline);

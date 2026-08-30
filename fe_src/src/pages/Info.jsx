@@ -7,9 +7,7 @@ import Dock from '../landing/components/Dock';
 import ChatThread from '../landing/components/ChatThread';
 import ContactCorner from '../landing/components/ContactCorner';
 import BackLink from '../components/BackLink';
-import { fetchGraph } from '../landing/rag/client';
-import { PROJECTS } from '../landing/data/corpus';
-import { EDGES } from '../landing/data/retrieval';
+import useGraphData from '../landing/useGraphData';
 import '../styles/landing.css';
 
 /* Landing — full-viewport similarity map with a RAG chat session.
@@ -19,22 +17,13 @@ export default function Info() {
   const { theme } = useTheme();
   const graphRef = useRef(null);
   const chat = useChat(graphRef);
-  const [graphData, setGraphData] = useState(null);
+  const graphData = useGraphData();
   const [activeCite, setActiveCite] = useState(null);
 
   // non-scrolling page + transparent navbar while this route is mounted
   useEffect(() => {
     document.documentElement.classList.add('route-landing');
     return () => document.documentElement.classList.remove('route-landing');
-  }, []);
-
-  // graph data: server corpus first, bundled copy when the backend is down
-  useEffect(() => {
-    let mounted = true;
-    fetchGraph()
-      .then((d) => mounted && setGraphData({ projects: d.projects, edges: d.edges }))
-      .catch(() => mounted && setGraphData({ projects: PROJECTS, edges: EDGES }));
-    return () => { mounted = false; };
   }, []);
 
   // Esc and the JHL. wordmark both end the session and restore the map

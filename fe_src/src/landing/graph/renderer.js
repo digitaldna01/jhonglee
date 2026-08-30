@@ -47,7 +47,8 @@ export function draw(ctx, sim, palette, hoverId, { width, height, compact = fals
     ctx.stroke();
   }
 
-  // nodes
+  // nodes (labels are collected here and drawn after, so they can avoid each other)
+  const labelled = [];
   for (const n of sim.nodes) {
     const dimmed = hoverId && hoverId !== n.id && !(hot && hot.has(n.id));
     const isHover = hoverId === n.id;
@@ -64,14 +65,36 @@ export function draw(ctx, sim, palette, hoverId, { width, height, compact = fals
     ctx.fillStyle = fill;
     ctx.fill();
 
-    // labels: always on hover, faint when idle, hidden while a hover
-    // focuses attention elsewhere. Narrow screens keep them too, smaller —
-    // an unnamed dot is decoration, a named one is a link.
-    if (isHover || !hoverId) {
-      ctx.font = compact ? LABEL_FONT_COMPACT : LABEL_FONT;
-      ctx.textAlign = 'center';
-      ctx.fillStyle = isHover ? c.label : dimmed ? c.labelDim : c.labelIdle;
-      ctx.fillText(n.label.toLowerCase(), n.x, n.y - n.r - 8);
+    // labels: the hovered node and its neighbours (they are lit — say who
+    // they are); everyone when nothing is hovered; never the dimmed rest.
+    // Narrow screens keep them too, smaller — an unnamed dot is decoration.
+    if (isHover || (hot && hot.has(n.id)) || !hoverId) {
+      labelled.push({ n, colour: isHover ? c.label : dimmed ? c.labelDim : c.labelIdle, first: isHover });
     }
+  }
+
+  // label placement: above the node by default; a label that would sit on
+  // one already placed drops below its node instead (two linked nodes at the
+  // same height are common — a strong edge is a short one). The hovered
+  // node is placed first so it always keeps the top slot.
+  ctx.font = compact ? LABEL_FONT_COMPACT : LABEL_FONT;
+  ctx.textAlign = 'center';
+  const lh = compact ? 12 : 14;
+  const placed = [];
+  const overlaps = (r) => placed.some((q) => r.x1 < q.x2 && r.x2 > q.x1 && r.y1 < q.y2 && r.y2 > q.y1);
+  labelled.sort((p, q) => Number(q.first) - Number(p.first));
+  for (const { n, colour } of labelled) {
+    const text = n.label.toLowerCase();
+    const w = ctx.measureText(text).width + 6;
+    const above = n.y - n.r - 8;
+    let rect = { x1: n.x - w / 2, x2: n.x + w / 2, y1: above - lh, y2: above };
+    let y = above;
+    if (overlaps(rect)) {
+      y = n.y + n.r + 8 + lh * 0.75;
+      rect = { x1: n.x - w / 2, x2: n.x + w / 2, y1: y - lh * 0.75, y2: y + lh * 0.25 };
+    }
+    placed.push(rect);
+    ctx.fillStyle = colour;
+    ctx.fillText(text, n.x, y);
   }
 }
