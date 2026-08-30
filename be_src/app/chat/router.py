@@ -1,26 +1,34 @@
 """Portfolio RAG chat — /api/chat/*.
 
-GET  /api/chat/graph   nodes + similarity edges for the landing map
-POST /api/chat/stream  SSE: `sources` (retrieval + timing) → `delta`
-                       (answer text chunks) → `done` (model label)
-                       429 (+Retry-After) when the visitor/IP rate limit trips
+GET  /api/chat/graph       nodes + similarity edges for the landing map
+POST /api/chat/stream      SSE: `sources` (retrieval + timing) → `delta`
+                           (answer text chunks) → `done` (model label, session_id)
+                           429 (+Retry-After) when the visitor/IP rate limit trips
+                           403 when session_id is another visitor's conversation
+GET  /api/chat/sessions/*  the transcript by address — conversation/router.py
 """
 
 from __future__ import annotations
 
 import json
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from fastapi.responses import StreamingResponse
 
+from ..core.auth import Principal, get_principal
 from ..core.cache import get_cache
 from ..core.config import get_settings
 from ..core.deps import get_client_ip, get_visitor_id
 from ..core.ratelimit import RateLimited, RateLimiter
 from . import service
+from .conversation import Forbidden, get_service
+from .conversation.router import router as sessions_router
 from .schemas import ChatRequest, GraphResponse
 
+log = logging.getLogger(__name__)
 router = APIRouter(prefix="/chat", tags=["chat"])
+router.include_router(sessions_router)
 
 
 @router.get("/graph", response_model=GraphResponse)
@@ -64,8 +72,28 @@ async def _rate_limit(request: Request, visitor_id: str = Depends(get_visitor_id
     return visitor_id
 
 
+async def _claim_address(who: Principal, session_id: str) -> None:
+    """Claim a new address, or prove this one is ours — before any streaming.
+    Only a refusal stops the answer: with the session table unavailable (dev
+    without migrations, a database outage) the question is still answered,
+    like chatlog's best-effort write, and the gap is logged."""
+    try:
+        await get_service().begin(who, session_id)
+    except Forbidden:
+        raise HTTPException(403, "this conversation belongs to another visitor") from None
+    except Exception as e:  # noqa: BLE001
+        log.warning("conversation bookkeeping skipped: %s", e)
+
+
 @router.post("/stream")
-async def stream(req: ChatRequest, response: Response, visitor_id: str = Depends(_rate_limit)):
+async def stream(
+    req: ChatRequest,
+    response: Response,
+    visitor_id: str = Depends(_rate_limit),
+    who: Principal = Depends(get_principal),
+):
+    if req.session_id:
+        await _claim_address(who, req.session_id)
     client_history = [t.model_dump() for t in req.history]
 
     async def events():

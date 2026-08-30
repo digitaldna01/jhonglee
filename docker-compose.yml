@@ -35,6 +35,7 @@ services:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - DATABASE_URL=postgresql+asyncpg://jhonglee:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/jhonglee
       - REDIS_URL=redis://redis:6379/0
+      - OWNER_TOKEN=${OWNER_TOKEN:-}
     depends_on:
       db:
         condition: service_healthy

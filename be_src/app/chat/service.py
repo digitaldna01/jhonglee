@@ -85,6 +85,7 @@ async def answer(
         elif name == "done":
             model = payload["model"]
             usage = {k: payload.get(k) for k in ("input_tokens", "output_tokens")}
+            payload = {**payload, "session_id": session_id}
         yield name, payload
 
     answer_text = "".join(parts)

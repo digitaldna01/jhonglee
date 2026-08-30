@@ -31,6 +31,8 @@ be_src/app/
     cache.py            KVCache 프로토콜 (get/set/delete/incr/close + ttl) — MemoryCache | RedisCache
     deps.py             get_visitor_id (익명 쿠키 jhl_vid), get_client_ip (Cloudflare/nginx 뒤 실제 IP)
     ratelimit.py        RateLimiter(cache).hit(key, limit, window) — 고정 윈도우, INCR+TTL
+    auth.py             Principal 계층: Visitor(익명 쿠키) ← Owner(Visitor + OWNER_TOKEN 쿠키). get_principal Depends
+  auth/                 주인의 문: POST /api/auth/owner (토큰 검사, IP당 5/분) → jhl_owner 쿠키. 방문자는 아무것도 필요 없음
   content/              축 ②: "내가 만든 것" — 읽기 전용, corpus.json이 소스 (chat이 빌려 씀)
     repository.py       corpus.json 로더 (DOCS / NODES / BIO / by_id)
     service.py          list_posts · get · exists · nodes  ← 타 기능은 여기만 호출
@@ -43,14 +45,20 @@ be_src/app/
     embedding.py        fastembed 로드 + 카탈로그 밖 모델 등록(CUSTOM). app import 없음 → Dockerfile이 직접 실행해 사전 다운로드
     store.py            VectorStore 인터페이스: search(코사인)·keyword_search(tsvector | BM25) — PgVectorStore | MemoryStore(SQLite 폴백); 공용 토크나이저
     ingest.py           corpus.json → 청크 계획(해시) → 바뀐 것만 임베딩·삽입, 사라진 것 삭제. `python -m app.chat.ingest`
-    models.py           rag_documents · rag_chunks (vector(384) HNSW + tsv 생성 컬럼 GIN) — corpus.json의 파생 인덱스; chat_logs
+    models.py           rag_documents · rag_chunks (vector(384) HNSW + tsv 생성 컬럼 GIN) — corpus.json의 파생 인덱스; chat_sessions · chat_logs
     generation.py       Claude 스트리밍(AsyncAnthropic) + 추출식 폴백 — (event, payload) async 제너레이터
     prompts.py          시스템 프롬프트·컨텍스트 조립 — 톤 수정은 여기서
-    history.py          서버 세션: load_session/append/clear — 키 chat:session:{vid}:{sid}, 마지막 8교환 + last_sources
-    chatlog.py          chat_logs 기록 (best-effort)
+    history.py          모델의 작업 기억: 캐시 키 chat:session:{vid}:{sid}, 마지막 8교환 + last_sources — 캐시 미스면 chat_logs에서 재구성
+    chatlog.py          conversation.service.record를 감싼 best-effort 래퍼 (chat_logs의 쓰기는 한 곳)
+    conversation/       "대화 = 주소" (/api/chat/sessions/*, 2026-08-30)
+      domain.py         Conversation · Turn · Source — frozen dataclass, ORM 행이 아니라 조립된 값
+      repository.py     ConversationRepository(Protocol): SqlConversationRepository(chat_sessions + chat_logs) | MemoryConversationRepository(테스트)
+      policy.py         접근 표(순수 함수): 읽기 = id를 아는 누구나 · 이어 말하기 = 시작한 방문자만 · 전체 목록 = Owner
+      service.py        ConversationService: begin(답하기 전 주소 선점/검증) · view · mine · all · record · working_memory — NotFound/Forbidden
+      schemas.py · router.py
     schemas.py
   demos/kmeans/         축 ②: 인터랙티브 데모 API (router · service · schemas)
-  social/               축 ③ (예정): 좋아요·댓글·챗 히스토리 — __init__ docstring에 계획
+  social/               축 ③ (예정): 좋아요·댓글 — __init__ docstring에 계획 (Principal은 core/auth 공용)
 tests/                  TestClient 스모크 (기능별 1개 이상)
 be_src/migrations/      Alembic (env.py는 DATABASE_URL을 읽음; 0001 pgvector 확장, 0002 rag_* + HNSW, 0003 chat_logs)
 be_src/docker-entrypoint.sh  `alembic upgrade head` 후 uvicorn — 컨테이너 시작마다 스키마 동기화
@@ -73,8 +81,8 @@ be_src/docker-entrypoint.sh  `alembic upgrade head` 후 uvicorn — 컨테이너
    | --------------------------------- | --------- | ------------------------------------ |
    | 파생 콘텐츠 (corpus.json)         | 배포 단위 | 파일 → 메모리 (`content.repository`) |
    | ML 런타임 (임베딩 모델)           | 프로세스  | 메모리, lifespan warmup              |
-   | 세션/휘발 (챗 히스토리, 레이트리밋 카운터) | TTL | `core.cache` (Redis) — `chat/history.py`, `core/ratelimit.py` |
-   | 대화 로그 (append-only)            | 영구      | `chat_logs` (Postgres)               |
+   | 세션/휘발 (모델 작업 기억, 레이트리밋 카운터) | TTL | `core.cache` (Redis) — `chat/history.py`, `core/ratelimit.py` |
+   | 대화 (주소 + 전사, append-only)     | 영구      | `chat_sessions` + `chat_logs` (Postgres) — `chat/conversation/` |
    | 영속 사용자 데이터 (좋아요, 댓글) | 영구      | `core.db` (Postgres)                 |
    | 청크 벡터 (corpus.json의 인덱스)   | 콘텐츠 해시 | `rag_chunks.embedding` (pgvector) — 시작 시 증분 sync |
 
@@ -101,7 +109,10 @@ be_src/docker-entrypoint.sh  `alembic upgrade head` 후 uvicorn — 컨테이너
 ```
 GET  /api/health
 GET  /api/content/posts              GET /api/content/posts/{slug}
-GET  /api/chat/graph                 POST /api/chat/stream (SSE; body {question, session_id?, history?}; 429 + Retry-After)
+GET  /api/chat/graph                 POST /api/chat/stream (SSE; body {question, session_id?, history?}; 429 + Retry-After; 403 남의 세션)
+GET  /api/chat/sessions/{sid}        전사 (id를 알면 누구나; can_continue는 시작한 방문자만)
+GET  /api/chat/sessions?scope=mine|all   내 것 / 전체(Owner만, 403)
+POST /api/auth/owner {token}         DELETE /api/auth/owner   GET /api/auth/me
 GET  /api/kmeans/dataset             POST /api/kmeans/run
 --- planned ---
 POST /api/social/posts/{slug}/likes  GET/POST /api/social/posts/{slug}/comments

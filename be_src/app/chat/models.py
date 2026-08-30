@@ -11,6 +11,9 @@ of it (what the in-memory numpy matrix used to be), kept in sync by
                  `tsv` is a generated full-text column over the passage
                  (english config: stopwords + stemming, Hangul passes
                  through untouched) for the keyword half of hybrid search
+  chat_sessions  one row per conversation: its client-minted id (the address
+                 /chat/{id}), which visitor started it, first and last activity.
+                 chat_logs rows hang off it by session_id (conversation/repository)
   chat_logs      one row per answered question: what was asked, what was
                  retrieved (ids + scores), what was answered, by which
                  model, how fast, and how many tokens it cost (NULL for
@@ -74,12 +77,21 @@ class RagChunk(Base):
     )
 
 
+class ChatSession(Base):
+    __tablename__ = "chat_sessions"
+
+    id: Mapped[str] = mapped_column(Text, primary_key=True)  # client-minted UUID
+    visitor_id: Mapped[str] = mapped_column(Text, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    last_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+
 class ChatLog(Base):
     __tablename__ = "chat_logs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     visitor_id: Mapped[str] = mapped_column(Text, index=True)
-    session_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    session_id: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)  # → chat_sessions.id
     question: Mapped[str] = mapped_column(Text)
     sources: Mapped[list] = mapped_column(JSON)  # [{id, kind, title, score}] as sent to the client
     answer: Mapped[str] = mapped_column(Text)

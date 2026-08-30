@@ -18,8 +18,10 @@ app/
     db.py                 SQLAlchemy async engine (Postgres; SQLite fallback), session_factory
     cache.py              KVCache protocol — MemoryCache | RedisCache (REDIS_URL)
     ratelimit.py          fixed-window RateLimiter on top of the cache
+    auth.py               Principal — Visitor (anonymous cookie) | Owner (Visitor + OWNER_TOKEN cookie); get_principal
     lifespan.py           startup: retrieval.warmup() / shutdown: cache + db
   content/                corpus.json loader + /api/content/* (read-only; the corpus source)
+  auth/                   /api/auth/owner — the owner's login (rate-limited token check → jhl_owner cookie)
   chat/                   /api/chat/* — the RAG pipeline
     router.py             HTTP only (SSE serialisation)
     service.py            retrieve → context → generate, as (event, payload) async events
@@ -27,15 +29,22 @@ app/
     embedding.py          fastembed loader + custom (non-catalog) model registry; run directly by the Dockerfile
     store.py              VectorStore: PgVectorStore (pgvector + tsvector) | MemoryStore (numpy + BM25 fallback); shared tokeniser
     ingest.py             corpus → chunk plan (content hash) → embed only what changed
-    models.py             rag_documents, rag_chunks (vector(384) HNSW + generated tsvector GIN), chat_logs
+    models.py             rag_documents, rag_chunks (vector(384) HNSW + generated tsvector GIN), chat_sessions, chat_logs
     generation.py         Claude streaming (AsyncAnthropic) + extractive fallback
     prompts.py            system prompt + context assembly
-    history.py            server-side sessions in the cache (Redis): turns + last_sources, keyed by visitor + session_id
-    chatlog.py            append-only chat_logs rows (best-effort)
+    history.py            the model's working memory in the cache (Redis): last 8 exchanges + last_sources; rebuilt from chat_logs on a miss
+    chatlog.py            best-effort wrapper around conversation.service.record (chat_logs has one writer)
+    conversation/         a conversation as an address — /api/chat/sessions/*
+      domain.py           Conversation · Turn · Source (frozen values)
+      repository.py       ConversationRepository protocol: SqlConversationRepository (chat_sessions + chat_logs) | Memory…
+      policy.py           the access table: read = anyone with the id · continue = the visitor who started it · list all = owner
+      service.py          ConversationService: begin (claim/verify before answering) · view · mine · all · working_memory
+      schemas.py / router.py
   demos/kmeans/           stateless demo API
-migrations/               Alembic; env.py reads DATABASE_URL. 0001 pgvector ext, 0002 rag tables, 0003 chat_logs, 0004 rag_chunks.tsv, 0005 chat_logs tokens
+migrations/               Alembic; env.py reads DATABASE_URL. 0001 pgvector ext, 0002 rag tables, 0003 chat_logs, 0004 rag_chunks.tsv, 0005 chat_logs tokens, 0006 chat_sessions (+ backfill)
 docker-entrypoint.sh      `alembic upgrade head`, then uvicorn
-tests/                    smoke (TestClient), cache, ingest, chat state (incl. global cap), follow-up, hybrid, mine_golden, usage_report
+tests/                    smoke (TestClient), cache, ingest, chat state (incl. global cap), conversation (policy · service · SQL · HTTP · owner),
+                          follow-up, hybrid, mine_golden, usage_report
                           (+ Postgres tests via TEST_DATABASE_URL)
 scripts/eval_retrieval.py golden-set retrieval eval (recall@1/@4 EN+KO, two-turn follow-ups, timing, peak RSS); `--sweep` ranking
                           constants, `--pg` the Postgres path — run before changing model/chunking/fusion weights
@@ -75,7 +84,8 @@ pytest                                      # add TEST_DATABASE_URL=postgresql+a
 | `CHAT_MODEL` | `claude-haiku-4-5` | |
 | `CHAT_RATE_PER_MINUTE` / `CHAT_RATE_PER_DAY` | `10` / `100` | per visitor **and** per IP on `POST /api/chat/stream`; `0` disables a window |
 | `CHAT_RATE_GLOBAL_PER_DAY` | `500` | site-wide daily cap = the hard ceiling on the Claude bill (500 × ≈$0.003 ≈ $1.5/day). 429 carries `X-RateLimit-Scope: global` |
-| `CHAT_HISTORY_TTL_DAYS` | `7` | server-side session lifetime |
+| `CHAT_HISTORY_TTL_DAYS` | `7` | working-memory lifetime in the cache; the transcript itself stays in `chat_logs` |
+| `OWNER_TOKEN` | *(unset → owner login disabled)* | long random secret; `POST /api/auth/owner {token}` makes that browser the owner (lists/reads every conversation) |
 | `EMBED_MODEL` | `Xenova/paraphrase-multilingual-MiniLM-L12-v2-q8` | fastembed catalog name or a `chat/embedding.CUSTOM` key; the Dockerfile `ARG` bakes the same default. 384-d is baked into `rag_chunks.embedding` |
 
 ## API surface
@@ -83,8 +93,11 @@ pytest                                      # add TEST_DATABASE_URL=postgresql+a
 ```
 GET  /api/health
 GET  /api/content/posts            GET  /api/content/posts/{slug}
-GET  /api/chat/graph[?z=0.5&k=2]   POST /api/chat/stream   (SSE: sources → delta* → done; 429 + Retry-After when rate-limited)
-     z = edge σ floor, k = mutual-kNN size (0 = off) — experiment knobs (defaults retrieval/edges.EDGE_Z/EDGE_K)
+GET  /api/chat/graph[?z=0.5&k=2]   POST /api/chat/stream   (SSE: sources → delta* → done{model, session_id}; 429 + Retry-After when
+     z = edge σ floor, k = mutual-kNN size (0 = off)          rate-limited; 403 when session_id is another visitor's conversation)
+GET  /api/chat/sessions/{sid}      the transcript — anyone with the id; can_continue only for the visitor who started it
+GET  /api/chat/sessions?scope=mine|all[&before=&limit=]   mine: this browser's; all: owner only (403)
+POST /api/auth/owner {token}       DELETE /api/auth/owner   GET /api/auth/me   (owner login: 401 wrong, 404 not configured, 429 5/min per IP)
 GET  /api/kmeans/dataset           POST /api/kmeans/run
 ```
 

@@ -21,6 +21,9 @@
   CHAT_RATE_GLOBAL_PER_DAY
                       site-wide ceiling per day — the hard cap on the bill:
                       answers/day × cost per answer (≈ $0.003 on Haiku 4.5)
+  OWNER_TOKEN         long random secret; presenting it (POST /api/auth/owner)
+                      makes that browser the site owner, who can list and read
+                      every conversation. Unset → owner login disabled
 """
 import os
 from functools import lru_cache
@@ -41,6 +44,7 @@ class Settings:
         self.chat_rate_per_minute = int(os.getenv("CHAT_RATE_PER_MINUTE", "10"))
         self.chat_rate_per_day = int(os.getenv("CHAT_RATE_PER_DAY", "100"))
         self.chat_rate_global_per_day = int(os.getenv("CHAT_RATE_GLOBAL_PER_DAY", "500"))
+        self.owner_token = os.getenv("OWNER_TOKEN", "")
 
 
 @lru_cache

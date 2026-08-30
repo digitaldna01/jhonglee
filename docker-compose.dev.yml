@@ -49,6 +49,7 @@ services:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - DATABASE_URL=postgresql+asyncpg://jhonglee:${POSTGRES_PASSWORD:-jhonglee}@db:5432/jhonglee
       - REDIS_URL=redis://redis:6379/0
+      - OWNER_TOKEN=${OWNER_TOKEN:-}
     volumes:
       - ./be_src/app:/app/app                # live source
       - ./be_src/migrations:/app/migrations  # so new revisions land in the repo
