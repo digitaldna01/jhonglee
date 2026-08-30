@@ -200,28 +200,9 @@
   to { transform: translateY(0); }
 }
 
-.back-map {
-  position: absolute;
-  top: 70px;
-  left: var(--gutter);
-  z-index: 4;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  background: none;
-  border: 0;
-  padding: 0;
-  cursor: pointer;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.02em;
-  color: var(--fg-2);
-  white-space: nowrap;
-  transition: color 0.2s var(--ease-out);
-}
-.back-map:hover { color: var(--fg-1); }
-.back-map:hover svg { color: var(--accent); }
-.back-map svg { width: 13px; height: 13px; transition: color 0.2s var(--ease-out); }
+/* the shared back link (components/BackLink) sits inside the fixed chat
+   layer, so it is positioned against that layer, not the viewport */
+.chat .back-link { position: absolute; z-index: 4; }
 
 .thread {
   flex: 1;

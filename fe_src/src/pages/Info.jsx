@@ -6,6 +6,7 @@ import Intro from '../landing/components/Intro';
 import Dock from '../landing/components/Dock';
 import ChatThread from '../landing/components/ChatThread';
 import ContactCorner from '../landing/components/ContactCorner';
+import BackLink from '../components/BackLink';
 import { fetchGraph } from '../landing/rag/client';
 import { PROJECTS } from '../landing/data/corpus';
 import { EDGES } from '../landing/data/retrieval';
@@ -75,12 +76,7 @@ export default function Info() {
       <Intro gone={chat.inChat} />
 
       <section className="chat" aria-label="Conversation">
-        <button type="button" className="back-map" onClick={chat.exitChat}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 5l-7 7 7 7" />
-          </svg>
-          back to map
-        </button>
+        <BackLink onClick={chat.exitChat}>back to map</BackLink>
         <ChatThread
           messages={chat.messages}
           activeCite={activeCite}
