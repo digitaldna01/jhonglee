@@ -25,12 +25,21 @@
   --color-secondary-light:  var(--accent-fill);
 }
 
-/* ── Responsive type & layout tokens ─────────────────────
-   These change per breakpoint; reference with var(--h1) etc. */
+/* ── Fluid type & layout tokens ──────────────────────────
+   Display sizes flow with the viewport instead of stepping at
+   breakpoints: each clamp() is a straight line from its minimum
+   at 360px to its maximum at 1440px, held flat beyond. Body/UI
+   sizes stay fixed — chrome should not breathe with the window.
+   (slope = (max − min) / 10.8 per vw; intercept = min − 3.6 × slope) */
 :root {
-  --d1: 48px;  --h1: 36px;  --h2: 30px;  --h3: 24px;  --h4: 20px;
+  --d1: clamp(40px, 29.33px + 2.963vw, 72px);   /* 40 → 72 */
+  --h1: clamp(32px, 22.67px + 2.593vw, 60px);   /* 32 → 60 */
+  --h2: clamp(28px, 21.33px + 1.852vw, 48px);   /* 28 → 48 */
+  --h3: clamp(22px, 17.33px + 1.296vw, 36px);   /* 22 → 36 */
+  --h4: clamp(20px, 16.67px + 0.926vw, 30px);   /* 20 → 30 */
   --body-lg: 18px;  --body-md: 16px;  --body-sm: 14px;  --caption: 12px;
-  --layout-width: 375px;  --layout-margin: 16px;  --layout-gutter: 16px;
+  --layout-margin: clamp(20px, 6vw, 80px);          /* page side padding */
+  --layout-gutter: clamp(16px, 12px + 1vw, 24px);   /* grid gaps */
 
   /* v2 chrome type scale + fixed page gutter (navbar, CV, landing dock) */
   --text-wordmark: 15px;
@@ -39,18 +48,6 @@
   --text-meta: 11.5px;    /* mono meta: eyebrows, CV dates + section labels, contact corner */
   --text-hint: 10.5px;    /* wordmark home hint, chat foot */
   --gutter: 22px;
-}
-@media (min-width: 376px) and (max-width: 1279px) {
-  :root {
-    --d1: 60px;  --h1: 48px;  --h2: 36px;  --h3: 30px;  --h4: 24px;
-    --layout-width: 800px;  --layout-margin: 32px;  --layout-gutter: 24px;
-  }
-}
-@media (min-width: 1280px) {
-  :root {
-    --d1: 72px;  --h1: 60px;  --h2: 48px;  --h3: 36px;  --h4: 30px;
-    --layout-width: 1280px;  --layout-margin: 80px;  --layout-gutter: 24px;
-  }
 }
 
 /* ── Semantic aliases ────────────────────────────────────

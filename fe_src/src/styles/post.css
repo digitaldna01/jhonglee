@@ -1,27 +1,25 @@
 /* ── Post — reading column ───────────────────────────────
    One width for everything: text, figures, code, maths and
-   embedded demos all sit in the same 600px column, so the page
-   keeps a single rhythm. 18px Avenir at 600px measures ≈75
-   characters a line; phones drop to 16px with 20px gutters. */
+   embedded demos share the column, so the page keeps a single
+   rhythm. The body flows 16 → 17px between 640 and 1440px and
+   the column is set in em (34em ≈ 75 characters of Avenir, measured), so
+   the line length stays the same whatever the size resolves to:
+   544px at 16px, 578px at 17px. Phones: 16px, 20px gutters. */
 
 .post-body {
-  max-width: 600px;
+  max-width: 34em;
   margin: 0 auto;
-  font-size: 16px;
-  line-height: 1.72;
+  font-size: clamp(16px, 15.2px + 0.125vw, 17px);
+  line-height: 1.7;
 }
-@media (min-width: 768px) { .post-body { font-size: 18px; line-height: 1.7; } }
 
 .post-body .prose p { text-wrap: pretty; }
 /* Korean never breaks inside a word; harmless for Latin text */
 .post-body .prose { word-break: keep-all; }
 .post-body .prose pre { font-size: 0.85em; }
 
-/* section headings (###): the global --h4 is 24px between 768 and 1279,
-   only 1.33× an 18px body — a bold paragraph, not a heading. Hold ≈1.5× */
-@media (min-width: 768px) and (max-width: 1279px) {
-  .post-body .prose h3 { font-size: 27px; }
-}
+/* section headings (###): ≈1.5–1.75× the body, flowing 24 → 30px */
+.post-body .prose h3 { font-size: clamp(24px, 22px + 0.556vw, 30px); }
 
 /* the old full-bleed hero now takes the column like everything else */
 .post-body .prose img.img-wide { width: 100%; max-width: 100%; }

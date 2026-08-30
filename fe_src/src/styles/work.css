@@ -60,7 +60,6 @@
   color: var(--fg-1);
   margin: 0;
 }
-@media (max-width: 480px) { .proj-title { font-size: 44px; } } /* two lines, & never starts a line */
 .proj-title em  { font-style: normal; font-weight: 300; color: var(--accent); }
 .proj-title .ampersand { font-weight: 300; } /* one emphasis per headline: "Ideas" */
 
