@@ -6,6 +6,7 @@ import PostNav from './PostNav';
 import Related from './Related';
 import Lightbox from '../../components/Lightbox';
 import BackLink from '../../components/BackLink';
+import NotFound from '../NotFound';
 import { markZoomable, zoomTarget } from '../../components/Lightbox/zoomable';
 import '../../styles/work.css';
 import '../../styles/post.css';
@@ -92,8 +93,18 @@ export default function Post() {
     return () => mo.disconnect();
   }, [status]);
 
-  if (status === 'loading') return <p className="pt-24 text-center">Loading…</p>;
-  if (status === '404' || !meta) return <p className="pt-24 text-center">404 - Post Not Found</p>;
+  // the chunk usually lands in a few ms — the shell keeps the page's height
+  // and the word only surfaces (CSS delay) if the wait grows noticeable
+  if (status === 'loading') {
+    return (
+      <section className="w-full pt-20 md:pt-24 font-sans min-h-[70vh]" aria-busy="true">
+        <div className="max-w-4xl mx-auto px-5 sm:px-8">
+          <div className="post-head"><p className="post-meta-text post-loading">Loading</p></div>
+        </div>
+      </section>
+    );
+  }
+  if (status === '404' || !meta) return <NotFound slug={slug} />;
 
   const locales = Array.isArray(meta.locales) ? meta.locales : null;
   const initial = meta.defaultLocale ?? locales?.[0] ?? "en";

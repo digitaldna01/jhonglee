@@ -1,12 +1,6 @@
 import { Link } from 'react-router-dom';
 
-// every post's metadata (not its body), newest first — the order WORK shows
-const ALL_POSTS = Object.entries(
-  import.meta.glob('../../posts/*.mdx', { eager: true, import: 'metadata' }),
-)
-  .map(([path, m]) => ({ slug: path.replace('../../posts/', '').replace('.mdx', ''), ...m }))
-  .filter((p) => p.title)
-  .sort((a, b) => new Date(b.date) - new Date(a.date));
+import { ALL_POSTS } from './posts';
 
 /* Newer / older by date — the same order as the WORK list, so the two
    links always mean "the one above / below this on that page". */

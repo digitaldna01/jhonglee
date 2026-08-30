@@ -187,3 +187,28 @@
   .post-nav { grid-template-columns: 1fr; gap: 18px; }
   .post-nav-link.is-older { text-align: left; }
 }
+
+/* ── Loading / not found ─────────────────────────────────
+   Loading: the word appears only after 400ms so a normal load never
+   flashes it. Not found: the post masthead with the failed address in
+   the meta slot and the newest posts where the body would be. */
+.post-loading {
+  opacity: 0;
+  animation: post-loading-in 0.3s var(--ease-out) 0.4s forwards;
+}
+@keyframes post-loading-in { to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .post-loading { animation-duration: 0s; }
+}
+
+.nf-address { margin-bottom: 28px; text-transform: none; }
+.nf-address .nf-code { text-transform: uppercase; }
+.nf-address .nf-path { color: var(--fg-1); overflow-wrap: anywhere; }
+.nf-lead { margin: 0; color: var(--fg-2); text-wrap: pretty; }
+.nf-latest {
+  display: grid;
+  gap: 18px;
+  margin-top: 36px;
+  padding-top: 22px;
+  border-top: 1px solid var(--hairline);
+}
