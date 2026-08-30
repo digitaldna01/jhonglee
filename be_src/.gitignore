@@ -3,3 +3,6 @@ data/
 __pycache__/
 # mine_golden.py working file — label, --merge, discard
 scripts/golden_candidates.json
+
+# judge_answers.py output — per-run experiment data, not source
+scripts/judge_out.json

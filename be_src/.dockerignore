@@ -5,3 +5,4 @@ __pycache__
 README.md
 data
 scripts/golden_candidates.json
+scripts/judge_out.json

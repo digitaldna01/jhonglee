@@ -17,7 +17,7 @@ from .prompts import SYSTEM_PROMPT, build_context, user_message
 
 log = logging.getLogger(__name__)
 
-MAX_TOKENS = 300  # 2-3 sentences — a spec, not a rate limit
+CHAT_MAX_TOKENS = 300  # 2-3 sentences — a spec, not a rate limit
 
 Event = tuple[str, dict]
 
@@ -42,10 +42,17 @@ def extractive_answer(retrieved: list[dict]) -> str:
 
 
 async def generate(
-    question: str, retrieved: list[dict], history: list[dict], *, topic: str | None = None
+    question: str,
+    retrieved: list[dict],
+    history: list[dict],
+    *,
+    topic: str | None = None,
+    system: str = SYSTEM_PROMPT,
 ) -> AsyncIterator[Event]:
     """Yield ("delta", {text}) chunks, then ("done", {model, input_tokens?, output_tokens?}) —
-    the token usage is present only when a model actually answered."""
+    the token usage is present only when a model actually answered.
+    `system` is the production prompt unless an experiment (scripts/judge_answers.py)
+    swaps in a variant."""
     settings = get_settings()
     if not settings.anthropic_api_key:
         yield "delta", {"text": extractive_answer(retrieved)}
@@ -61,8 +68,8 @@ async def generate(
         client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
         async with client.messages.stream(
             model=settings.chat_model,
-            max_tokens=MAX_TOKENS,
-            system=SYSTEM_PROMPT,
+            max_tokens=CHAT_MAX_TOKENS,
+            system=system,
             messages=messages,
         ) as stream:
             async for text in stream.text_stream:
