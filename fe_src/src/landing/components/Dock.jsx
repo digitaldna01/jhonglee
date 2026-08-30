@@ -8,7 +8,7 @@ const SEEDS = [
 
 /* Seed chips + composer. The composer is SHARED between map and chat
    modes — it stays docked at the bottom across the transition. */
-export default function Dock({ inChat, busy, onAsk }) {
+export default function Dock({ inChat, busy, onAsk, inputRef }) {
   const [value, setValue] = useState('');
 
   const submit = (q) => {
@@ -35,6 +35,7 @@ export default function Dock({ inChat, busy, onAsk }) {
           </svg>
         </span>
         <input
+          ref={inputRef}
           type="text"
           autoComplete="off"
           spellCheck="false"

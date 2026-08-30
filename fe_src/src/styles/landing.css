@@ -162,7 +162,22 @@
   line-height: 1.5;
   text-wrap: pretty;
 }
-.intro .hint { color: var(--accent-2); }
+/* "ask below" is the one live thing in the intro — a link-styled button
+   that hands focus to the composer, so the next keystroke is the question */
+.intro .hint {
+  all: unset;                /* first — it would reset everything below */
+  pointer-events: auto;
+  cursor: pointer;
+  color: var(--accent-2);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
+  transition: text-decoration-color 0.2s var(--ease-out);
+}
+.intro .hint:hover { text-decoration-color: currentColor; }
+.intro.gone .hint { pointer-events: none; }   /* faded out in chat mode → not a target */
+.intro .hint:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
 
 /* ---- Chat dock (shared composer, pinned bottom) ------------ */
 .dock {

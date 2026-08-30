@@ -19,6 +19,7 @@ export default function Info() {
   const chat = useChat(graphRef);
   const graphData = useGraphData();
   const [activeCite, setActiveCite] = useState(null);
+  const composerRef = useRef(null);
 
   // non-scrolling page + transparent navbar while this route is mounted
   useEffect(() => {
@@ -62,7 +63,7 @@ export default function Info() {
           graphRef={graphRef}
         />
       )}
-      <Intro gone={chat.inChat} />
+      <Intro gone={chat.inChat} onAsk={() => composerRef.current?.focus()} />
 
       <section className="chat" aria-label="Conversation">
         <BackLink onClick={chat.exitChat}>back to map</BackLink>
@@ -74,7 +75,7 @@ export default function Info() {
         />
       </section>
 
-      <Dock inChat={chat.inChat} busy={chat.busy} onAsk={chat.ask} />
+      <Dock inChat={chat.inChat} busy={chat.busy} onAsk={chat.ask} inputRef={composerRef} />
       <ContactCorner />
     </div>
   );
