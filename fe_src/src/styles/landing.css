@@ -23,6 +23,13 @@
   background: transparent;
   border-bottom-color: transparent;
 }
+/* …except while the mobile drawer is open: bar + drawer become one opaque
+   sheet, or CV / WORK print straight over the hero text */
+:root.route-landing .site-nav.open {
+  background: var(--color-bg);
+  border-bottom-color: var(--hairline);
+  box-shadow: 0 12px 28px -16px rgba(var(--scrim), 0.35); /* reads as a sheet above the map */
+}
 
 .landing { letter-spacing: -0.006em; }
 

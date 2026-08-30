@@ -42,7 +42,7 @@ export default function Navbar() {
     pathname === path || (path === '/work' && pathname.startsWith('/posts/'));
 
   return (
-    <nav className="site-nav" aria-label="Main">
+    <nav className={`site-nav${open ? ' open' : ''}`} aria-label="Main">
       <div className="site-nav-bar">
         <Link
           to="/"
