@@ -51,6 +51,8 @@ scripts/eval_retrieval.py golden-set retrieval eval (recall@1/@4 EN+KO, two-turn
 scripts/mine_golden.py    chat_logs → golden_candidates.json (real questions + what retrieval returned, flags, session
                           follow-ups); label `expect`, then `--merge` into golden_set.json. `--out -` for the Pi
 scripts/usage_report.py   chat_logs → per-day questions / answered / tokens / USD at list price, 30-day projection
+scripts/eval_retrieval.py --rewrite  adds a "hybrid + rewrite" row: the production query rewrite (Korean / referring
+                          follow-ups → English question) before ranking; needs ANTHROPIC_API_KEY, ~$0.01
 scripts/judge_answers.py  answer-quality A/B: two system prompts, same retrieval, Sonnet 5 judge (faithfulness per
                           claim + pairwise rubric verdict with shuffled order); scripts/eval_questions.json is the set
 ```
@@ -95,7 +97,7 @@ pytest                                      # add TEST_DATABASE_URL=postgresql+a
 ```
 GET  /api/health
 GET  /api/content/posts            GET  /api/content/posts/{slug}
-GET  /api/chat/graph[?z=0.5&k=2]   POST /api/chat/stream   (SSE: sources → delta* → done{model, session_id}; 429 + Retry-After when
+GET  /api/chat/graph[?z=0.5&k=2]   POST /api/chat/stream   (SSE: sources{sources, search_query?: rewritten query | NO_RETRIEVAL} → delta* → done{model, session_id}; 429 + Retry-After when
      z = edge σ floor, k = mutual-kNN size (0 = off)          rate-limited; 403 when session_id is another visitor's conversation)
 GET  /api/chat/sessions/{sid}      the transcript — anyone with the id; can_continue only for the visitor who started it
 GET  /api/chat/sessions?scope=mine|all[&before=&limit=]   mine: this browser's; all: owner only (403)

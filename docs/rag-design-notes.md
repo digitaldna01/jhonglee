@@ -64,7 +64,7 @@ relations:                  # 온톨로지-라이트 (§3)
 - 예: `interests.md`(관심사·취향), `faq.md`(자주 묻는 질문), `skills.md`(기술 스택 상세)
 - bio만 특별 취급(컨텍스트 상시 포함); 나머지 content 문서는 일반 검색으로 걸림
 - 작성 후 `npm run corpus` 실행 필수 (출력 커밋)
-- **생성 문서 하나**: 빌더가 `projectIndex`(kind `index`, `node: false`)를 덧붙임 — 요약은 "이 사이트의 프로젝트 N개: 제목, …", 본문 한 청크는
+- **생성 문서 하나**: 빌더가 `projectIndex`(kind `index`, `node: false`)를 덧붙임 — 검색에서는 열거 질문(목록·개수·"뭐 만들었어")에만 후보(§2.10) — 요약은 "이 사이트의 프로젝트 N개: 제목, …", 본문 한 청크는
   프로젝트당 한 줄(제목·연도·excerpt). "프로젝트 다 말해줘"는 검색 top-4로는 답할 수 없어서(§2.9 E25: "네 개"라며 셋 나열) 목록 자체가
   문서여야 하고, 손으로 쓰면 다음 글부터 낡으니 코퍼스와 함께 생성. 골든셋 영향 없음(아래) — 단 임베딩 passage에 "What have you built?"
   같은 질문형 접두어를 붙이면 "What do you do for a living?"을 빼앗아 EN 12→11이 되어 뺐다
@@ -163,9 +163,7 @@ relations:                  # 온톨로지-라이트 (§3)
 구현: `retrieval.retrieve(..., context_title=)` → `retrieval/hybrid.rank()`, `history.load_session()["last_sources"]`.
 
 ### 다음 단계
-- **P3 질문 재작성** (`chat/rewrite.py`): history가 있을 때 Haiku 1콜로 독립 **영어** 질문 생성 → 검색. 앵커+하이브리드가
-  골든셋을 다 맞추므로, 도입 전 `chat_logs`에서 실패 사례(대명사뿐인 후속, C 유형)를 먼저 모아 골든셋에 넣고 비교 측정.
-  처음엔 "history 있으면 항상", 로그로 비율을 본 뒤 조건부로. 키 없으면 위 방식으로 폴백
+- ~~**P3 질문 재작성**~~ → 2026-08-30 도입, §2.10. 조건부(한국어 또는 참조어 있는 영어 후속)로 시작했고 키 없으면 앵커 방식으로 폴백
 - **도구 사용(agentic)**: 모델이 검색 여부·질의를 결정 → C 유형까지. LangGraph 도입 시점과 같이 판단 (backend-architecture 결정 표)
 
 ## 2.6 하이브리드 검색 (dense + 키워드) — 2026-08-29
@@ -373,6 +371,71 @@ RAGAS의 faithfulness)과 **선호**(어투·길이 적합·거절 처리 — �
 영향은 0. (§2.6 표의 KO 13/14 · D 2/2는 그 뒤 어느 변경에서 12/14 · 1/2로 내려온 상태 — "타이포그래피 작업 있어?"→cogsAndGears,
 "Which one was fastest?"→kmeans. 원인 추적은 별도 항목.)
 
+## 2.10 검색용 질문 재작성 — 교차언어 RAG의 나머지 반쪽 (2026-08-30)
+
+코퍼스는 영어 청크뿐(`build-corpus`가 `<Lang locale="en">`만 취함), 임베딩은 다국어. 한국어 질문은 의미로는 영어 청크를 찾지만
+**키워드 절반(BM25/tsvector)이 죽고**, 생략된 후속 질문은 앵커 제목으로 주제만 되찾을 뿐 빠진 단어는 못 채운다. 2026년 관례는
+다국어 임베딩(지금) + **피벗 번역**(질문을 영어 독립 질문으로 재작성해 검색)의 하이브리드 — LangChain의 condense-question 프롬프트
+("follow up question → standalone question")가 원형이고, 우리는 거기에 영어로의 번역과 "새 주제면 이전 주제를 끌어오지 말 것"을 더함.
+
+`chat/rewrite.py`: `search_query(question, history)` — 조건에 맞으면 Haiku 1콜(≈0.5초, max 80 토큰)로 재작성, 아니면 원문.
+**검색에만** 쓰고 답변 생성은 방문자의 원문으로(오역이 답에 스며들지 않게). 실패·타임아웃(6초)·키 없음 → 원문으로 폴백.
+조건: 한글이 있거나, 영어 후속 중 참조어(it/that/this/more/which…)가 있을 때. 영어 첫 질문(대부분의 트래픽)은 호출 0.
+
+측정에서 배운 것 세 가지 — 프롬프트를 두 번 고쳤다:
+1. 처음 프롬프트는 "search query"라고 해서 **키워드 조각**("XGBoost experience", "about page")이 나왔다. bio의 passage는 질문형
+   ("Who are you? …")이라 "about page"로는 못 찾고, 주제 전환 케이스(FU-B) 5/5 → 3/5. → "방문자가 다 풀어 썼을 완전한 영어 질문 한 문장"으로.
+2. 영어 후속을 전부 재작성하니 "Have you used XGBoost?"에 이전 주제(양자)가 섞였다. 프롬프트에 "새 주제면 섞지 말 것"을 넣고,
+   **참조어 없는 영어 후속은 아예 재작성하지 않음** → FU-B 5/5 복구.
+3. 인덱스 문서(§1)가 영어 재작성 질문의 키워드를 훔쳤다("Have you made anything with Blender?" → 본문에 모든 excerpt가 있던 인덱스).
+   본문을 제목·연도만으로, 요약을 "Index of project titles (for listing or counting)"으로 — "무엇을 만들었나"의 답처럼 읽히는 요약이
+   프로젝트 자체를 이겼기 때문.
+
+| hybrid (configured model) | EN r@1 | KO r@1 r@4 | FU-A | FU-B | FU-D | ms/q |
+|---|---|---|---|---|---|---|
+| 재작성 없음 | 12/12 | 12/14 13/14 | 10/11 | 5/5 | 1/2 | 1 |
+| **+ 재작성** | 12/12 | **14/14 14/14** | **11/11** | 5/5 | **2/2** | ~500 (재작성 호출 포함) |
+
+**앵커의 자리(같은 날, 나중)**: 재작성 도입 후 골든셋 B("양자 → Have you used XGBoost?")가 글 몇 단어 바뀌는 것으로 뒤집혔다 —
+앵커 제목을 붙인 두 번째 dense 질의가 양자 문서를 0.647까지 올려 정답(0.29 + 키워드 0.1)과 0.005 차이. 재작성이 주제를 이미 문장에
+넣어 주므로 앵커는 **재작성이 필요했는데 못 받았을 때의 폴백으로만**(`rewrite.search_plan` → (query, anchor)): 재작성됨 → 앵커 없음,
+참조어 없는 영어 새 질문 → 앵커 없음, 한국어인데 모델 실패 → 원문 + 앵커. 결과 EN 12/12 · KO 14/14 · A 11/11 · B 5/5 · D 2/2.
+
+**글 표현 실험(같은 날)**: kmeans 포스트 두 섹션의 영어 첫 문장에 독자가 묻는 말을 자연스럽게 넣음("…the four initialization methods you
+meet most often — Random, Farthest First, KMeans++ and Manual", "…two cases where KMeans itself doesn't work well…"). 청크 기대치 c1/3 → c2/3
+(재작성 문구 변동으로 실행마다 ±1). 검색 규칙 세 번 바꿔서 안 되던 것이 문장 하나로 움직였다 — 가설 확인.
+
+**인덱스 문서의 자리(같은 날, 마지막)**: PG 경로에서 "타이포그래피 작업 있어?"·"블렌더로 만든 거 있어?"의 1위를 인덱스가 계속 뺏었다.
+원인 둘 — 재작성 질문의 "project"가 키워드 검색에서 인덱스(제목·"projects" 반복)를 올림: "project/projects/site/portfolio"는 거의 모든 청크
+머리말(`From {title} (project; tags)`)에 있어 검색어로서 정보가 0 → 도메인 불용어로. 그리고 인덱스는 **열거 질문에만** 후보여야 함
+(`retrieval.is_enumeration`: list/all/every/how many/what have you made/전부/목록/몇 개…) — 그 외 질문에선 순위에서 제외. 양쪽 경로 모두
+EN 12/12 · KO 14/14(PG 13/14, 재작성 문구 변동) · A 11/11 · B 5/5 · D 2/2.
+
+**프롬프트 v2(외부 리뷰 반영, 같은 날 마지막)**: 리뷰 7항목 중 실측으로 걸러 넣은 것 — `NO_RETRIEVAL` 센티넬(인사·감사·횡설수설·
+어시스턴트 향한 지시는 검색 생략, bio만 컨텍스트), "대화에 없는 조건 덧붙이지 말 것", 주입 방어 한 줄, few-shot 5개. few-shot은 **프레이밍 주의**:
+처음 넣은 예시("손동작 인식은 어떤 모델로 했어요?" → "Which model was used for…")가 맨 키워드 질문("실시간 손동작 인식")에 그대로 덧씌워졌다 →
+예시는 방문자 말에 단어를 더하지 않는 것만(인사 / 평범한 한국어 질문 / 맨 키워드 / 참조 해소 / 주제 전환 / 자기소개), 골든셋 문장 재사용 금지.
+센티넬은 좁게: "너는 누구야?"·맨 키워드가 NO_RETRIEVAL로 빠지던 걸 규칙에 명시("about 질문·맨 키워드는 검색"). 리뷰의 나머지 — 128토큰 절단
+(실측: 400단어 붙여도 벡터가 계속 변함, fastembed 512·청크 최대 358단어 → 해당 없음), 평서형 질의(대칭 paraphrase 모델 논거; A/B: 의문문 KO 13/14 vs
+평서형 12/14 — bio passage가 질문형이라 의문문이 유리, 채택 안 함), 멀티쿼리+RRF(9개 문서에서 RRF가 평평해지는 걸 §2.6에서 봄, r@4 이미 만점),
+3인칭 정규화(문서가 1인칭), HyDE(지연) — 근거 없어 보류. 프롬프트 형태 A/B는 `rewrite.SYSTEM_PROMPT`를 바꿔 `eval_retrieval --rewrite`로.
+
+**답변 모델에 주는 주제(같은 날)**: 생성 프롬프트의 "(이전 답은 X에 관한 것)" 힌트는 이전 턴의 **1위 소스** 제목이었는데, 1위가 틀리고
+답은 2위 문서로 나간 경우("블렌더로 만든 거 있어?" → 1위 Smart Factory, 답은 Cogs and Gears) 다음 "그건 어떻게 만들었어?"가 Smart Factory로
+설명됐다. 재작성이 참조를 해소하며 프로젝트 제목을 문장에 넣으므로 **재작성 질문에 등장한 제목을 주제로**(`service.topic_named`), 이전 1위는 폴백.
+열거 단서에서 "what/which projects"는 뺌 — "What projects were made using Blender?"는 목록 질문이 아니다.
+
+남은 것 둘. **① 인용 청크**: 문서는 맞는데 "초기화 방법은?"에 본문 첫 단락이 인용됨(골든셋 `chunk` 기대치 c1/3). 세 가지를 시도 —
+키워드 질의에서 앵커 제목 단어 제거(`hybrid.keyword_query`, 제목은 모든 청크 passage에 있어 청크 선택에 정보가 0 — 무해해서 유지),
+키워드 색인에서 요약 청크 제외(본문 없는 문서를 못 찾아 EN 12→11 — 되돌림), 1위 문서만 본문 청크 중 재선택(지표 불변 — 되돌림).
+청크별 점수를 찍어 보니 'Four ways to start' 섹션은 BM25·코사인 모두 6개 중 꼴찌: 본문이 "initialization method" 대신 "ways to seed"라고
+써서 질문 단어와 안 맞는다. **검색 규칙이 아니라 글의 표현 문제** — 섹션 첫 문장에 독자가 묻는 말("the four initialization methods")을
+쓰는 게 정공법(post-writing-guide에 반영), 코드 쪽 대안은 리랭커나 상위 청크 2개 인용. **② 인덱스 문서의 1위 탈취 변동**: 재작성 문구가
+매번 조금 달라("Do you have any projects made with Blender?") 인덱스가 1위, 정답 2위가 되는 케이스가 실행마다 0~2건(PG 경로 KO r@1 11~14/14).
+top-4엔 있어 답은 맞지만, 근본은 인덱스 요약이 "무엇을 만들었나" 질문과 닮은 것 — 덜 질문 같은 passage 또는 목록 단서가 있을 때만
+후보로 두는 규칙이 다음 손잡이. 골든셋에 한국어 생략 후속 4건과 `chunk` 기대치 필드를 추가했고, `eval_retrieval.py --rewrite`가 재작성
+전/후를 나란히 낸다. 재작성은 temperature를 못 정하므로(SDK 1.x에서 인자 제거) 실행 간 ±1건 변동이 정상.
+
 ## 4. 로드맵
 
 - [x] **P1** frontmatter 전환 + corpus.json 빌드 파이프라인 (fe/be 단일 소스) — 2026-08-23
@@ -400,7 +463,7 @@ RAGAS의 faithfulness)과 **선호**(어투·길이 적합·거절 처리 — �
       Pi 첫 배포 후 `docker stats` 실측 → 스왑 사용 시 bge-small + Haiku 질문 재작성으로 회귀
 - [ ] **P3** 리랭커 (fastembed rerank) — 검색 품질 문제가 실측되면
 - [x] **P2-3** 후속 질문 1단계: 골든셋 `followup` + 제목 앵커 가중 RRF — 2026-08-29 (§2.5)
-- [ ] **P3** 멀티턴 질문 재작성 (`chat/rewrite.py`, Haiku 1콜: 후속 질문 → 독립 영어 질문) — API 키 켠 뒤, §2.5 표로 비교
+- [x] **P3 → 완료 2026-08-30** 질문 재작성 (`chat/rewrite.py`): 한국어 또는 참조어가 있는 영어 후속 → 독립 영어 질문으로 검색. 골든셋 KO 12→14/14, FU-A 10→11/11, FU-D 1→2/2 (§2.10)
 
 ## Sources
 

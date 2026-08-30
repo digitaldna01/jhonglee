@@ -11,9 +11,24 @@ from collections.abc import AsyncIterator
 
 from ..content import service as content
 from ..core.config import get_settings
-from . import chatlog, generation, history, retrieval
+from . import chatlog, generation, history, retrieval, rewrite
 
 TOP_K = 4
+
+
+def topic_named(query: str | None, fallback: str | None) -> str | None:
+    """The topic to tell the answering model about. When the rewrite named a
+    project, that is the topic — it resolved the visitor's reference. The
+    previous turn's top source is only the fallback: it can be a doc that
+    merely ranked first while the answer was about the second ("블렌더로 만든
+    거 있어?" ranked Smart Factory above Cogs and Gears; the answer was about
+    Cogs and Gears, and the next "그건…" was then explained as Smart Factory)."""
+    if query:
+        low = query.lower()
+        for d in content.nodes():
+            if d["title"].lower() in low:
+                return d["title"]
+    return fallback
 
 
 def retrieval_label() -> str:
@@ -63,7 +78,11 @@ async def answer(
             context_title = prev_top["title"] if prev_top else None
 
     t0 = time.perf_counter()
-    retrieved = await retrieval.retrieve(question, k=TOP_K, context_title=context_title)
+    # Korean or a follow-up → searched as a self-contained English query (see
+    # rewrite.py); the answer is still generated from the visitor's own words
+    query, anchor = await rewrite.search_plan(question, turns, topic=context_title)
+    # query None = nothing to look up (a greeting, thanks): the bio alone is the context
+    retrieved = await retrieval.retrieve(query, k=TOP_K, context_title=anchor) if query else []
     retrieval_ms = round((time.perf_counter() - t0) * 1000, 1)
 
     sources = [
@@ -74,12 +93,14 @@ async def answer(
         "sources": sources,
         "retrieval_ms": retrieval_ms,
         "retrieval_model": retrieval_label(),
+        **({"search_query": query or rewrite.NO_RETRIEVAL} if query != question else {}),
     }
 
     parts: list[str] = []
     model = ""
     usage: dict = {}
-    async for name, payload in generation.generate(question, retrieved, turns, topic=context_title):
+    topic = topic_named(query, context_title) if query else None
+    async for name, payload in generation.generate(question, retrieved, turns, topic=topic):
         if name == "delta":
             parts.append(payload["text"])
         elif name == "done":

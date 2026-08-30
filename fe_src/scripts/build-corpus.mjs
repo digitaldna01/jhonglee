@@ -136,17 +136,19 @@ docs.push({
   lean: null,
   tags: ['all projects', 'list', 'overview', 'portfolio'],
   stack: null,
-  summary: `A complete list of the ${listed.length} projects on this site: ${listed.map((d) => d.title).join(', ')}.`,
+  // phrased as an index, not as "what I made": a summary that read like the
+  // answer to "have you made anything with X?" outranked the project itself
+  summary: `Index of project titles (for listing or counting them). The ${listed.length} projects: ${listed.map((d) => d.title).join(', ')}.`,
   thumbnail: null,
   url: null,
   node: false,
   chunks: [
     {
       id: 'projectIndex#0',
-      heading: 'Every project, one line each',
-      text: listed
-        .map((d) => `${d.title}${d.year ? ` (${d.year})` : ''}: ${d.summary}`)
-        .join('\n'),
+      // titles and years only — with every excerpt in here too, any query naming
+      // a tool ("Blender") keyword-matched this list ahead of the project itself
+      heading: 'Every project',
+      text: listed.map((d) => `${d.title}${d.year ? ` (${d.year})` : ''}`).join('\n'),
     },
   ],
 });

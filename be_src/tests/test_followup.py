@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 
-from app.chat import history, retrieval
+from app.chat import history, retrieval, rewrite
 from app.content.repository import by_id
 
 
@@ -46,7 +46,33 @@ def test_retrieve_anchors_ellipsis_without_sticking_on_topic_switch():
         assert anchored[0]["id"] == "quantumSimulator"
         more = await retrieval.retrieve("Tell me more about it", k=4, context_title=blender)
         assert more[0]["id"] == "cogsAndGears"
-        switched = await retrieval.retrieve("Have you used XGBoost?", k=4, context_title=quantum)
+        # a topic switch: the plan drops the anchor for a question with nothing to
+        # resolve (anchored, this case sat within 0.005 of sticking to quantum)
+        query, anchor = await rewrite.search_plan("Have you used XGBoost?", [{"role": "user", "content": "…"}], topic=quantum)
+        assert query is not None and anchor is None
+        switched = await retrieval.retrieve(query, k=4, context_title=anchor)
         assert switched[0]["id"] == "handPoseEstimation"
+
+    asyncio.run(run())
+
+
+def test_generation_topic_prefers_the_project_the_rewrite_named():
+    from app.chat.service import topic_named
+
+    assert topic_named("How was the Cogs and Gears project made with Blender?", "Smart Factory Dashboard") == "Cogs and Gears"
+    assert topic_named("How was that made?", "Smart Factory Dashboard") == "Smart Factory Dashboard"
+    assert topic_named(None, "Smart Factory Dashboard") == "Smart Factory Dashboard"  # (service passes None on NO_RETRIEVAL)
+
+
+def test_index_doc_competes_only_for_enumeration_questions():
+    assert retrieval.is_enumeration("List all your projects.")
+    assert retrieval.is_enumeration("What have you made?") and retrieval.is_enumeration("프로젝트 전부 알려줘")
+    assert not retrieval.is_enumeration("Do you have any typography work?")
+
+    async def run():
+        listed = await retrieval.retrieve("List all your projects.", k=4)
+        assert listed[0]["id"] == "projectIndex"
+        typo = await retrieval.retrieve("Do you have any typography work?", k=4)
+        assert all(h["kind"] != "index" for h in typo)
 
     asyncio.run(run())

@@ -43,7 +43,7 @@ warnings.filterwarnings("ignore")
 import anthropic  # noqa: E402
 from pydantic import BaseModel  # noqa: E402
 
-from app.chat import generation, retrieval  # noqa: E402
+from app.chat import generation, retrieval, rewrite  # noqa: E402
 from app.chat.prompts import SYSTEM_PROMPT, build_context  # noqa: E402
 from app.chat.service import TOP_K  # noqa: E402
 from app.core.config import get_settings  # noqa: E402
@@ -129,13 +129,17 @@ async def run_case(case: dict, variants: dict[str, str]) -> dict:
     prev_hist: dict[str, list[dict]] = {v: [] for v in variants}
     topic = None
     if case.get("prev"):
-        prev_docs = await retrieval.retrieve(case["prev"], k=TOP_K)
+        prev_docs = await retrieval.retrieve(await rewrite.search_query(case["prev"], []) or case["prev"], k=TOP_K)
         topic = prev_docs[0]["title"] if prev_docs else None
         for v, system in variants.items():
             a = await answer(case["prev"], prev_docs, [], None, system)
             prev_hist[v] = [{"role": "user", "content": case["prev"]}, {"role": "assistant", "content": a["text"]}]
             out["answers"].setdefault(v, {})["prev_answer"] = a["text"]
-    retrieved = await retrieval.retrieve(case["q"], k=TOP_K, context_title=topic)
+    # production's retrieval path: Korean / follow-ups are searched as an English
+    # query (the first variant's history stands in — the rewrite sees one conversation)
+    query, anchor = await rewrite.search_plan(case["q"], next(iter(prev_hist.values())), topic=topic)
+    retrieved = await retrieval.retrieve(query, k=TOP_K, context_title=anchor) if query else []
+    out["search_query"] = (query or rewrite.NO_RETRIEVAL) if query != case["q"] else None
     out["context"] = build_context(retrieved)
     out["sources"] = [r["title"] for r in retrieved]
     for v, system in variants.items():

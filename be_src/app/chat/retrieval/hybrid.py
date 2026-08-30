@@ -66,6 +66,21 @@ def rrf(rankings: list[list[str]], weights: list[float] | None = None, k: int = 
     return sorted(score, key=lambda d: score[d], reverse=True)
 
 
+def keyword_query(question: str, context_title: str | None) -> str:
+    """The question for the keyword ranking. In a conversation the anchored
+    doc's title is often IN the question (the rewrite puts it there, visitors
+    type it) — and since every chunk of that doc carries its title, the words
+    say nothing about *which chunk* answers, while BM25 counts them most in
+    the introduction. Drop them, so the terms that are left pick the section
+    ("initialization methods" → "Four ways to start", not the intro). A
+    question that is nothing but the title keeps it."""
+    if not context_title:
+        return question
+    title = {w.lower() for w in context_title.split()}
+    rest = [w for w in question.split() if w.strip(".,?!\"'").lower() not in title]
+    return " ".join(rest) if rest else question
+
+
 def contextual_query(question: str, context_title: str) -> str:
     """A follow-up anchored to what the conversation was just about — the
     title of the previous turn's top source. One title is enough to pull an
@@ -112,7 +127,7 @@ async def rank(
     plain = {h.doc_id: h.score for h in rankings[0][0]}  # question-only cosines
     floor = keyword_gate * max(plain.values(), default=0.0)
     if keyword_weight > 0:
-        for q in queries if context_keyword else queries[:1]:
+        for q in queries if context_keyword else [keyword_query(question, context_title)]:
             hits = [h for h in await store.keyword_search(q, candidates) if plain.get(h.doc_id, -1.0) >= floor]
             rankings.append((hits, keyword_weight, False))
 

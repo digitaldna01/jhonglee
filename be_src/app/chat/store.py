@@ -101,7 +101,8 @@ STOPWORDS = frozenset(
     just don should now
     tell show explain describe talk know use used using make made build built create created
     anything something everything ever please thanks thank hi hello one ones thing things
-    stuff also really much many lot kind sort like""".split()
+    stuff also really much many lot kind sort like
+    project projects site portfolio""".split()  # ← domain: in (nearly) every passage prefix — they only ever match the index doc
 )
 
 

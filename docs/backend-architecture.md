@@ -46,6 +46,7 @@ be_src/app/
     store.py            VectorStore 인터페이스: search(코사인)·keyword_search(tsvector | BM25) — PgVectorStore | MemoryStore(SQLite 폴백); 공용 토크나이저
     ingest.py           corpus.json → 청크 계획(해시) → 바뀐 것만 임베딩·삽입, 사라진 것 삭제. `python -m app.chat.ingest`
     models.py           rag_documents · rag_chunks (vector(384) HNSW + tsv 생성 컬럼 GIN) — corpus.json의 파생 인덱스; chat_sessions · chat_logs
+    rewrite.py          검색용 질문 재작성: 한국어·참조어 있는 후속 → 독립 영어 질문(Haiku 1콜, 검색에만 사용, 실패 시 원문)
     generation.py       Claude 스트리밍(AsyncAnthropic) + 추출식 폴백 — (event, payload) async 제너레이터
     prompts.py          시스템 프롬프트·컨텍스트 조립 — 톤 수정은 여기서
     history.py          모델의 작업 기억: 캐시 키 chat:session:{vid}:{sid}, 마지막 8교환 + last_sources — 캐시 미스면 chat_logs에서 재구성

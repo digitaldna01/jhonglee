@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 
 import numpy as np
 
@@ -81,6 +82,19 @@ async def _ready() -> VectorStore:
     return _store
 
 
+_ENUMERATION = re.compile(
+    r"\b(list|all|every|each|how many|count|overview"
+    r"|what (have|did) you (made|make|built|build|done|do))\b|전부|모두|모든|다 |목록|몇 개|어떤 프로젝트|뭐 만들었",
+    re.I,
+)
+
+
+def is_enumeration(question: str) -> bool:
+    """Does the question ask for the projects as a set (list / count / what
+    have you made)? Only then may the generated index document compete."""
+    return bool(_ENUMERATION.search(question))
+
+
 async def retrieve(question: str, k: int = 4, *, context_title: str | None = None) -> list[dict]:
     """Top-k documents for a question (hybrid.rank over the live store).
 
@@ -93,10 +107,15 @@ async def retrieve(question: str, k: int = 4, *, context_title: str | None = Non
     """
     store = await _ready()
     out = []
-    for r in (await rank(store, _embed_query, question, context_title=context_title))[:k]:
+    enumerating = is_enumeration(question)
+    for r in await rank(store, _embed_query, question, context_title=context_title):
         doc = by_id(r.doc_id)
         if doc is None:  # index ahead of corpus.json (shouldn't happen after sync)
             continue
+        if doc["kind"] == "index" and not enumerating:
+            continue  # the generated title list answers enumeration only; elsewhere it just steals a slot
+        if len(out) == k:
+            break
         out.append(
             {
                 "id": doc["id"],

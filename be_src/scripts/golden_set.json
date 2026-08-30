@@ -162,7 +162,7 @@
       ]
     }
   ],
-  "_comment_followup": "Two-turn cases: prev = previous user question, q = follow-up. type A = ellipsis/pronoun, B = topic shift (must NOT stick to prev), D = language switch.",
+  "_comment_followup": "Two-turn cases: prev = previous user question, q = follow-up. type A = ellipsis/pronoun, B = topic shift (must NOT stick to prev), D = language switch. Optional `chunk`: a substring of the heading of the chunk that should be quoted for the top doc (the section that answers, not the introduction).",
   "followup": [
     {
       "type": "A",
@@ -170,7 +170,8 @@
       "q": "How did you initialise the centroids?",
       "expect": [
         "kmeansVisualizer"
-      ]
+      ],
+      "chunk": "Four ways to start"
     },
     {
       "type": "A",
@@ -202,7 +203,8 @@
       "q": "초기화 방법은 뭐였어?",
       "expect": [
         "kmeansVisualizer"
-      ]
+      ],
+      "chunk": "Four ways to start"
     },
     {
       "type": "A",
@@ -267,7 +269,8 @@
       "q": "초기화 방식 설명해줘",
       "expect": [
         "kmeansVisualizer"
-      ]
+      ],
+      "chunk": "Four ways to start"
     },
     {
       "type": "D",
@@ -276,6 +279,39 @@
       "expect": [
         "quantumSimulator"
       ]
+    },
+    {
+      "type": "A",
+      "prev": "양자 컴퓨팅 프로젝트 설명해줘",
+      "q": "그건 뭘로 만들었어?",
+      "expect": [
+        "quantumSimulator"
+      ]
+    },
+    {
+      "type": "A",
+      "prev": "블렌더로 만든 거 있어?",
+      "q": "더 자세히 말해줘",
+      "expect": [
+        "cogsAndGears"
+      ]
+    },
+    {
+      "type": "A",
+      "prev": "XGBoost 써본 적 있어?",
+      "q": "거기서 데이터는 어떻게 모았어?",
+      "expect": [
+        "handPoseEstimation"
+      ]
+    },
+    {
+      "type": "A",
+      "prev": "What did you build with k-means?",
+      "q": "그 알고리즘이 언제 잘 안 돼?",
+      "expect": [
+        "kmeansVisualizer"
+      ],
+      "chunk": "Where KMeans breaks"
     }
   ]
 }

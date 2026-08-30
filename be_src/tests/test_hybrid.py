@@ -95,8 +95,8 @@ def test_retrieve_fixes_the_k_means_golden_case():
         hits = await retrieval.retrieve("What did you build with k-means?", k=4)
         assert hits[0]["id"] == "kmeansVisualizer"
         assert hits[0]["chunk"] is not None and "kmeans" in hits[0]["chunk"]["text"].lower().replace("-", "")
-        # topic switch after the anchor is not dragged back
-        switched = await retrieval.retrieve("Have you used XGBoost?", k=4, context_title="Quantum Simulator")
+        # a topic switch is searched un-anchored (rewrite.search_plan) and lands on its own topic
+        switched = await retrieval.retrieve("Have you used XGBoost?", k=4)
         assert switched[0]["id"] == "handPoseEstimation"
 
     asyncio.run(run())
@@ -116,3 +116,12 @@ def test_pg_keyword_search_uses_tsvector():
         assert await store.keyword_search("who are you", 5) == []
 
     asyncio.run(run())
+
+
+def test_keyword_query_drops_the_anchored_title_but_never_empties():
+    from app.chat.retrieval.hybrid import keyword_query
+
+    q = "What were the initialization methods used in the KMeans Clustering project?"
+    assert keyword_query(q, "KMeans Clustering") == "What were the initialization methods used in the project?"
+    assert keyword_query(q, None) == q
+    assert keyword_query("KMeans Clustering?", "KMeans Clustering") == "KMeans Clustering?"  # only the title: keep it
