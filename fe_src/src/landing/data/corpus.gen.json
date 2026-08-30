@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-30T09:24:16.228Z",
+  "generated": "2026-08-30T13:22:14.665Z",
   "docs": [
     {
       "id": "smartfactoryDashboard",
@@ -312,6 +312,68 @@
       "url": "/posts/visualArtPortfolio",
       "node": true,
       "chunks": []
+    },
+    {
+      "id": "cv",
+      "kind": "cv",
+      "title": "CV",
+      "date": "",
+      "year": null,
+      "lean": null,
+      "tags": [
+        "cv",
+        "resume",
+        "contact",
+        "email",
+        "github",
+        "linkedin",
+        "instagram",
+        "education",
+        "experience",
+        "work history",
+        "career",
+        "publication",
+        "research",
+        "gpa",
+        "honors"
+      ],
+      "stack": null,
+      "summary": "Jae Hong Lee's CV — where to reach him, where he studied, where he has worked and researched, and what he has published.",
+      "thumbnail": null,
+      "url": null,
+      "node": false,
+      "chunks": [
+        {
+          "id": "cv#0",
+          "heading": "How to contact me",
+          "text": "The best way to contact me is email: ll.leejaehong.ll@gmail.com. You can also\nfind me on GitHub (github.com/digitaldna01), LinkedIn\n(linkedin.com/in/hong-lee-0821) and Instagram (@8.21j). This site is\njhonglee.com, and a PDF résumé is on its CV page."
+        },
+        {
+          "id": "cv#1",
+          "heading": "Education",
+          "text": "I studied at Boston University from September 2019 to May 2025 and graduated\nwith a B.A. in Computer Science and a minor in Visual Arts, magna cum laude\nwith a 3.90 GPA, and was inducted into Upsilon Pi Epsilon, the computing honor\nsociety. During that time I spent a visiting year in Computer Science &\nEngineering at Korea University in Seoul (September 2022 – June 2023). Before\nuniversity I went to high school at Aquinas Institute of Rochester in\nRochester, NY (2016–2019) and Bowie High School in Austin, TX (2015–2016)."
+        },
+        {
+          "id": "cv#2",
+          "heading": "Experience",
+          "text": "I work at LG CNS in Seoul as an agentic AI software engineer on smart factory\nsystems, since January 2026. There I built a retrieval-augmented generation\nsystem for MES manuals: preprocessing pipelines (PDF parsing, semantic\nchunking, metadata injection), embeddings stored in pgvector, and LLM-based\nquery processing — rewriting, hybrid BM25 + vector retrieval, reranking — in a\nmodular FastAPI backend. Before that I was a machine learning specialist at\nLSAT Lab (September–December 2025, remote), working on time-series deep\nlearning, and at LSAT Demon (June–September 2025, remote), where I developed\nan LLM-powered backend for personalized text generation with semantic\nretrieval (BM25, FAISS), curated domain datasets, and did the prompt\nengineering for deployment on models such as Mistral and GPT. My first\ninternship was at Xenix Studio in Seoul (July–November 2020), as a software\nengineer intern on blockchain and frontend work."
+        },
+        {
+          "id": "cv#3",
+          "heading": "Research",
+          "text": "At Boston University I was an undergraduate research assistant in computer\nvision with the IVC group (April 2024 – May 2025), advised by Aoming Liu, on\ntext-to-360-degree panorama generation: a cube-based approach combining spot\ndiffusion with latent-space noise projection to improve depth and visual\ncontinuity. Before that (September 2023 – May 2024), advised by Eung-Joo Lee\nand Jong In Choi, I worked on AI-driven hand pose estimation with a custom\nhaptic controller, training an XGBoost model on 3,000–9,000 samples — the\nwork behind the Hand Pose Estimation project and the publication below.\n\nI spent two summers as a research intern at the Korea Electronics Technology\nInstitute (KETI) in Seongnam. In 2024, on system optimization, I contributed to\nresearch on memory-efficient quantum simulation that stores only the measured\nqubits, up to 45 qubits, built a quantum circuit simulator with Google's\nTensorNetwork, Qiskit and a statevector engine to run Grover's algorithm, and\ngave two internal seminars on qubits, superposition, Bell's theorem and the\nEPR paradox. In 2022, on computer vision, I applied Google's Vision\nTransformer to cat and dog breed classification, reaching over 95% accuracy,\nand re-implemented the model in TensorFlow with an API and an OpenCV camera\nmodule for real-time classification of real pets."
+        },
+        {
+          "id": "cv#4",
+          "heading": "Other projects",
+          "text": "Besides the projects on this site, I built To-Do Calendar (January–May 2024)\nwith React, Firebase and the Google Calendar and authentication APIs: tasks\nand deadlines sync to Google Calendar, and Google Meet and Zoom meetings are\nadded automatically so nothing is missed."
+        },
+        {
+          "id": "cv#5",
+          "heading": "Publication",
+          "text": "Jongin Choi, Jaehong Lee, Daniel Oh and Eung-Joo Lee, \"Machine Learning-Based\nHand Pose Generation Using a Haptic Controller\", Electronics 13.10 (2024):\n1970."
+        }
+      ]
     },
     {
       "id": "bio",

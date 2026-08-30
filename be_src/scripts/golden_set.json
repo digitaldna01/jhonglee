@@ -53,7 +53,8 @@
     {
       "q": "What do you do for a living?",
       "expect": [
-        "bio"
+        "bio",
+        "cv"
       ]
     },
     {

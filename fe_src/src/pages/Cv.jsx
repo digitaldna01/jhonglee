@@ -10,11 +10,11 @@ const SECTIONS = [
 ];
 
 const CONTACTS = [
-  { label: 'Email', href: 'mailto:ll.leejaehong@gmail.com' },
+  { label: 'Email', href: 'mailto:ll.leejaehong.ll@gmail.com' },
   { label: 'LinkedIn', href: 'https://www.linkedin.com/in/hong-lee-0821/' },
   { label: 'GitHub', href: 'https://github.com/digitaldna01' },
   { label: 'Instagram', href: 'https://www.instagram.com/8.21j' },
-  { label: 'Resume', href: '/pdf/Jae_Hong_Lee_Resume.pdf' },
+  { label: 'Resume', href: '/pdf/Jay_Resume.pdf' },
 ];
 
 function CvRow({ item }) {
