@@ -51,7 +51,7 @@ relations:                  # 온톨로지-라이트 (§3)
 본문 → 섹션 단위 청킹되어 검색 대상
 ```
 
-파이프라인: `posts/*.mdx + content/*.md → (npm run corpus) → corpus.json → be_src 시작 시 해시 대조 → 바뀐 청크만 임베딩 → rag_chunks`.
+파이프라인: `posts/*.mdx + content/*.md → (npm run corpus; 로컬 수동, 배포는 CI) → corpus.json(생성물, 미커밋) → be_src 시작 시 해시 대조 → 바뀐 청크만 임베딩 → rag_chunks`.
 새 글 작성 = 새 노드 + 새 검색 문서. 별도 등록 없음.
 
 ### 코퍼스 전용 문서 — `src/content/`
@@ -497,9 +497,9 @@ v3에서 잡은 둘. ① "Who are you?"가 스마트 팩토리 후속으로 오�
       `eval_retrieval.py --sweep/--pg` (§2.6) — 2026-08-29
 - [x] **P2-5** 골든셋 채굴 `scripts/mine_golden.py`: chat_logs → 후보 → 라벨 → merge (§2.6) — 2026-08-29.
       배포 후 실제 질문이 쌓이면 돌려서 재스윕 — 이게 평가 주도 루프의 시작점
-- [ ] **P3** corpus.json을 커밋 대상에서 제외 — CI(deploy.yml)가 `npm run corpus`를 돌려 백엔드 이미지에
-      아티팩트로 포함하거나 `POST /api/admin/ingest`로 전달. 동기화를 사람 기억에서 CI로.
-      그다음 `/api/content/*`도 rag_documents를 읽게 하면 corpus.json 자체가 사라질 수 있음
+- [x] **P3 → 완료 2026-08-31** corpus.json/corpus.gen.json을 커밋 대상에서 제외 — deploy.yml이 web 번들을 만들기 전에
+      `npm run corpus`를 돌려 두 이미지가 같은 실행에서 나온 코퍼스를 담는다. 로컬은 클론/포스트 수정 후 `npm run corpus`
+      (없으면 backend가 생성 방법을 알려주며 거부). 다음 단계였던 "`/api/content/*`가 rag_documents를 읽기"는 그대로 후보
 - [x] **P2-6** 그래프 엣지 z-score 임계값 + 부유 노드 (§2.8) — 2026-08-29
 - [ ] **P2** `relations` 선언 엣지 + 그래프 표시 구분
 - [x] **P3 → 완료 2026-08-29** 한국어 질문 대응 — 골든셋 실측 후 **multilingual-MiniLM-L12 int8**로 교체

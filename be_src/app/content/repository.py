@@ -2,7 +2,8 @@
 
 The mdx posts in fe_src are the single source of truth; `npm run corpus`
 (fe_src/scripts/build-corpus.mjs) extracts their frontmatter + English
-prose into corpus.json, committed next to this module. Read-only,
+prose into corpus.json next to this module — generated (gitignored):
+CI rebuilds it on every deploy, `npm run corpus` locally. Read-only,
 loaded once at import. Each doc:
 
   id, kind (project|post|bio|…), title, date, year, lean, tags, stack,
@@ -18,6 +19,10 @@ from pathlib import Path
 
 _CORPUS_PATH = Path(__file__).with_name("corpus.json")
 
+if not _CORPUS_PATH.exists():  # generated, not committed (CI runs this on deploy)
+    raise FileNotFoundError(
+        f"{_CORPUS_PATH} is missing — generate it with: cd fe_src && npm ci && npm run corpus"
+    )
 with _CORPUS_PATH.open(encoding="utf-8") as f:
     _payload = json.load(f)
 

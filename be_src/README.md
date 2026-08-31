@@ -20,7 +20,8 @@ app/
     ratelimit.py          fixed-window RateLimiter on top of the cache
     auth.py               Principal — Visitor (anonymous cookie) | Owner (Visitor + OWNER_TOKEN cookie); get_principal
     lifespan.py           startup: retrieval.warmup() / shutdown: cache + db
-  content/                corpus.json loader + /api/content/* (read-only; the corpus source)
+  content/                corpus.json loader + /api/content/* (read-only; corpus.json is generated —
+                          `cd fe_src && npm run corpus` — and gitignored; CI regenerates it on deploy)
   auth/                   /api/auth/owner — the owner's login (rate-limited token check → jhl_owner cookie)
   chat/                   /api/chat/* — the RAG pipeline
     router.py             HTTP only (SSE serialisation)

@@ -34,7 +34,8 @@ mdx 포스트 ──(npm run corpus)──▶ corpus.json ──▶ 백엔드 �
   (`ANTHROPIC_API_KEY`, `POSTGRES_PASSWORD`) — 배포 워크플로가 Pi에서 `.env`를 생성. 키가 없으면 챗은 검색 결과만으로 답함
 - `main`은 PR로만 바뀐다(관리자 포함, 승인 0명이라 혼자서도 머지 가능). 머지 = 배포. 브랜치에서 작업 → PR → 머지
 - 로컬 스택에서 Postgres는 `localhost:5433`, Redis는 `localhost:6380`으로 노출 (DB 뷰어 연결용)
-- 포스트를 고친 뒤엔 `cd fe_src && npm run corpus` → `corpus.json` 커밋. 백엔드는 다음 시작 때 바뀐 청크만 재임베딩
+- `corpus.json`/`corpus.gen.json`은 생성물(gitignore) — 배포마다 CI가 `npm run corpus`로 다시 만든다.
+  로컬에선 클론 직후와 포스트를 고친 뒤 `cd fe_src && npm run corpus` (dev 백엔드는 다음 시작 때 바뀐 청크만 재임베딩)
 
 ## 더 읽기
 

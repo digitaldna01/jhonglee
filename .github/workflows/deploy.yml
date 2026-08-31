@@ -30,10 +30,11 @@ jobs:
           cache: npm
           cache-dependency-path: fe_src/package-lock.json
 
-      - name: Build web bundle
+      - name: Build web bundle (and the corpus both images embed)
         working-directory: fe_src
         run: |
           npm ci
+          npm run corpus   # writes fe_src/src/landing/data/corpus.gen.json + be_src/app/content/corpus.json
           npm run build
 
       - name: Set up Docker Buildx
