@@ -40,3 +40,7 @@ _private_notes/
 
 # Design
 v2-design-handoff/
+# generated from the posts by `npm run corpus` — CI rebuilds both on every deploy;
+# run it once locally after cloning or editing posts/content
+be_src/app/content/corpus.json
+fe_src/src/landing/data/corpus.gen.json
