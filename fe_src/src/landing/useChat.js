@@ -16,6 +16,7 @@ import { ForbiddenError, NotFoundError, RateLimitError, fetchConversation, strea
 import { embed, retrieve } from './data/retrieval';
 import { answer as localAnswer, HISTORY_MAX } from './rag/generate';
 import { historyFromTurns, messagesFromTurns, nonBio } from './transcript';
+import { startAnswerBlink, stopAnswerBlink } from './favicon';
 
 let nextId = 1;
 const mint = () => crypto.randomUUID();
@@ -31,6 +32,13 @@ export default function useChat(graphRef, sid) {
   const [messages, setMessages] = useState([]);
   const [canContinue, setCanContinue] = useState(true);
   const [missing, setMissing] = useState(false); // the URL names a conversation that does not exist
+
+  // the tab's dot blinks while the answer streams (see favicon.js)
+  useEffect(() => {
+    if (busy) startAnswerBlink();
+    else stopAnswerBlink();
+    return stopAnswerBlink;
+  }, [busy]);
   const sessionRef = useRef(sid ?? null); // the address of the current conversation, minted on the first ask
   const selfNavRef = useRef(null); // the sid we put in the URL ourselves — consumed once, so that arrival is not a reload
   const prevSidRef = useRef(sid);
