@@ -145,7 +145,7 @@ Implementing this in Qiskit was almost embarrassingly short:
 
 <Lang locale="ko">
 
-위가 3큐비트 검색의 Grover 회로예요. 왼쪽 블록이 initialization, 가운데가 oracle, 오른쪽이 diffuser고요. 일은 대부분 MCX(multi-controlled X) 게이트가 해요 — oracle이 marked state를 "알아보는" 방법이 이 게이트거든요.
+위가 3큐비트 검색의 Grover 회로예요. 왼쪽 블록이 initialization, 가운데가 oracle, 오른쪽이 diffuser고요. 일은 대부분 MCX(multi-controlled X) 게이트가 하는데, oracle이 marked state를 "알아보는" 방법이 이 게이트거든요.
 
 Qiskit 구현은 민망할 만큼 짧아요.
 
@@ -169,7 +169,7 @@ But that's the point — Qiskit hides everything interesting behind `.append()`.
 
 <Lang locale="ko">
 
-그런데 그게 핵심이에요 — Qiskit은 흥미로운 걸 전부 `.append()` 뒤에 숨겨요. 다음 두 시뮬레이터는 정확히 그 반대로 가요.
+그런데 그게 핵심이에요. Qiskit은 흥미로운 걸 전부 `.append()` 뒤에 숨겨요. 다음 두 시뮬레이터는 정확히 그 반대로 가요.
 
 </Lang>
 
@@ -203,7 +203,7 @@ The catch is that U has to be the size of the whole system. If you want to apply
 
 <Lang locale="ko">
 
-문제는 U가 전체 시스템 크기여야 한다는 거예요. 3큐비트 시스템의 큐비트 1에 Hadamard를 걸고 싶다고 2×2 Hadamard 행렬을 바로 곱할 수는 없어요 — 큐비트 1에는 Hadamard로, 나머지에는 identity로 작용하는 8×8 행렬이 필요해요. 여기서 **Kronecker 곱**이 등장해요 (큐비트 0을 가장 왼쪽 텐서 인자로 두는 컨벤션이에요):
+문제는 U가 전체 시스템 크기여야 한다는 거예요. 3큐비트 시스템의 큐비트 1에 Hadamard를 걸고 싶다고 2×2 Hadamard 행렬을 바로 곱할 수는 없어요. 큐비트 1에는 Hadamard로, 나머지에는 identity로 작용하는 8×8 행렬이 필요해요. 여기서 **Kronecker 곱**이 등장해요 (큐비트 0을 가장 왼쪽 텐서 인자로 두는 컨벤션이에요):
 
 </Lang>
 
@@ -267,7 +267,7 @@ The controlled gates need slightly more care — a CNOT isn't just `kron(CX, I)`
 
 <Lang locale="ko">
 
-Controlled 게이트는 조금 더 신경 써야 해요 — CNOT은 `kron(CX, I)`로 끝나지 않아요. control과 target 큐비트가 붙어 있지 않을 수도 있거든요. control이 $|0\rangle$일 땐 그대로 두고 $|1\rangle$일 땐 target을 뒤집는 block-diagonal 행렬을 직접 만들어야 해요. 대신 이 helper를 한 번 잘 짜두면 나머지 controlled 게이트(CZ, CCX, MCX)는 전부 특수 케이스로 떨어져요.
+Controlled 게이트는 조금 더 신경 써야 해요. CNOT은 `kron(CX, I)`로 끝나지 않아요. control과 target 큐비트가 붙어 있지 않을 수도 있거든요. control이 $|0\rangle$일 땐 그대로 두고 $|1\rangle$일 땐 target을 뒤집는 block-diagonal 행렬을 직접 만들어야 해요. 대신 이 helper를 한 번 잘 짜두면 나머지 controlled 게이트(CZ, CCX, MCX)는 전부 특수 케이스로 떨어져요.
 
 **게이트 행렬들의 실제 모습:**
 
@@ -309,17 +309,17 @@ The statevector simulator is clear, short, and fast for small systems. The probl
 
 <Lang locale="ko">
 
-게이트 몇 개는 따로 한마디씩 할게요 — 손으로 직접 써보고 나서 생각이 바뀐 것들이에요.
+게이트 몇 개는 따로 한마디씩 할게요. 손으로 직접 써보고 나서 생각이 바뀐 것들이에요.
 
 **H는 superposition을 만드는 게이트예요.** $H|0\rangle = \tfrac{1}{\sqrt{2}}(|0\rangle + |1\rangle)$. 모든 큐비트에 걸면 $2^n$개 기저 상태의 균일한 중첩이 만들어져요. 제가 아는 모든 양자 알고리즘이 여기서 시작해요.
 
-**Z, S, T는 측정만 보면 똑같아요.** $|1\rangle$ 성분의 위상만 바꾸거든요. 그런데 뒤에 H를 한 번 더 걸면 얘기가 달라져요 — 그게 간섭(interference)이 일어나는 방식이고, 간섭이야말로 양자가 특정 문제에서 고전보다 빠른 유일한 이유예요.
+**Z, S, T는 측정만 보면 똑같아요.** $|1\rangle$ 성분의 위상만 바꾸거든요. 그런데 뒤에 H를 한 번 더 걸면 얘기가 달라져요. 그게 간섭(interference)이 일어나는 방식이고, 간섭이야말로 양자가 특정 문제에서 고전보다 빠른 유일한 이유예요.
 
 **CNOT은 얽힘(entanglement)을 만드는 게이트예요.** $H \otimes I$ 다음에 CNOT을 걸면 $|00\rangle$이 벨 상태 $\tfrac{1}{\sqrt{2}}(|00\rangle + |11\rangle)$로 바뀌어요. 둘 다 혼자서는 확정된 값이 없는데도, 서로는 완벽하게 상관된 두 큐비트죠.
 
 **Toffoli(CCX)는 universal해요.** H와 같이 쓰면 어떤 양자 회로든 만들 수 있어요. 고전 논리(AND, NAND)를 양자 컴퓨터에 인코딩하는 자리도 여기고요.
 
-Statevector 시뮬레이터는 작은 시스템에선 명확하고 짧고 빨라요. 문제는 20–25큐비트쯤부터예요 — 상태당 $2^{25}$개의 복소수, 게이트 행렬당 $2^{50}$개의 항이면 노트북이 슬슬 버거워하기 시작해요.
+Statevector 시뮬레이터는 작은 시스템에선 명확하고 짧고 빨라요. 문제는 20–25큐비트쯤부터예요. 상태당 $2^{25}$개의 복소수, 게이트 행렬당 $2^{50}$개의 항이면 노트북이 슬슬 버거워하기 시작해요.
 
 </Lang>
 
@@ -360,9 +360,9 @@ In code:
 
 <Lang locale="ko">
 
-그림의 노드 하나하나가 작은 텐서예요 — 큐비트이거나, 게이트거나요. 노드 사이의 선은 **edge**인데, 공유하는 텐서 인덱스를 나타내요. 큐비트에 게이트를 적용한다는 건 새 노드를 끼워 넣고 입력 edge를 큐비트의 현재 출력 edge에 이어 주는 것 — 그게 전부예요. 거대한 행렬은 없어요.
+그림의 노드 하나하나가 작은 텐서예요. 큐비트이거나, 게이트거나요. 노드 사이의 선은 **edge**인데, 공유하는 텐서 인덱스를 나타내요. 큐비트에 게이트를 적용한다는 건 새 노드를 끼워 넣고 입력 edge를 큐비트의 현재 출력 edge에 이어 주는 것, 그게 전부예요. 거대한 행렬은 없어요.
 
-회로 실행은 모든 edge를 **contract**하는 일이에요 — 열린(open) edge만 남을 때까지 공유 인덱스를 따라 합을 취하는 거죠. 그 결과가 최종 상태 벡터예요. Statevector와의 결정적 차이는, build 단계에서는 어떤 것도 전체 $2^n$ 크기로 만들어지지 않는다는 점이에요. 덕분에 프레임워크가 마지막에 계산이 제일 덜한 contraction 순서를 고를 수 있어요.
+회로 실행은 모든 edge를 **contract**하는 일이에요. 열린(open) edge만 남을 때까지 공유 인덱스를 따라 합을 취하는 거죠. 그 결과가 최종 상태 벡터예요. Statevector와의 결정적 차이는, build 단계에서는 어떤 것도 전체 $2^n$ 크기로 만들어지지 않는다는 점이에요. 덕분에 프레임워크가 마지막에 계산이 제일 덜한 contraction 순서를 고를 수 있어요.
 
 코드로는 이래요:
 
@@ -390,9 +390,9 @@ For small circuits, statevector is actually faster — less overhead. But as the
 
 <Lang locale="ko">
 
-API는 일부러 statevector 시뮬레이터와 똑같이 맞췄어요 — 같은 메서드 이름, 같은 의미예요. 차이는 전부 안에서 일어나요. `tn.h([0])`은 Hadamard 텐서 노드를 네트워크에 추가하고 edge 하나를 다시 잇기만 해요. 아무 계산도 안 하죠. 진실의 순간은 `tn.run()`이에요: TensorNetwork이 그래프를 훑으며 contraction 순서를 정하고 최종 상태를 만들어요.
+API는 일부러 statevector 시뮬레이터와 똑같이 맞췄어요. 같은 메서드 이름, 같은 의미예요. 차이는 전부 안에서 일어나요. `tn.h([0])`은 Hadamard 텐서 노드를 네트워크에 추가하고 edge 하나를 다시 잇기만 해요. 아무 계산도 안 하죠. 진실의 순간은 `tn.run()`이에요: TensorNetwork이 그래프를 훑으며 contraction 순서를 정하고 최종 상태를 만들어요.
 
-작은 회로에선 오히려 statevector가 빨라요 — 오버헤드가 적으니까요. 그런데 회로가 깊어지거나 넓어지면 텐서 네트워크 쪽이 이기기 시작해요. Statevector가 스스로 떠안는 거대한 중간 행렬을 안 만들어도 되거든요.
+작은 회로에선 오히려 statevector가 빨라요. 오버헤드가 적으니까요. 그런데 회로가 깊어지거나 넓어지면 텐서 네트워크 쪽이 이기기 시작해요. Statevector가 스스로 떠안는 거대한 중간 행렬을 안 만들어도 되거든요.
 
 </Lang>
 
@@ -506,7 +506,7 @@ What's nice is that you can flip the simulator backend in the UI and confirm all
 
 <Lang locale="ko">
 
-좋은 건, UI에서 시뮬레이터 백엔드를 바꿔 가며 세 엔진이 같은 분포를 내는지 확인할 수 있다는 거예요. 당연히 같아야죠 — 같은 수학을 시뮬레이션하는 거니까요. 그래도 세 결과가 실제로 딱 맞아떨어지는 걸 눈으로 보는 건, 스택 전체를 직접 만들었을 때만 얻을 수 있는 종류의 확인이에요.
+좋은 건, UI에서 시뮬레이터 백엔드를 바꿔 가며 세 엔진이 같은 분포를 내는지 확인할 수 있다는 거예요. 당연히 같아야죠. 같은 수학을 시뮬레이션하는 거니까요. 그래도 세 결과가 실제로 딱 맞아떨어지는 걸 눈으로 보는 건, 스택 전체를 직접 만들었을 때만 얻을 수 있는 종류의 확인이에요.
 
 </Lang>
 
@@ -534,11 +534,11 @@ What's nice is that you can flip the simulator backend in the UI and confirm all
 
 **같은 게이트를 세 번 구현하니까 그제야 진짜로 이해가 됐어요.** H가 superposition을 만든다는 건 글로 읽어서도 알 수 있어요. 그런데 `(1/sqrt(2)) * [[1,1],[1,-1]]`을 직접 쓰고, 전체 시스템 크기로 Kronecker 확장하고, 상태 벡터에 곱해서 진폭이 갈라지는 걸 눈으로 보는 건 완전히 다른 경험이에요. 적어도 저는 그렇게 해야 머리에 남더라고요.
 
-**세 시뮬레이터의 API를 똑같이 맞춘 보람이 있었어요.** 같은 메서드 이름, 같은 형태, 같은 출력이요. 덕분에 프론트엔드는 한 번만 만들고 엔진 선택은 백엔드 flag 하나로 처리했어요. 디버깅도 쉬워졌고요 — statevector와 tensornetwork가 같은 회로에서 다른 답을 내면, 둘 중 하나엔 버그가 있다는 뜻이니까요.
+**세 시뮬레이터의 API를 똑같이 맞춘 보람이 있었어요.** 같은 메서드 이름, 같은 형태, 같은 출력이요. 덕분에 프론트엔드는 한 번만 만들고 엔진 선택은 백엔드 flag 하나로 처리했어요. 디버깅도 쉬워졌고요. statevector와 tensornetwork가 같은 회로에서 다른 답을 내면, 둘 중 하나엔 버그가 있다는 뜻이니까요.
 
 **텐서 네트워크는 의외로 만만해요.** 라이브러리가 무서울 줄 알았는데 TensorNetwork의 API는 작아요. 개념적으로 무거운 부분은 "언제 어떤 edge를 contract하느냐"인데, 그건 라이브러리가 대신 해줘요.
 
-**설명하는 것도 이해의 절반이었어요.** 인턴 기간에 사내 세미나를 두 번 했어요 — 큐비트, superposition, 벨 정리, EPR 역설. 준비해 보니 시뮬레이터를 만들 때와 똑같더라고요. 바닥부터 직접 만들거나 직접 설명해야 하는 순간, 진짜 이해하고 있는지가 드러나요.
+**설명하는 것도 이해의 절반이었어요.** 인턴 기간에 사내 세미나를 두 번 했어요. 주제는 큐비트, superposition, 벨 정리, EPR 역설이었고요. 준비해 보니 시뮬레이터를 만들 때와 똑같더라고요. 바닥부터 직접 만들거나 직접 설명해야 하는 순간, 진짜 이해하고 있는지가 드러나요.
 
 </Lang>
 
@@ -564,7 +564,7 @@ What's nice is that you can flip the simulator backend in the UI and confirm all
 
 **3D 회로는 재밌지만, 더 낫다고는 못 하겠어요.** react-three-fiber를 고른 건 뭐가 되는지 보고 싶어서였지, 문제가 3D를 요구해서가 아니었거든요. 실제 작업엔 Qiskit풍의 깔끔한 2D 에디터가 더 쓸모 있을 거예요. 3D는 토글이나 이스터에그로 남기는 게 맞겠다 싶어요.
 
-**노이즈 모델이 없어요.** 세 시뮬레이터 모두 이상적인 조건을 가정해요 — 게이트는 완벽하고, decoherence도 없죠. 실제 양자 하드웨어는 노이즈가 지배하는데요. Depolarizing channel이나 T1/T2 모델을 넣으면 실제 IBM 하드웨어에서 마주칠 결과에 훨씬 가까워질 거예요.
+**노이즈 모델이 없어요.** 세 시뮬레이터 모두 이상적인 조건을 가정해요. 게이트는 완벽하고, decoherence도 없죠. 실제 양자 하드웨어는 노이즈가 지배하는데요. Depolarizing channel이나 T1/T2 모델을 넣으면 실제 IBM 하드웨어에서 마주칠 결과에 훨씬 가까워질 거예요.
 
 </Lang>
 
@@ -593,7 +593,7 @@ Source code and live demo:
 
 양자 컴퓨팅을 공부하는데 Qiskit 튜토리얼을 아무리 따라 해도 어쩐지 감이 안 잡힌다 싶으면, statevector 시뮬레이터를 직접 한 번 짜 보시길 권해요. NumPy 200줄 정도예요. 게이트 행렬을 손으로 쓰고 첫 CNOT을 Kronecker 확장할 때쯤이면, `circuit.draw()`를 백 번 부르는 것보다 훨씬 선명한 그림이 머리에 잡혀요.
 
-그게 잡히고 나면 텐서 네트워크가 자연스러운 다음 단계예요 — 같은 물리, 다른 표현, 훨씬 나은 scaling이요. 무거운 일은 Google 라이브러리가 대부분 해주고요.
+그게 잡히고 나면 텐서 네트워크가 자연스러운 다음 단계예요. 같은 물리, 다른 표현, 훨씬 나은 scaling이요. 무거운 일은 Google 라이브러리가 대부분 해주고요.
 
 "언제 또 해보겠어"로 고른 과제치고는, 본전을 뽑고도 남은 여름이었어요.
 
