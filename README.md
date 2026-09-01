@@ -32,7 +32,8 @@ mdx 포스트 ──(npm run corpus)──▶ corpus.json ──▶ 백엔드 �
 
 - 로컬 시크릿은 compose 파일 옆 `.env` (`.env.example` 참고). **프로덕션은 GitHub Actions Secrets**
   (`ANTHROPIC_API_KEY`, `POSTGRES_PASSWORD`) — 배포 워크플로가 Pi에서 `.env`를 생성. 키가 없으면 챗은 검색 결과만으로 답함
-- `main`은 PR로만 바뀐다(관리자 포함, 승인 0명이라 혼자서도 머지 가능). 머지 = 배포. 브랜치에서 작업 → PR → 머지
+- 일상 작업은 `develop`에서(로컬 체크아웃·dev 도커가 서빙하는 브랜치). `main`은 PR(develop → main)로만 바뀌고,
+  머지 = 배포(관리자 포함 직접 push 불가, 승인 0명이라 혼자 머지 가능)
 - 로컬 스택에서 Postgres는 `localhost:5433`, Redis는 `localhost:6380`으로 노출 (DB 뷰어 연결용)
 - `corpus.json`/`corpus.gen.json`은 생성물(gitignore) — 배포마다 CI가 `npm run corpus`로 다시 만든다.
   로컬에선 클론 직후와 포스트를 고친 뒤 `cd fe_src && npm run corpus` (dev 백엔드는 다음 시작 때 바뀐 청크만 재임베딩)
