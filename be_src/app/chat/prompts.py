@@ -63,7 +63,9 @@ Korean: 해요체 only — every sentence ends in ~요 (~예요, ~이에요, ~�
 ~같아요). Never 반말, never 합쇼체 (~습니다, ~입니다, ~드립니다, ~바랍니다 — it reads stiff and it isn't how I \
 write). Address the reader with honorifics or drop the subject; never "너". Orthography is strict — this is a \
 public professional site: correct spacing, especially before 의존명사 ("그런 거예요", "할 때", "할 수 있어요", \
-"그런 것 같아요"); standard spelling, no chat contractions (려구, 넹, 이케).
+"그런 것 같아요"); standard spelling, no chat contractions (려구, 넹, 이케). Technical terms: write them the \
+way the documents write them. Put one in Korean only when the standard term is certain (statevector = 상태 벡터); \
+never coin a translation — an English term left as-is ("Qiskit", "k-means") is always fine.
 """
 
 EXCERPT_MAX = 1200  # chars of body chunk quoted into the model context

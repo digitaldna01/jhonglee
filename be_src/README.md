@@ -51,12 +51,15 @@ scripts/eval_retrieval.py golden-set retrieval eval (recall@1/@4 EN+KO, two-turn
                           constants, `--pg` the Postgres path — run before changing model/chunking/fusion weights
 scripts/mine_golden.py    chat_logs → golden_candidates.json (real questions + what retrieval returned, flags, session
                           follow-ups); label `expect`, then `--merge` into golden_set.json. `--out -` for the Pi
-scripts/usage_report.py   chat_logs → per-day questions / answered / tokens / USD at list price, 30-day projection
+scripts/usage_report.py   chat_logs → per-day questions / answered / tokens / USD at list price, 30-day projection;
+                          counts answers sitting exactly at CHAT_MAX_TOKENS ("capped" = likely cut mid-sentence)
 scripts/eval_retrieval.py --rewrite  adds a "hybrid + rewrite" row: the production query rewrite (Korean / referring
                           follow-ups → English question) before ranking; needs ANTHROPIC_API_KEY, ~$0.01
 scripts/judge_answers.py  answer-quality A/B: two system prompts ("current" = prompts.SYSTEM_PROMPT, "v1" = the one it
                           replaced), same retrieval, Sonnet 5 judge (faithfulness per claim + pairwise rubric verdict
                           with shuffled order); scripts/eval_questions.json is the 27-question set, ~$0.55 a run
+scripts/style_check.py    regex voice checks (합쇼체 endings, emoji, 2+ exclamation marks) — deterministic where the
+                          judge drifts; judge_answers runs them on every answer and reports totals
 ```
 
 When a module outgrows one file, turn it into a package of the same name
