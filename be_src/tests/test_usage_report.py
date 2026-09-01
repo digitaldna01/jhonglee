@@ -35,3 +35,14 @@ def test_summarize_groups_by_day_skips_fallbacks_and_projects():
     assert t["questions"] == 4 and t["answered"] == 3
     assert abs(t["usd_per_answer"] - 0.002) < 1e-9
     assert abs(t["usd_30d_projection"] - 0.006 / 2 * 30) < 1e-9
+
+
+def test_summarize_counts_answers_that_hit_the_cap():
+    rows = [
+        _row("claude-haiku-4-5", 1000, 800),
+        _row("claude-haiku-4-5", 1000, 300, day=1),
+    ]
+    rep = ur.summarize(rows, cap=800)
+    assert rep["days"][0]["capped"] == 1
+    assert rep["days"][1]["capped"] == 0
+    assert rep["total"]["capped"] == 1

@@ -49,6 +49,8 @@ from app.chat.prompts import SYSTEM_PROMPT, build_context  # noqa: E402
 from app.chat.service import TOP_K  # noqa: E402
 from app.core.config import get_settings  # noqa: E402
 
+import style_check  # noqa: E402  — sibling module; scripts/ is on sys.path when run and under pytest
+
 HERE = Path(__file__).parent
 JUDGE_MODEL = "claude-sonnet-5"
 CONCURRENCY = 4
@@ -246,6 +248,13 @@ def report(cases: list[dict], a: str, b: str) -> None:
     print(f"  tone   {a}: {tone[a]}  {b}: {tone[b]}  tie: {tone['tie']}")
     print(f"  unsupported claims   {a}: {unsupported[a]}  {b}: {unsupported[b]}")
     print(f"  mean output tokens   {a}: {tokens[a] / n:.0f}  {b}: {tokens[b] / n:.0f}")
+    style = {k: sum(len(c.get("style", {}).get(k, [])) for c in cases) for k in (a, b)}
+    print(f"  style violations     {a}: {style[a]}  {b}: {style[b]}   (regex: 합쇼체 어미·이모지·느낌표≥2)")
+    sflagged = [(c["id"], k, s) for c in cases for k in (a, b) for s in c.get("style", {}).get(k, [])]
+    if sflagged:
+        print("\n  style violations:")
+        for cid, k, issue in sflagged:
+            print(f"    {cid} [{k}] {issue}")
     flagged = [(c["id"], k, u) for c in cases for k in (a, b) for u in c["verdict"]["unsupported"][k]]
     if flagged:
         print("\n  unsupported claims:")
@@ -282,6 +291,14 @@ async def main(args: argparse.Namespace) -> None:
         print(f"reusing {len(cases)} answers from {args.reuse}")
     else:
         cases = await asyncio.gather(*(guarded(run_case(q, variants)) for q in questions))
+    # deterministic voice checks on every answer — the judge's tone call drifts run to
+    # run, these don't. Recomputed on --reuse too, so old transcripts pick them up.
+    for c in cases:
+        c["style"] = {
+            k: style_check.check(c["answers"][k]["text"])
+            + [f"(prev) {s}" for s in style_check.check(c["answers"][k].get("prev_answer") or "")]
+            for k in variants
+        }
     save = lambda: Path(args.out).write_text(json.dumps(  # noqa: E731
         {"a": a, "b": b, "answerer": settings.chat_model, "judge": args.judge, "rubric": rubric, "cases": cases},
         ensure_ascii=False, indent=2))
