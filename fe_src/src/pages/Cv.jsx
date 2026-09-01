@@ -1,3 +1,5 @@
+import { useLocation } from 'react-router-dom';
+import BackLink from '../components/BackLink';
 import cvData from '../data/cv.json';
 import { pad2 } from '../utils/format';
 import '../styles/cv.css';
@@ -40,8 +42,12 @@ function CvRow({ item }) {
 }
 
 export default function Cv() {
+  // reached from a chat citation → the way back is that conversation (same as Post)
+  const from = useLocation().state;
+  const chatAddress = from?.from === 'chat' ? (from.sid ? `/chat/${from.sid}` : '/') : null;
   return (
     <main className="cv">
+      {chatAddress && <BackLink to={chatAddress} inFlow>back to chat</BackLink>}
       <div className="cv-masthead">
         <p className="cv-eyebrow">Curriculum Vitae</p>
         <h1 className="cv-name">

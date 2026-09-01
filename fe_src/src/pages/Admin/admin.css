@@ -58,4 +58,11 @@
 .admin-meta .sep { margin: 0 6px; color: var(--fg-4); }
 @media (max-width: 560px) {
   .admin-row { flex-direction: column; gap: 4px; }
+  /* a stacked row has the full width — give a long question two lines, not "…" */
+  .admin-title {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
 }
