@@ -8,8 +8,11 @@
   /* one step below the site's paper so white figure blocks read as blocks */
   background: var(--ground-2);
 }
-/* the navbar must sit on the same ground or a white band appears across the top */
+/* the navbar must sit on the same ground or a white band appears across the top;
+   body too, or overscroll and the strip below the shell show the site's paper
+   (visible as an off-colour footer band in light mode) */
 :root.route-work { --nav-bg: var(--ground-2); }
+:root.route-work body { background: var(--ground-2); }
 .proj-container {
   max-width: 1280px;
   margin: 0 auto;

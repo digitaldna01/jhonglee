@@ -59,6 +59,14 @@
 .post-body .prose h3 { font-size: clamp(24px, 22px + 0.556vw, 30px); }
 
 /* the old `img-wide` class is inert: an image is `content` unless it says `wide`/`full` */
+/* replaced elements keep their intrinsic width and overflow a narrower parent —
+   the column is 34em (≈544px), wider than a phone, so cap them at their container
+   as well as at the column. (Must out-rank .prose > *'s max-width: var(--col);
+   .full stays viewport-based, .wide spans its container.) */
+.post-body .prose img:not(.full),
+.post-body .prose video:not(.full) { max-width: min(100%, var(--col)); height: auto; }
+.post-body .prose img.wide,
+.post-body .prose video.wide { max-width: 100%; }
 
 /* ── Post meta + language toggle ────────────────────────── */
 .post-meta-row {
