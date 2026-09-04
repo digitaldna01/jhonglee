@@ -1,25 +1,78 @@
 ---
 title: Design Study
-date: '2023-11-30'
+date: "2023-11-30"
 category: PROJECTS
 subcategory: visual
 medium: artwork
 thumbnail: /images/projects/design-study/thumbnail.svg
-excerpt: An exploration of graphic design principles through typographic composition and book layout.
+excerpt: A studybook of six design principles — contrast, texture, symmetry, asymmetry, repetition, balance — made for BU's Foundation of Design class.
 keywords:
   - Graphic Design
   - Book
 lean: design
+locales:
+  - en
+  - ko
+defaultLocale: en
 ---
 
+import { Lang } from "../utils/lang";
 import StudyBook from "../components/StudyBook";
 
-A self-directed studybook working through the fundamentals of graphic design — grid systems,
-typographic hierarchy, colour, and the rhythm of a printed page. Each spread takes up a single
-principle and then applies it, so the book itself becomes the final design artifact, not just a
-record of one.
+<p className="not-prose text-sm tracking-widest uppercase text-center text-gray-400 my-4">
+  contrast · texture · symmetry · asymmetry · repetition · balance
+</p>
+
+<Lang locale="en">
+
+A studybook of six design principles — contrast, texture, symmetry, asymmetry, repetition,
+and balance — working from Ellen Lupton and Jennifer Cole Phillips's
+_Graphic Design: The New Basics_.
+
+Honestly, I wasn't confident going in. I'm not unusually creative, and I don't have a better
+eye than anyone else — I just liked design. The people in that class were genuinely creative.
+Looking back, I think what I really liked was simply making things alongside people like that.
+
+</Lang>
+
+<Lang locale="ko">
+
+디자인의 여섯 원리, 대비·질감·대칭·비대칭·반복·균형을 하나씩 공부하며 만든 스터디북이에요.
+교재는 Ellen Lupton과 Jennifer Cole Phillips의 \_Graphic Design: The New Basics.
+
+솔직히 처음엔 자신이 없었어요. 창의력이 남다른 것도, 남들보다 눈이 좋은 것도 아니고, 그냥
+디자인이 좋았을 뿐이거든요. 같이 수업 듣던 친구들은 정말로 창의적이었어요. 지금 생각하면
+저는 그런 사람들 틈에서 뭔가를 만든다는 것 자체가 좋았던 것 같아요.
+
+</Lang>
+
+<Lang locale="en">
+
+One line from the textbook made it into the book itself — Rick Valicenti's epigraph on
+texture: "If you touch something (it is likely) someone will feel it. If you feel something
+(it is likely) someone will be touched."
+
+</Lang>
+
+<Lang locale="ko">
+
+교재에서 책 안까지 따라 들어온 문장이 하나 있어요. Texture 장을 여는 Rick Valicenti의
+말인데, 넘기다 보면 만나요. "If you touch something (it is likely) someone will feel it.
+If you feel something (it is likely) someone will be touched."
+
+</Lang>
 
 <StudyBook className="wide" />
 
+<Lang locale="en">
+
 Flip through all 24 pages above the way you would the printed copy — drag a corner or click an
 edge to turn.
+
+</Lang>
+
+<Lang locale="ko">
+
+24쪽을 실제 책처럼 넘겨 보세요. 모서리를 드래그하거나 가장자리를 클릭하면 다음 장으로 넘어가요.
+
+</Lang>
