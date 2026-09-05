@@ -24,6 +24,8 @@ function Layout() {
         <Route path="/cv" element={<Cv />} />
         <Route path="/work" element={<Work />} />
         <Route path="/blog" element={<Navigate to="/work" replace />} />
+        {/* renamed 2026-09-05: the paper is about pose generation, not estimation */}
+        <Route path="/posts/handPoseEstimation" element={<Navigate to="/posts/handPoseGeneration" replace />} />
         <Route path="/posts/:slug" element={<Post />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="*" element={<NotFound />} />

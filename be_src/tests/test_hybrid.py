@@ -97,7 +97,7 @@ def test_retrieve_fixes_the_k_means_golden_case():
         assert hits[0]["chunk"] is not None and "kmeans" in hits[0]["chunk"]["text"].lower().replace("-", "")
         # a topic switch is searched un-anchored (rewrite.search_plan) and lands on its own topic
         switched = await retrieval.retrieve("Have you used XGBoost?", k=4)
-        assert switched[0]["id"] == "handPoseEstimation"
+        assert switched[0]["id"] == "handPoseGeneration"
 
     asyncio.run(run())
 

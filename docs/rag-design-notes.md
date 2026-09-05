@@ -340,7 +340,7 @@ ML 쌍 {kmeans, handPose}, smartfactory·gillSans·quantum은 부유 — 손으�
 
 ```yaml
 relations:
-  - { to: handPoseEstimation, rel: uses-ml }
+  - { to: handPoseGeneration, rel: uses-ml }
   - { to: smartfactoryDashboard, rel: applied-in }
 ```
 
