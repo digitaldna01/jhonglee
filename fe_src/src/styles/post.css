@@ -68,6 +68,49 @@
 .post-body .prose img.wide,
 .post-body .prose video.wide { max-width: 100%; }
 
+/* ---- Media layouts — named patterns for more than one image ----------
+   <div className="media-duo">   two across, equal columns
+   <div className="media-duo golden">  two across, 2:1 — the first leads
+   <div className="media-trio">  three across (stays 3-up on phones: detail shots, frames)
+   <div className="media-strip"> a filmstrip: any count, fixed height, scrolls sideways
+   Content-width by default like every block; add `wide` to span the container.
+   Add `crop` to a duo/trio to equalize cells (4:3, cover) when ratios don't match. */
+.post-body .prose .media-duo,
+.post-body .prose .media-trio {
+  display: grid;
+  gap: 12px;
+  align-items: start;
+  margin: 1.6em 0;
+}
+.post-body .prose .media-duo { grid-template-columns: 1fr 1fr; }
+.post-body .prose .media-duo.golden { grid-template-columns: 2fr 1fr; }
+.post-body .prose .media-trio { grid-template-columns: repeat(3, 1fr); }
+.post-body .prose .media-duo img,
+.post-body .prose .media-trio img { width: 100%; max-width: none; margin: 0; }
+.post-body .prose .media-duo.crop img,
+.post-body .prose .media-trio.crop img { aspect-ratio: 4 / 3; object-fit: cover; }
+.post-body .prose .media-strip {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  margin: 1.6em 0;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+.post-body .prose .media-strip img {
+  height: 240px;
+  width: auto;
+  max-width: none;
+  flex: 0 0 auto;
+  margin: 0;
+  scroll-snap-align: start;
+}
+@media (max-width: 560px) {
+  .post-body .prose .media-duo,
+  .post-body .prose .media-duo.golden { grid-template-columns: 1fr; }
+  .post-body .prose .media-strip img { height: 180px; }
+}
+
 /* ── Post meta + language toggle ────────────────────────── */
 .post-meta-row {
   display: flex;
