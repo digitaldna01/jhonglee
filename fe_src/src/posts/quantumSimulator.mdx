@@ -50,7 +50,7 @@ Here's what I learned building it.
 
 그런데 그 시뮬레이터, 안에서 정확히 무슨 일을 하는 걸까요? `circuit.run()` 한 줄이면 결과가 나오지만, 그 안에서 무슨 일이 벌어지는지 모르고 쓰자니 영 찜찜했어요. 그래서 같은 회로를 IBM Qiskit, NumPy로 바닥부터 짠 statevector 엔진, Google TensorNetwork 세 가지로 따로따로 만들어 봤어요. 게이트도 알고리즘도 같지만, 구현은 셋 다 완전히 달라요.
 
-결과물은 작은 시뮬레이터 프레임워크와, 브라우저에서 게이트를 드래그해 회로를 만들어 볼 수 있는 React/Three.js 데모를 만들어 봤습니다. [라이브 데모](https://quantum-simulator-production.up.railway.app/)에서 직접 돌려볼 수 있고, 전체 코드는 [GitHub](https://github.com/digitaldna01/quantum-simulator)에 있어요.
+결과물로 작은 시뮬레이터 프레임워크와, 브라우저에서 게이트를 드래그해 회로를 만들어 볼 수 있는 React/Three.js 데모를 완성했어요. [라이브 데모](https://quantum-simulator-production.up.railway.app/)에서 직접 돌려볼 수 있고, 전체 코드는 [GitHub](https://github.com/digitaldna01/quantum-simulator)에 있어요.
 
 만들면서 배운 것들을 정리해 봤어요.
 
@@ -78,7 +78,7 @@ The whole thing is wrapped in a Flask API and a React frontend so you can build 
 
 ### 아이디어
 
-양자 컴퓨팅 튜토리얼은 대부분 프레임워크 하나(보통 Qiskit)를 골라서 벨 상태와 Grover 알고리즘을 따라 하게 해요. API 감을 잡기엔 좋은데, 정작 시뮬레이터 자체는 블랙박스로 남죠. "큐비트 0에 Hadamard 게이트를 적용한다"는 게 실제로 무슨 뜻일까요? 거대한 행렬을 곱하는 걸까요? $2^n$개의 진폭을 저장하는 걸까요? 아니면 뭔가 수가 따로 있는 걸까요?
+양자 컴퓨팅 튜토리얼은 대부분 프레임워크 하나(보통 Qiskit)를 골라서 벨 상태와 Grover 알고리즘을 따라 하게 해요. API 감을 잡기엔 좋은데, 정작 시뮬레이터 자체는 블랙박스로 남죠. "큐비트 0에 Hadamard 게이트를 적용한다"는 게 실제로 무슨 뜻일까요? 거대한 행렬을 곱하는 걸까요? $2^n$개의 진폭을 저장하는 걸까요? 아니면 뭔가 더 기발한 방법이 있는 걸까요?
 
 답은 "셋 다 맞다"예요. 어떤 시뮬레이터를 고르느냐에 따라 달라질 뿐이죠. 그래서 셋 다 만들어 봤어요.
 
@@ -267,7 +267,7 @@ The controlled gates need slightly more care — a CNOT isn't just `kron(CX, I)`
 
 <Lang locale="ko">
 
-Controlled 게이트는 조금 더 신경 써야 해요. CNOT은 `kron(CX, I)`로 끝나지 않아요. control과 target 큐비트가 붙어 있지 않을 수도 있거든요. control이 $|0\rangle$일 땐 그대로 두고 $|1\rangle$일 땐 target을 뒤집는 block-diagonal 행렬을 직접 만들어야 해요. 대신 이 helper를 한 번 잘 짜두면 나머지 controlled 게이트(CZ, CCX, MCX)는 전부 특수 케이스로 떨어져요.
+Controlled 게이트는 조금 더 신경 써야 해요. CNOT은 `kron(CX, I)`로 끝나지 않아요. control과 target 큐비트가 붙어 있지 않을 수도 있거든요. control이 $|0\rangle$일 땐 그대로 두고 $|1\rangle$일 땐 target을 뒤집는 block-diagonal 행렬을 직접 만들어야 해요. 대신 이 helper를 한 번 잘 짜두면 나머지 controlled 게이트(CZ, CCX, MCX) 구현은 전부 특수한 경우로 쉽게 풀려요.
 
 **게이트 행렬들의 실제 모습:**
 
@@ -309,7 +309,7 @@ The statevector simulator is clear, short, and fast for small systems. The probl
 
 <Lang locale="ko">
 
-게이트 몇 개는 따로 한마디씩 할게요. 손으로 직접 써보고 나서 생각이 바뀐 것들이에요.
+게이트 몇 개는 따로 한마디씩 할게요. 손으로 직접 짜보면서 비로소 제대로 와닿았던 것들이거든요.
 
 **H는 superposition을 만드는 게이트예요.** $H|0\rangle = \tfrac{1}{\sqrt{2}}(|0\rangle + |1\rangle)$. 모든 큐비트에 걸면 $2^n$개 기저 상태의 균일한 중첩이 만들어져요. 제가 아는 모든 양자 알고리즘이 여기서 시작해요.
 
@@ -390,7 +390,7 @@ For small circuits, statevector is actually faster — less overhead. But as the
 
 <Lang locale="ko">
 
-API는 일부러 statevector 시뮬레이터와 똑같이 맞췄어요. 같은 메서드 이름, 같은 의미예요. 차이는 전부 안에서 일어나요. `tn.h([0])`은 Hadamard 텐서 노드를 네트워크에 추가하고 edge 하나를 다시 잇기만 해요. 아무 계산도 안 하죠. 진실의 순간은 `tn.run()`이에요: TensorNetwork이 그래프를 훑으며 contraction 순서를 정하고 최종 상태를 만들어요.
+API는 일부러 statevector 시뮬레이터와 똑같이 맞췄어요. 같은 메서드 이름, 같은 의미예요. 차이는 전부 안에서 일어나요. `tn.h([0])`은 Hadamard 텐서 노드를 네트워크에 추가하고 edge 하나를 다시 잇기만 해요. 아무 계산도 안 하죠. 결정적인 순간은 `tn.run()`이에요: TensorNetwork이 그래프를 훑으며 contraction 순서를 정하고 최종 상태를 만들어요.
 
 작은 회로에선 오히려 statevector가 빨라요. 오버헤드가 적으니까요. 그런데 회로가 깊어지거나 넓어지면 텐서 네트워크 쪽이 이기기 시작해요. Statevector가 스스로 떠안는 거대한 중간 행렬을 안 만들어도 되거든요.
 
@@ -481,7 +481,7 @@ The whole thing is deployed on Railway. You can try the [live demo](https://quan
 
 <Lang locale="ko">
 
-**3큐비트에서 marked state를 $|101\rangle$로 두고 Grover 돌리기.** 모든 큐비트를 H로 초기화하고, $|101\rangle$에 대한 oracle을 적용한 다음 diffuser예요. Iteration 한 번만으로 $|101\rangle$이 측정될 확률이 압도적으로 커져야 해요.
+**3큐비트에서 marked state를 $|101\rangle$로 두고 Grover 돌리기.** 모든 큐비트를 H로 초기화하고, $|101\rangle$에 대한 oracle을 적용한 다음 diffuser를 거쳐요. Iteration 한 번만으로 $|101\rangle$이 측정될 확률이 압도적으로 커져야 해요.
 
 </Lang>
 
@@ -506,7 +506,7 @@ What's nice is that you can flip the simulator backend in the UI and confirm all
 
 <Lang locale="ko">
 
-좋은 건, UI에서 시뮬레이터 백엔드를 바꿔 가며 세 엔진이 같은 분포를 내는지 확인할 수 있다는 거예요. 당연히 같아야죠. 같은 수학을 시뮬레이션하는 거니까요. 그래도 세 결과가 실제로 딱 맞아떨어지는 걸 눈으로 보는 건, 스택 전체를 직접 만들었을 때만 얻을 수 있는 종류의 확인이에요.
+좋은 건, UI에서 시뮬레이터 백엔드를 바꿔 가며 세 엔진이 같은 분포를 내는지 확인할 수 있다는 거예요. 당연히 같아야죠. 같은 수학을 시뮬레이션하는 거니까요. 그래도 세 결과가 실제로 딱 맞아떨어지는 걸 눈으로 보는 건, 스택 전체를 직접 만들었을 때만 느낄 수 있는 확신이거든요.
 
 </Lang>
 
@@ -560,7 +560,7 @@ What's nice is that you can flip the simulator backend in the UI and confirm all
 
 ### 다르게 해보고 싶은 점
 
-**성능 비교는 제대로 된 벤치마크가 필요해요.** 큐비트 수를 늘려 가며 statevector와 tensornetwork에 같은 회로를 돌리는 `run_time_comparison.py`가 있긴 한데, 한 머신에서 한 번 잰 결과일 뿐이에요. 여러 회로 구조, 반복 시행, 메모리 프로파일링까지 갖춰야 정직한 그림이 나올 것 같아요.
+**성능 비교는 제대로 된 벤치마크가 필요해요.** 큐비트 수를 늘려 가며 statevector와 tensornetwork에 같은 회로를 돌리는 `run_time_comparison.py`가 있긴 한데, 한 머신에서 한 번 잰 결과일 뿐이에요. 여러 회로 구조, 반복 시행, 메모리 프로파일링까지 갖춰야 정확한 비교 결과가 나올 것 같아요.
 
 **3D 회로는 재밌지만, 더 낫다고는 못 하겠어요.** react-three-fiber를 고른 건 뭐가 되는지 보고 싶어서였지, 문제가 3D를 요구해서가 아니었거든요. 실제 작업엔 Qiskit풍의 깔끔한 2D 에디터가 더 쓸모 있을 거예요. 3D는 토글이나 이스터에그로 남기는 게 맞겠다 싶어요.
 
@@ -593,7 +593,7 @@ Source code and live demo:
 
 양자 컴퓨팅을 공부하는데 Qiskit 튜토리얼을 아무리 따라 해도 어쩐지 감이 안 잡힌다 싶으면, statevector 시뮬레이터를 직접 한 번 짜 보시길 권해요. NumPy 200줄 정도예요. 게이트 행렬을 손으로 쓰고 첫 CNOT을 Kronecker 확장할 때쯤이면, `circuit.draw()`를 백 번 부르는 것보다 훨씬 선명한 그림이 머리에 잡혀요.
 
-그게 잡히고 나면 텐서 네트워크가 자연스러운 다음 단계예요. 같은 물리, 다른 표현, 훨씬 나은 scaling이요. 무거운 일은 Google 라이브러리가 대부분 해주고요.
+그게 잡히고 나면 텐서 네트워크가 자연스러운 다음 단계예요. 같은 물리, 다른 표현, 훨씬 나은 scaling이요. 까다로운 계산은 Google 라이브러리가 대부분 해주고요.
 
 "언제 또 해보겠어"로 고른 과제치고는, 본전을 뽑고도 남은 여름이었어요.
 

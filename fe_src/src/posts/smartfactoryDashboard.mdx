@@ -86,7 +86,7 @@ Here's exactly how I built it, step by step.
 - 왼쪽엔 드래그할 수 있는 **AI 에이전트 / 워크플로우 패널**
 - 오른쪽엔 에이전트 실행 일정을 관리하는 **Notion 스타일 일정 캘린더**
 
-시각 레퍼런스는 항공 화물 대시보드와 클린룸 제어 패널에서 가져왔어요. 밝은 회색 배경, 둥근
+시각적 레퍼런스는 항공 화물 대시보드와 클린룸 제어 패널에서 참고했어요. 밝은 회색 배경, 둥근
 카드, pill 탭, 최소한의 검정 포인트. 산업적이면서도 차분한 인상이 목표였어요.
 
 </Lang>
@@ -128,7 +128,7 @@ The visual inspiration came from aircraft freight dashboards and clean-room cont
 
 Claude Design으로 바로 들어가는 대신, 먼저 Claude Chat에서 디자인 시스템 자체를 정의했어요.
 항공 화물 물류 대시보드, BIM 건설 도구, 어두운 데이터 카드까지 레퍼런스 이미지 세 장을 건네고,
-만들고 싶은 공장 대시보드의 방향을 자세히 풀어 쓴 컨셉 프롬프트를 썼죠.
+만들고 싶은 공장 대시보드의 방향을 상세하게 담은 컨셉 프롬프트를 입력했어요.
 
 그랬더니 컬러 팔레트, 타이포그래피 스케일, 상태 표현 방식, spacing token, mood board까지 갖춘
 디자인 시스템 레퍼런스가 통째로 나왔어요. 결과물은 채팅 안에서 인터랙티브 위젯으로 바로 확인할
@@ -395,8 +395,8 @@ Like aircraft avionics — zero noise, total operational clarity.
 
 <Lang locale="ko">
 
-Notes field에 디자인 시스템을 한 번 넣어두면, Claude Design은 개별 프롬프트를 받기 전부터
-전체 시각 언어를 이해한 채로 출발해요. 이후 만들어지는 모든 컴포넌트가 폰트, 컬러, spacing
+Notes field에 디자인 시스템을 한 번 입력해 두면, Claude Design은 개별 프롬프트를 받기도 전에
+전체 시각 언어를 완벽하게 숙지한 상태로 시작해요. 이후 만들어지는 모든 컴포넌트가 폰트, 컬러, spacing
 규칙을 알아서 물려받고요.
 
 </Lang>
@@ -460,7 +460,7 @@ A few minutes later, Claude Design produced a high-fidelity mockup that faithful
 
 <Lang locale="ko">
 
-이 단계의 반복 속도가 정말 빨랐어요. calendar grid가 너무 빽빽해 보이면 "time slot을 더
+이 단계의 반복 속도가 정말 빨랐어요. 캘린더 grid가 너무 빽빽해 보이면 "time slot을 더
 높이고, grid line weight를 줄이고, event block typography를 부드럽게 해줘"처럼 말로 방향만
 일러 주면 돼요. 몇 초 뒤에 고친 버전이 돌아와요.
 
@@ -482,8 +482,8 @@ The iteration cycle here was genuinely fast. When a component didn't look right 
 
 **Process map modules**
 첫 버전의 공정 단계는 라벨 붙은 상자 수준이었어요. 그래서 module마다 status indicator dot,
-WIP lot count badge, 은은한 selection highlight가 필요하다고 더 요청했죠. 바이브 디자인 두어
-번 만에 공정 모듈이 진짜 설비 cell처럼 느껴지기 시작했어요. 선택할 수 있고, 한눈에 들어오고,
+WIP lot count badge, 은은한 selection highlight가 필요하다고 더 요청했죠. 디자인 수정을 두어
+번 거치니 공정 모듈이 진짜 설비(cell)처럼 느껴지기 시작했어요. 선택할 수 있고, 한눈에 들어오고,
 정보는 빽빽한데 어수선하지 않은 모습으로요.
 
 **AI agent cards**
@@ -493,7 +493,7 @@ Violet accent의 톤을 잡는 데는 몇 번의 시도가 들었어요. 목표�
 차분함은 그대로예요.
 
 **Schedule calendar**
-제일 애먹인 패널은 calendar였어요. 초기 버전은 영락없는 Gantt chart였거든요. grid line을
+가장 애를 먹인 패널은 캘린더였어요. 초기 버전은 영락없이 간트 차트(Gantt chart) 같았거든요. grid line을
 대부분 걷어내고, time slot의 세로 여백을 늘리고, scheduled workflow를 bar 대신 둥근 card로
 바꿨어요. 그제야 Notion Calendar의 event 표현에 가까워졌어요.
 
@@ -566,14 +566,13 @@ Implement: Smart Factory OS.html
 
 <Lang locale="ko">
 
-Claude Design이 디자인 파일을 잠깐 호스팅하고, Claude Code가 그걸 읽어 와 구현하는 방식이에요.
+Claude Design이 디자인 파일을 임시로 호스팅하고, Claude Code가 그걸 불러와서 구현하는 방식이에요.
 
 Claude Code는 컴포넌트 구조를 잡고 selected module, detail panel view, calendar view toggle
 같은 interactive state를 이어 줬어요. Claude Design에서 넘어온 design token도 기반 스타일로
 자동 적용됐는데, color variable, border radius, font weight가 기대보다 훨씬 깔끔하게 넘어왔어요.
 
-왼쪽 agent panel에서 calendar로 드래그 앤 드롭하는 부분은 UX를 맞추느라 prompting이 조금 더
-들었어요. 그래도 interaction을 또렷하게 설명해 주니 기본 로직은 무난히 처리하더라고요.
+왼쪽 에이전트 패널에서 캘린더로 드래그 앤 드롭하는 부분은 원하는 UX를 구현하기 위해 프롬프트를 몇 번 더 다듬어야 했어요. 그래도 interaction을 또렷하게 설명해 주니 기본 로직은 무난히 처리하더라고요.
 
 예를 들면 이렇게요.
 
@@ -619,7 +618,7 @@ When the desired behavior is described concretely, Claude Code wires up the matc
   흐름이에요. 공정 모듈을 클릭하면 WIP count, equipment status, active alarm을 볼 수 있어요.
 - **Left (AI Agent 패널)**: agent와 workflow card가 놓여 있어요. Agent가 움직이는 액션엔 violet,
   일반 workflow엔 blue 계열을 썼어요.
-- **Right (Schedule)**: Notion 스타일 calendar예요. Scheduled run은 깔끔한 event block으로
+- **Right (Schedule)**: Notion 스타일 캘린더예요. Scheduled run은 깔끔한 event block으로
   표시되고, workflow 카테고리별로 색이 갈려요.
 
 전체 인터페이스는 처음 레퍼런스였던 항공 화물 대시보드의 감성을 공장 운영 화면에 옮겨 놓은
@@ -681,7 +680,7 @@ Export된 design context에 color와 spacing 정보가 충분해서 Claude Code�
 
 ### 다르게 해보고 싶은 점
 
-지금의 process map은 data-driven이라기보다 아직 그림에 가까워요. 실제 운영에 쓰려면 각
+지금의 공정 맵은 데이터 기반(data-driven)이라기보다 아직은 시각적인 프로토타입에 가까워요. 실제 운영에 쓰려면 각
 process module의 running, alarm, idle 상태를 MES backend에서 오는 live WebSocket 데이터로
 움직이는 구조가 필요할 거예요. 다음에 Claude Code와 다시 붙어 볼 만한 주제죠.
 
@@ -755,7 +754,7 @@ Total time from first prompt to working demo: roughly half a day.
 
 <Lang locale="ko">
 
-이 툴체인은 이런 유형의 작업에 꽤 실속이 있었어요. 특히 복잡하고 데이터가 많은 B2B
+이 툴체인은 이런 작업에 꽤 강력한 실효성이 있었어요. 특히 복잡하고 데이터가 많은 B2B
 인터페이스, 그러니까 디자인 언어가 정교해야 하고 컴포넌트 interaction이 분명해야 하는 운영형
 SaaS 화면에서 강점이 도드라졌어요. Claude Chat → Claude Design → Claude Code로 이어지는
 흐름은 디자인과 엔지니어링 사이에서 으레 생기는 소통 비용을 꽤 줄여줄 것 같아요 <span className="line-through">다만 Claude에 쓴 $110은 별도예요.</span>
