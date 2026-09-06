@@ -1,6 +1,6 @@
 ---
 title: Hand Pose Generation
-date: '2024-05-15'
+date: "2024-05-15"
 category: PROJECTS
 subcategory: logical
 medium: figure
@@ -11,6 +11,207 @@ keywords:
   - XGBoost
 lean: ml
 stack: Python · XGBoost
+locales:
+  - en
+  - ko
+defaultLocale: en
 ---
 
-[Published Paper](https://www.mdpi.com/2079-9292/13/10/1970)
+import { Lang } from "../utils/lang";
+import GradientBoostingDemo from "../components/GradientBoostingDemo";
+
+<p className="not-prose text-sm tracking-widest uppercase text-center text-gray-400 my-4">
+  five inputs · forty-five angles · nine thousand frames
+</p>
+
+<Lang locale="en">
+
+In September 2023, Professor [Eung-Joo Lee](https://ecse.engineering.arizona.edu/faculty-staff/faculty/eung-joo-lee) was looking for a computer science student with some AI experience for a hand-pose research project. A friend of mine put my name forward, I did one interview, and for the next eight months my week ended the same way: a Friday-evening meeting where I reported what I'd gotten working that week — and what I hadn't.
+
+The project became a published paper, [Machine Learning-Based Hand Pose Generation Using a Haptic Controller](https://www.mdpi.com/2079-9292/13/10/1970) (Electronics, 2024) — the first paper with my name on it.
+
+### Turning the arrow around
+
+Hand tracking usually means estimation: point a camera at a hand and work out its pose. Cameras are good at the overall shape of a hand, but weakest exactly where it matters — how far each finger is bent, and what to do when fingers hide each other. Our project ran the arrow the other way. The input isn't an image; it's a custom-built controller with five buttons, one per finger, each reading pressure as a value between 0.0 and 1.0. Each button also sits on a small motor, so the grip can push back against your fingers when your virtual hand grabs something.
+
+</Lang>
+
+<Lang locale="ko">
+
+2023년 9월, [이응주](https://ecse.engineering.arizona.edu/faculty-staff/faculty/eung-joo-lee) 교수님께서 손 포즈 연구를 함께할 AI 경험이 있는 학부생을 찾고 계셨습니다. 학교 친구의 추천으로 면접을 본 후 합류가 결정되었고, 그때부터 8개월 동안 제 한 주의 마무리는 늘 같았습니다. 매주 금요일 저녁마다 교수님과 마주 앉아 '이번 주에 성공한 것'과 '실패한 것'을 리뷰하는 주간 미팅이었죠.
+
+이 프로젝트는 [Machine Learning-Based Hand Pose Generation Using a Haptic Controller](https://www.mdpi.com/2079-9292/13/10/1970)라는 논문으로 출판되었습니다(Electronics, 2024). 제 이름이 처음으로 실린 논문이기도 해요.
+
+### 화살표를 반대로
+
+손 추적(Hand Tracking)이라고 하면 보통 카메라를 이용한 추정(estimation)을 떠올립니다. 하지만 카메라는 손의 전체 윤곽은 잘 잡아내도, 정작 중요한 세밀한 부분에는 취약합니다. 손가락 하나하나가 얼마나 굽었는지, 손가락이 서로를 가리는 순간엔 어떻게 처리해야 할지 같은 문제 말입니다. 저희 연구는 화살표를 반대로 돌렸습니다. 입력은 카메라 영상이 아니라 자체 제작한 하드웨어 컨트롤러 데이터입니다. 손가락마다 버튼이 하나씩, 총 다섯 개가 달려 있고 누르는 압력에 따라 0.0에서 1.0 사이 값을 읽습니다. 버튼마다 모터가 장착되어 있어, 가상 공간에서 물체를 쥐면 손끝에 물리적인 반발력을 주기도 하고요.
+
+</Lang>
+
+<img
+  src="/images/projects/hand-pose-generation/controller.jpg"
+  alt="The in-house haptic controller from four angles, with dimensions: 182.71mm tall, five finger buttons along the grip"
+/>
+
+<Lang locale="en">
+
+The question we set out to answer: from just those five numbers, can a model generate the whole hand — fifteen finger joints, three Euler angles each, forty-five values per frame — smoothly enough to pass for a real hand in VR?
+
+### The data factory
+
+The data side belonged to the other half of the team. Professor Jongin Choi and Daniel Oh wired the controller into Unity and built a pipeline that recorded poses at 90 frames per second, pairing the five input values with the forty-five joint angles — saved and labeled automatically, no motion-capture studio, no hand annotation. Honestly, I barely overlapped with them: the four of us met maybe once a month for an hour. To me their pipeline really was a factory — datasets arrived, in sizes from 1,000 to 9,000 frames in steps of 2,000, in exactly the tabular shape a model wants.
+
+</Lang>
+
+<Lang locale="ko">
+
+우리가 던진 질문은 단순했습니다. 숫자 5개만 가지고 모델이 손 전체의 포즈(손가락 관절 15개, 각각의 오일러 각 3개, 프레임당 총 45개의 값)를 생성해 낼 수 있을까? 그것도 VR 환경에서 진짜 손처럼 보일 만큼 매끄럽게 말이죠.
+
+### Unity로 만든 학습 데이터
+
+데이터 수집은 팀의 다른 연구진(최종인 교수님, Daniel Oh)이 전담했습니다. 컨트롤러를 Unity 환경에 연동하여, 초당 90프레임의 속도로 5개의 입력값과 45개의 관절 각도 데이터를 실시간으로 동기화하는 파이프라인을 구축했죠. 모션 캡처 스튜디오도, 번거로운 수동 라벨링도 전혀 필요 없는 시스템이었습니다.
+
+사실 저는 이 파이프라인을 구축한 분들과 자주 만나지는 않았습니다. 넷이서 한 달에 한 번, 한 시간쯤 모이는 게 전부였거든요. 하지만 이 자동화 시스템 덕분에 저는 모델링에만 온전히 집중할 수 있었습니다. 1,000프레임부터 시작해 2,000프레임 단위로 커지는 데이터셋이, 모델에 당장 집어넣기 좋은 깔끔한 정형 데이터(tabular data) 형태로 척척 준비되었으니까요.
+
+</Lang>
+
+<img
+  className="wide"
+  src="/images/projects/hand-pose-generation/unity-pipeline.jpg"
+  alt="Unity editor during data generation: a rigged 3D hand in the scene view, and the Inspector listing every finger joint field from Thumb Metacarpal to Pinky Tip"
+/>
+
+<Lang locale="en">
+
+### Picking the model
+
+I didn't go straight to XGBoost. My notes from that September read like a lineup of suspects: RNNs, a three-layer MLP, the point-cloud family (PointNet, PointNet++, PointCNN, DGCNN), even a VAE-GAN. I studied them one page at a time and crossed them out one page at a time.
+
+</Lang>
+
+<Lang locale="ko">
+
+### 최적의 모델 찾기
+
+처음부터 XGBoost로 직행한 건 아니었습니다. 그해 9월의 노트를 넘겨 보면 후보 모델이 줄줄이 나옵니다. RNN, 3층 MLP, 포인트 클라우드 쪽의 PointNet 계열, 심지어 VAE-GAN까지. 하나씩 논문을 리뷰했고, 하나씩 지워 나갔죠.
+
+</Lang>
+
+<div className="media-duo">
+  <img
+    src="/images/projects/hand-pose-generation/notes-xgboost-1.jpg"
+    alt="Handwritten study notes on XGBoost: ensemble and boosting definitions, CART, the additive prediction equation and the regularized objective"
+  />
+  <img
+    src="/images/projects/hand-pose-generation/notes-xgboost-2.jpg"
+    alt="Handwritten derivation pages: expanding the objective with MSE and a Taylor expansion, ending at the gradient and hessian terms"
+  />
+</div>
+
+<Lang locale="en">
+
+What survived the elimination was decided by the data's shape. Five numeric features in, forty-five numeric targets out, a few thousand rows — that's not deep-learning territory; it's the home turf of gradient-boosted trees. XGBoost trains in seconds, works well on small tabular datasets, and is light enough to run in real time on modest hardware, which matters if the model is going to live inside a VR loop. We also stayed with Euler angles instead of quaternions: each frame is predicted independently, with no interpolation between poses, so quaternions' strengths mattered less than their jitter.
+
+### What XGBoost actually does
+
+Think of golf. The goal is to get the ball in the hole. Your first shot just sends it roughly in the right direction. And from the second shot on, you don't start over from the tee — you only look at the distance left between the ball and the hole, and play that. The third shot plays whatever is still left. Where the ball ends up is simply all your shots added together.
+
+That's the whole algorithm. In XGBoost, one shot is one tree — and a tree here is nothing scary, just a game of twenty questions: "is the thumb pressure above 0.5? then answer 3.2, otherwise 1.1." The first tree guesses roughly; the second tree only learns the gap between that guess and the answer; the third learns what's still left. The one formula in this post says exactly the golf sentence:
+
+$$\hat{y}^{(t)} = \hat{y}^{(t-1)} + f_t(x)$$
+
+In words: where the ball is now = where it was + this shot.
+
+One problem remains. Stack up hundreds of trees and the model can simply memorize the data — the student who memorized last year's exam answers: perfect on practice problems, lost on a new one. So XGBoost fines each tree for asking too many questions, and the size of that fine is a number called λ. Remember it; it comes back in a moment.
+
+Try it below: the gray dots are data, the blue line is where all the shots so far have brought the ball, and the red dots in the bottom panel are the distance still left to the hole — what the next tree gets to play. Keep adding trees and watch that distance shrink toward zero.
+
+</Lang>
+
+<Lang locale="ko">
+
+소거법의 끝에서 결국 데이터의 형태가 모델을 결정지었습니다. 입력 피처 5개, 출력 타겟 45개, 그리고 수천 개 남짓한 행. 이런 데이터에는 딥러닝보다 그래디언트 부스팅(gradient boosting)이 제격입니다. XGBoost는 몇 초면 학습이 끝나고, 작은 정형 데이터에 강하고, 평범한 하드웨어에서도 실시간으로 돌아갈 만큼 가볍습니다. 모델이 VR 루프 안에서 살아야 하니 중요한 조건이었죠. 각도 표현도 쿼터니언 대신 오일러 각을 그대로 썼습니다. 프레임마다 독립적으로 예측하므로 포즈 사이의 보간(interpolation)이 없고, 그렇다면 쿼터니언의 장점보다는 지터(jitter) 같은 부작용이 더 우려되었기 때문입니다.
+
+### 그래서 XGBoost가 뭐냐면
+
+골프를 생각하면 쉽습니다. 목표는 공을 홀에 넣는 것입니다. 첫 샷은 일단 홀 방향으로 크게 보냅니다. 중요한 건 두 번째 샷부터입니다. 처음부터 다시 치는 게 아니라, 지금 공에서 홀까지 남은 거리만 보고 칩니다. 세 번째 샷 역시 남은 거리만 계산해서 치고요. 공이 최종적으로 놓이는 자리는 결국 지금까지 친 모든 샷을 합친 결과입니다.
+
+이게 알고리즘의 전부입니다. XGBoost에서는 샷 하나가 트리(Tree) 하나입니다. 여기서 결정 트리라는 것도 거창한 게 아니라 그냥 스무고개와 같습니다. "엄지 압력이 0.5보다 큰가요? 그러면 3.2, 아니면 1.1" 같은 질문 몇 개로 숫자 하나를 내놓는 규칙이죠. 첫 트리가 대충 맞히면, 두 번째 트리는 그 추측과 정답 사이의 차이만 배웁니다. 이 글의 유일한 수식이 방금 그 골프 문장 그대로고요.
+
+$$\hat{y}^{(t)} = \hat{y}^{(t-1)} + f_t(x)$$
+
+말로 풀어쓰면, '현재 공의 위치 = 아까 위치 + 이번 샷'이 됩니다.
+
+남은 문제는 하나입니다. 트리를 수백 개 쌓으면 모델이 데이터를 통째로 외워버릴 수 있습니다. 기출문제 답만 달달 외운 학생처럼, 연습 문제는 만점이지만 새로운 문제 앞에서는 무너지는 셈이죠. 그래서 XGBoost는 트리가 너무 많은 질문을 던지면 벌점을 매깁니다. 그 벌점의 강도를 조절하는 숫자가 바로 λ(람다)입니다.
+
+아래에서 직접 확인해 보세요. 회색 점은 데이터, 파란 선은 지금까지의 샷들이 공을 옮겨 놓은 자리, 아래 패널의 빨간 점은 홀까지 남은 거리입니다. 다음 트리가 감당해야 할 몫이죠. 트리를 더할수록 그 거리가 0으로 줄어드는 게 보일 겁니다.
+
+</Lang>
+
+<GradientBoostingDemo />
+
+<Lang locale="en">
+
+Most of my time went into two things, and I remember them because they refused to end: overfitting and hyperparameter tuning. With datasets this small, the model memorizes if you let it. I leaned on that fine and ran grid search over the number of rounds, the tree depth, and the L2 lambda — again and again — until the sweet spot emerged: 200 rounds, depth 3, λ = 10. Written down, that's one sentence. Lived through, it was most of my Friday-evening reports.
+
+### How to read a scary number
+
+To score the model, we generated 2,000 fresh frames with the controller and compared generated poses against real ones joint by joint: the angle between finger-bone vectors, and joint positions measured from the wrist. The errors are summed over all 2,000 frames and all 15 joints, which makes them look terrifying at first — the model trained on 1,000 samples has a cumulative angle error of 93,232 degrees. Divide by frames and joints, though, and it's 3.1 degrees per joint; at 3,000 training samples it drops to about 1.1 degrees, an error you can't see.
+
+The curve told a clean story: more data, less error — from 93,232 down to 17,757 at 9,000 samples — but with diminishing returns, and past ten thousand samples the improvement stops being worth the frames. In the side-by-side sequences, the 1,000-sample hands visibly miss (an index finger bending the wrong way); at 3,000 you have to squint; at 9,000, telling generated from real is genuinely hard.
+
+</Lang>
+
+<Lang locale="ko">
+
+가장 많은 시간을 쏟은 부분은 오버피팅 제어와 하이퍼파라미터 튜닝이었습니다. 데이터셋 크기가 작다 보니 방치하면 모델이 정답을 외워버렸거든요. 앞서 말한 벌점(λ)을 활용해, 라운드 수와 트리 깊이, L2 람다 값을 바꿔 가며 그리드 서치를 쉼 없이 돌렸습니다. 그렇게 찾아낸 최적점이 '200라운드, 깊이 3, λ=10'입니다. 글로 적으면 짧은 한 줄이지만, 저 한 줄을 찾아내는 것이 8개월간 금요일 보고의 전부였습니다.
+
+### 누적 오차의 진짜 의미
+
+모델의 평가는 이렇게 진행했습니다. 컨트롤러로 새로운 데이터 2,000프레임을 생성한 뒤, 생성된 포즈와 실제 포즈를 관절 단위로 비교했습니다. 손가락 뼈 벡터 사이의 각도, 그리고 손목을 기준으로 측정한 관절 위치 오차를 구했죠. 이 오차를 2,000프레임과 15개 관절에 대해 모두 더하다 보니 표면적인 숫자만 보면 꽤 위압적입니다. 1,000개의 샘플로 학습한 모델의 누적 각도 오차가 무려 93,232도에 달했거든요.
+
+하지만 이를 전체 프레임과 관절 수로 나누어보면 관절당 평균 오차는 약 3.1도에 불과합니다. 3,000샘플에서는 1.1도까지 떨어지는데, 이는 육안으로는 거의 인지하기 힘든 수준입니다.
+
+곡선은 정직했습니다. 데이터가 늘어날수록 오차가 줄어듭니다. 93,232에서 시작해 9,000샘플에서는 17,757까지 떨어졌죠. 다만 갈수록 감소폭이 둔화되어, 10,000샘플을 넘기면 데이터를 더 추가해도 성능 향상 폭이 미미해집니다. 결과물을 나란히 비교해 보면 1,000샘플로 만든 손은 어색한 티가 납니다. 검지가 엉뚱한 방향으로 굽는 식으로요. 반면 3,000샘플은 눈을 가늘게 뜨고 봐야 오차가 보이고, 9,000샘플쯤 되면 어느 쪽이 실제 데이터인지 분간하기 어렵습니다.
+
+</Lang>
+
+<div className="media-duo">
+  <img
+    src="/images/projects/hand-pose-generation/angle-error.png"
+    alt="Cumulative angle error versus training-set size: 93,232 degrees at 1,000 samples, falling to 17,757 at 9,000"
+  />
+  <img
+    src="/images/projects/hand-pose-generation/position-error.png"
+    alt="Cumulative position error versus training-set size, in world and local coordinates, both falling as the dataset grows"
+  />
+</div>
+
+<img
+  src="/images/projects/hand-pose-generation/pose-grid.jpg"
+  alt="Grid of hand poses: ground truth in the first column, then poses generated by models trained on 1,000 through 9,000 samples — the 1,000 column has visible errors circled in red, the 9,000 column is nearly identical to ground truth"
+/>
+
+<Lang locale="en">
+
+### Looking back
+
+What worked was picking a tool that fit the problem. Nothing here needed a neural network, and with data coming straight out of Unity and retraining taking seconds, the experiment loop stayed fast. The results already point at the next step: because each pose is predicted independently, the generated motion still carries tiny frame-to-frame tremors, and a time-series model that looks at a window of frames is the natural fix.
+
+</Lang>
+
+<Lang locale="ko">
+
+### 돌아보면
+
+이 프로젝트에서 가장 잘한 일을 꼽자면, 문제의 본질에 맞는 도구를 선택했다는 점입니다. 딥러닝 신경망이 굳이 필요 없는 문제였고, Unity에서 데이터가 나오는 즉시 몇 초 만에 모델을 재학습할 수 있어 실험 사이클을 매우 빠르게 돌릴 수 있었습니다.
+
+다음 연구의 방향성도 이미 결과를 통해 명확히 드러났습니다. 프레임을 독립적으로 예측하다 보니 생성된 손동작에서 미세한 떨림(Tremor)이 발생하는데, 여러 프레임을 윈도우(window) 단위로 묶어서 처리하는 시계열 모델을 도입하는 것이 자연스러운 다음 단계가 될 것입니다.
+
+</Lang>
+
+<p className="not-prose text-xs text-gray-400">
+  Figures from Choi, Lee, Oh &amp; Lee, "Machine Learning-Based Hand Pose
+  Generation Using a Haptic Controller", Electronics 13(10):1970, 2024 (CC BY
+  4.0).
+</p>

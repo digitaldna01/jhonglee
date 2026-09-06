@@ -80,7 +80,9 @@
   display: grid;
   gap: 12px;
   align-items: start;
-  margin: 1.6em 0;
+  /* auto keeps the content-width case centred in the column (margin shorthand
+     would otherwise beat .prose > *'s margin-inline: auto on specificity) */
+  margin: 1.6em auto;
 }
 .post-body .prose .media-duo { grid-template-columns: 1fr 1fr; }
 .post-body .prose .media-duo.golden { grid-template-columns: 2fr 1fr; }
@@ -93,7 +95,7 @@
   display: flex;
   gap: 10px;
   overflow-x: auto;
-  margin: 1.6em 0;
+  margin: 1.6em auto;
   scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
 }
