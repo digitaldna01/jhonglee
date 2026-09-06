@@ -16,7 +16,7 @@
     {
       "q": "Have you used XGBoost?",
       "expect": [
-        "handPoseEstimation"
+        "handPoseGeneration"
       ]
     },
     {
@@ -72,7 +72,7 @@
     {
       "q": "gesture recognition in real time",
       "expect": [
-        "handPoseEstimation"
+        "handPoseGeneration"
       ]
     }
   ],
@@ -92,7 +92,7 @@
     {
       "q": "XGBoost 써본 적 있어?",
       "expect": [
-        "handPoseEstimation"
+        "handPoseGeneration"
       ]
     },
     {
@@ -147,7 +147,7 @@
     {
       "q": "실시간 손동작 인식",
       "expect": [
-        "handPoseEstimation"
+        "handPoseGeneration"
       ]
     },
     {
@@ -237,7 +237,7 @@
       "prev": "Tell me about your quantum computing project",
       "q": "Have you used XGBoost?",
       "expect": [
-        "handPoseEstimation"
+        "handPoseGeneration"
       ]
     },
     {
@@ -302,7 +302,7 @@
       "prev": "XGBoost 써본 적 있어?",
       "q": "거기서 데이터는 어떻게 모았어?",
       "expect": [
-        "handPoseEstimation"
+        "handPoseGeneration"
       ]
     },
     {

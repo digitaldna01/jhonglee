@@ -5,10 +5,11 @@
     <meta name="author" content="Jae Hong Lee" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>jhonglee</title>
-    <!-- Apply persisted theme before first paint to avoid a flash.
-         Default is light; prefers-color-scheme is deliberately not consulted. -->
+    <!-- Apply the theme before first paint to avoid a flash. A stored choice
+         (the header toggle) wins; otherwise follow the OS setting. -->
     <script>(function(){try{var t=localStorage.getItem('pf-theme');
-      document.documentElement.setAttribute('data-theme',(t==='light'||t==='dark')?t:'light');
+      if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+      document.documentElement.setAttribute('data-theme',t);
     }catch(e){}})();</script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />

@@ -27,7 +27,7 @@ def test_mine_skips_known_questions_pairs_followups_and_flags():
         _row("Who are you?", ["bio"]),  # already in the golden set
         _row("What did you build with k-means?", ["cogsAndGears", "kmeansVisualizer"], t=100, score=0.32),  # >30 min: fresh
         _row("How did you initialise the centroids?", ["kmeansVisualizer"], t=101),
-        _row("How did you initialise the centroids?", ["handPoseEstimation"], t=102, model="extractive fallback", score=0.1),
+        _row("How did you initialise the centroids?", ["handPoseGeneration"], t=102, model="extractive fallback", score=0.1),
         _row("블렌더로 만든 거 있어?", ["cogsAndGears"], t=300),  # hours later: not a follow-up
     ]
     cands = mg.mine(rows, GOLDEN)

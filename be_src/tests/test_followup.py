@@ -51,7 +51,7 @@ def test_retrieve_anchors_ellipsis_without_sticking_on_topic_switch():
         query, anchor = await rewrite.search_plan("Have you used XGBoost?", [{"role": "user", "content": "…"}], topic=quantum)
         assert query is not None and anchor is None
         switched = await retrieval.retrieve(query, k=4, context_title=anchor)
-        assert switched[0]["id"] == "handPoseEstimation"
+        assert switched[0]["id"] == "handPoseGeneration"
 
     asyncio.run(run())
 
