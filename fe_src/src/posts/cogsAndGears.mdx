@@ -1,21 +1,180 @@
 ---
 title: Cogs and Gears
-date: '2025-03-09'
+date: "2025-03-09"
 category: PROJECTS
 subcategory: visual
 medium: artwork
-thumbnail: /images/projects/cogs-and-gears/thumbnail.svg
+thumbnail: /images/projects/cogs-and-gears/cover.jpg
 excerpt: >-
-  I translated the poem's central metaphor into an interactive experience — where each verse
-  represents a small, moving gear, gradually assembling into a complete heart.
+  An interactive reading of Ryn's poem COGS AND GEARS — each verse you read adds
+  one gear, and by the last line the gears have assembled a mechanical heart.
 keywords:
   - Digital Narrative
   - UX/UI Design
   - Blender
+  - three.js
 lean: design
-stack: Blender · Web
+stack: Blender · React · three.js
+locales: [en, ko]
+defaultLocale: en
 ---
 
-Ryn's *COGS AND GEARS* explores the mechanical and emotional forces that drive human thought and devotion. Inspired by this, I translated the poem's central metaphor into an interactive experience — where each verse represents a small, moving gear, gradually assembling into a complete heart.
+import { Lang } from "../utils/lang";
+import HeartAssembly from "../components/HeartAssembly";
 
-[View Project](https://digitaldna01.github.io/digital-narrative/)
+<p className="not-prose">one verse · one gear · one heart</p>
+
+<Lang locale="en">
+Cogs spinning without rest, gears lodged in place, the whole contraption turning like clockwork toward one person. That is how *COGS AND GEARS* describes a mind in love. All I know about the writer is the name Ryn — no bio, no other works, nothing I could track down.
+
+I built the poem as a site. Each verse you read assembles another part, until the final line completes a mechanical heart. It was a solo project, so the entire pipeline was mine — visual language, Blender modeling, React, and sound design.
+
+</Lang>
+<Lang locale="ko">
+톱니는 쉬지 않고 돌고, 기어는 제자리에 맞물려 있고, 모든 부품이 시계태엽처럼 오직 한 사람을 향해 돌아가요. *COGS AND GEARS*는 사랑에 빠진 마음을 이렇게 그린 시예요. 작가에 대해 아는 건 Ryn이라는 이름뿐. 소개도 다른 작품도 끝내 못 찾았어요.
+
+이 시를 웹사이트로 만들었어요. 구절을 읽을 때마다 부품이 하나씩 조립되고, 마지막 구절에서 기계 심장이 완성돼요. 1인 프로젝트라 시각 언어 정의부터 블렌더 모델링, React 구현, 사운드 디자인까지 전부 제 몫이었고요.
+
+</Lang>
+
+---
+
+<Lang locale="en">
+### Interaction: One verse at a time
+
+The site opens with nothing but a small title on a dark screen. Click it, and the letters wrap themselves into a ring, turning the title into the first gear. A mechanical click, then the sound of gears catching.
+
+From there, the mouse wheel acts as a winding crank. One turn advances one verse, each paired with its own metallic transition sound catching like a ratchet. The mechanical vocabulary the poem leans on — _cogs_, _gears_, _spin_, _clockwork_ — stays highlighted as the verses go by.
+
+On the right half of the screen, every passing verse adds a new part in midair, and the model slowly takes the shape of a heart.
+
+</Lang>
+<Lang locale="ko">
+### 인터랙션: 한 번에 한 구절씩
+
+사이트에 들어가면 어두운 화면 한가운데에 작은 제목 하나만 떠 있어요. 클릭하면 글자들이 둥글게 말리면서 첫 번째 기어가 돼요. 철컥하는 기계음과 함께 기어 맞물려 도는 소리가 이어지고요.
+
+그다음부터는 마우스 휠이 태엽 손잡이예요. 한 칸 감을 때마다 구절이 하나 넘어가고, 그때마다 조금씩 다른 금속음이 래칫(ratchet)처럼 딸깍 걸려요. 시가 기대고 있는 단어들, cogs·gears·spin·clockwork는 지나간 뒤에도 강조된 채 남아 있고요.
+
+그리고 화면 오른쪽. 구절이 넘어갈 때마다 허공에 부품이 하나씩 붙으면서 서서히 심장 모양이 잡혀가요.
+
+</Lang>
+
+<div className="media-duo wide">
+  <img
+    src="/images/projects/cogs-and-gears/intro-title.jpg"
+    alt="The opening screen — a dark gradient and one small title, waiting to be clicked"
+  />
+  <img
+    src="/images/projects/cogs-and-gears/verse-one.jpg"
+    alt="The reading wheel on the left; on the right, the title wrapped around the first gear"
+  />
+</div>
+
+---
+
+<Lang locale="en">
+### Storyboard
+
+I mapped out the visual language in Figma first. The storyboard named the concept a clockwise universe — drawing heavily on industrial-revolution imagery — and listed six core elements: rotation, interlock, build-up, automation, engagement, and the heart.
+
+The color palette was strictly grays and rust: polished steel against oxidized bronze. This is exactly the palette the site ended up wearing, from the gray gradients and the brass title gear to the rust-orange pipes.
+
+The typography pairs Rocinante Titling Variable for the headings with Futura for the body. The Figma file is also where the poem sits fully transcribed, marked Ryn, Oct 2014 — the only trace of the author I have. Even in these early mockups, the one idea that survived every revision is already visible: lines of text bending into circles, physically becoming gears themselves.
+
+</Lang>
+<Lang locale="ko">
+### 스토리보드
+
+제일 먼저 Figma에서 시각 언어부터 잡았어요. 스토리보드에는 clockwise universe(시계방향의 우주)라는 콘셉트 아래, 산업혁명 이미지에서 가져온 핵심 요소 여섯 개(Rotation, Interlock, Build Up, Automation, Engagement, Heart)를 정리해 뒀어요.
+
+컬러 팔레트는 회색과 녹빛으로 좁혔어요. 잘 닦인 강철과 산화된 청동을 표현하고 싶었달까? 이 팔레트가 잿빛 그라데이션, 황동 타이틀 기어, 녹슨 주황빛 파이프까지 사이트의 최종 색으로 그대로 이어졌어요.
+
+타이포그래피는 제목용 Rocinante Titling Variable에 본문용 Futura를 짝지었어요. 시 전문도 여기 옮겨 적어 뒀는데, Ryn, Oct 2014라는 표기가 제가 아는 원작자의 유일한 흔적이에요. 시의 문장이 둥글게 휘어져 글자 자체가 기어가 된다는 아이디어는 이 초기 목업부터 완성본까지 한 번도 바뀌지 않았어요.
+
+</Lang>
+
+<img
+  src="/images/projects/cogs-and-gears/figma-storyboard.png"
+  alt="The Figma storyboard — a clockwise universe: key elements, color board, and a mood map from 'what' out to visual language"
+/>
+
+<div className="media-duo wide">
+  <img
+    src="/images/projects/cogs-and-gears/figma-typography.png"
+    alt="The type spec — Rocinante Titling Variable over Futura, with the poem transcribed and marked Ryn, Oct 2014"
+  />
+  <img
+    src="/images/projects/cogs-and-gears/figma-mockup.jpg"
+    alt="An early Figma mockup — circular text experiments over a reference illustration, before the Blender heart existed"
+  />
+</div>
+
+---
+
+<Lang locale="en">
+### 3D Modeling & React integration
+
+The heart was modeled in Blender entirely out of mechanical components — spur gears, worm gears, pipe elbows, and wye joints, using about forty-five separate meshes. The arteries are bent pipes, the chambers are discs and cylinders, and the small brass gear that initiates the assembly carries the title engraved on its face. I intentionally excluded organic shapes; if the poem builds a heart out of machinery, the 3D model had to follow suit.
+
+The bridge between the 3D model and the React code relies on a simple structuring rule in Blender. Every part is parented to one of twenty-five empties, labeled Stage1 through Stage25. The site simply renders stages 1 through n when the reader scrolls to verse n. One verse exactly corresponds to one gear cluster.
+
+</Lang>
+<Lang locale="ko">
+### 3D 모델링과 React 연동
+
+심장은 블렌더에서 기계 부품으로만 만들었어요. 평기어, 웜기어, 파이프 엘보, Y자 조인트까지 메시 45개. 구부린 파이프가 동맥이 되고, 원반과 원기둥이 심방이 돼요. 조립을 여는 작은 황동 기어에는 시 제목을 양각으로 새겨 넣었고요. 유기적인 형태는 일부러 하나도 안 넣었어요. 시가 기계로 심장을 쌓아 올리니까, 모델도 그래야 했죠.
+
+이 모델을 React에서 그대로 다룰 수 있는 건 블렌더 쪽 규칙 하나 덕분이에요. 부품 45개를 Empty 객체 스물다섯 개(Stage1~Stage25)에 나눠 묶고, 화면에서는 독자가 n번째 구절을 읽을 때 1부터 n까지만 보여줘요. 구절 하나가 기어 뭉치 하나인 셈이에요.
+
+</Lang>
+
+<img
+  src="/images/projects/cogs-and-gears/verse-mid.jpg"
+  alt="Mid-poem — plates, joints, and pipes gathering around the title gear"
+/>
+
+<Lang locale="en">
+  The interactive model below is the exact GLB file loaded by the site. Drag to
+  orbit the view, or press *assemble* to watch all twenty-five stages build from
+  scratch.
+</Lang>
+<Lang locale="ko">
+  아래 모델이 사이트가 로드하는 바로 그 GLB 파일이에요. 드래그하면 돌아가고,
+  *assemble*을 누르면 스물다섯 단계가 처음부터 다시 조립돼요.
+</Lang>
+
+<HeartAssembly />
+
+---
+
+<Lang locale="en">
+### The final verse
+
+The poem concludes by facing the person it was always turning toward — "Cogs and gears spin only for you in this very same place..." — and on that precise line, the final gear locks into place, completing the heart. That was the core design philosophy: the poem doesn't merely describe a heart; it assembles one. Finishing the poem is what brings the machine together.
+
+</Lang>
+<Lang locale="ko">
+### 마지막 구절
+
+시는 내내 향하던 사람 앞에서 끝나요. "Cogs and gears spin only for you in this very same place..." (톱니와 기어는 바로 이곳에서 오직 당신만을 위해 돌아가요). 이 구절에 닿는 순간 마지막 기어 뭉치가 제자리에 걸리고, 심장이 완성돼요. 처음부터 이게 설계였어요. 시가 심장을 묘사하는 게 아니라 조립하는 것. 그러니 시를 끝까지 읽는 일이 곧 마지막 조립이 되는 거죠.
+
+</Lang>
+
+<img
+  src="/images/projects/cogs-and-gears/final-verse.jpg"
+  alt="The last verse, and the finished heart"
+/>
+
+<Lang locale="en">
+  *COGS AND GEARS* is by Ryn, a poet I couldn't trace — if you happen to know
+  the author, let me know. The site is [live
+  here](https://digitaldna01.github.io/digital-narrative/), and the source is on
+  [GitHub](https://github.com/digitaldna01/digital-narrative).
+</Lang>
+<Lang locale="ko">
+  *COGS AND GEARS*는 Ryn의 시인데, 작가를 끝내 찾지 못했어요. 혹시 작가를 아는
+  분이 있다면 알려 주세요. 사이트는
+  [여기서 돌아가고](https://digitaldna01.github.io/digital-narrative/), 소스는
+  [GitHub](https://github.com/digitaldna01/digital-narrative)에 있어요.
+</Lang>
