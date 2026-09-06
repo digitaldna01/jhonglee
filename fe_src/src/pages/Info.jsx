@@ -28,6 +28,21 @@ export default function Info() {
   const graphData = useGraphData();
   const [activeCite, setActiveCite] = useState(null);
   const composerRef = useRef(null);
+  const hoverChangedAt = useRef(0); // on touch, a tap on an unnamed dot reveals first, goes second
+
+  const onMapHover = useCallback((id) => {
+    hoverChangedAt.current = performance.now();
+    setActiveCite(id);
+  }, []);
+
+  // a still click (not a drag — the graph tells them apart) opens the node's page;
+  // the reader came from the map/chat, so the post's back link says "back to chat"
+  const onMapSelect = useCallback((id) => {
+    const narrow = window.matchMedia('(max-width: 720px)').matches;
+    if (narrow && performance.now() - hoverChangedAt.current < 400) return;
+    const url = graphData?.projects.find((p) => p.id === id)?.url;
+    if (url) navigate(url, { state: { from: 'chat', sid: chat.sessionId } });
+  }, [graphData, navigate, chat.sessionId]);
 
   // non-scrolling page + transparent navbar while this route is mounted
   useEffect(() => {
@@ -63,7 +78,8 @@ export default function Info() {
           introActive={!chat.inChat}
           projects={graphData.projects}
           edges={graphData.edges}
-          onHover={setActiveCite}
+          onHover={onMapHover}
+          onSelect={onMapSelect}
           graphRef={graphRef}
         />
       )}
