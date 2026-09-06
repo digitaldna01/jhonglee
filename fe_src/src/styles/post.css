@@ -113,6 +113,69 @@
   .post-body .prose .media-strip img { height: 180px; }
 }
 
+/* ---- Exhibit — a museum wall (visualArtPortfolio) --------------------
+   <div className="exhibit wide">        one artwork hung on a wall panel
+   <div className="exhibit matted wide"> works on paper: white mat + thin frame
+   The label goes in a <div className="placard"> inside each Lang block.
+   Light theme is the day gallery; dark theme is the night opening. */
+.post-body .prose .exhibit {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* a soft ceiling spot on a warm plaster wall */
+  background:
+    radial-gradient(90% 130% at 50% -10%, rgb(255 253 248 / 0.9), transparent 65%),
+    #eae6de;
+  border: 1px solid var(--hairline);
+  border-radius: 4px;
+  padding: clamp(28px, 7vw, 72px) clamp(20px, 5vw, 56px);
+  margin: 1.6em auto 0.9em;
+}
+.post-body .prose .exhibit img {
+  margin: 0;
+  width: auto;
+  max-width: 100%;
+  max-height: min(68vh, 540px);
+  /* stretcher-bar edge plus the room's shadow */
+  box-shadow:
+    0 1px 2px rgb(30 25 16 / 0.3),
+    0 14px 30px -10px rgb(30 25 16 / 0.35);
+}
+.post-body .prose .exhibit.matted img {
+  background: #fdfdfb;
+  padding: clamp(12px, 3vw, 26px);
+  border: 1px solid #4a463d;
+}
+[data-theme="dark"] .post-body .prose .exhibit {
+  background:
+    radial-gradient(90% 130% at 50% -10%, rgb(220 228 255 / 0.08), transparent 65%),
+    #101319;
+}
+[data-theme="dark"] .post-body .prose .exhibit img {
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.6),
+    0 16px 34px -10px rgb(0 0 0 / 0.7);
+}
+/* the placard: narrow, quiet, a hairline rule like a plaque's top edge */
+.post-body .prose .placard {
+  max-width: 27em;
+  margin: 0 auto 2.4em;
+  border-top: 1px solid var(--hairline);
+  padding-top: 0.85em;
+  font-size: 0.93em;
+  line-height: 1.65;
+  color: var(--fg-2);
+}
+.post-body .prose .placard > p { margin: 0 0 0.5em; }
+.post-body .prose .placard > p:first-child em {
+  font-style: normal;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.82em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
 /* ── Post meta + language toggle ────────────────────────── */
 .post-meta-row {
   display: flex;
