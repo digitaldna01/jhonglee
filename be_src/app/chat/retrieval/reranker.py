@@ -25,7 +25,11 @@ from __future__ import annotations
 
 import re
 
-CANDIDATES = 10  # pairs scored per question (~80 ms each on the Pi)
+CANDIDATES = 10  # pairs scored per question
+PASSAGE_MAX = 320  # chars of a passage the encoder reads. Attention cost grows
+# ~quadratically with length: on the Pi, 10 realistic pairs took 14s uncapped,
+# 0.86s at 320 (golden set identical — the title, heading and opening sentences
+# carry the topic, and post-writing-guide puts the answer in the first sentence).
 GATE = 0.0  # only pairs the cross-encoder scores at least this high may be promoted
 # (ms-marco logits on this corpus: clearly relevant pairs land at +3..+7, clearly
 # unrelated at -5..-9. Meta questions — "Who are you?", "무슨 일 해?" — score every
@@ -48,8 +52,9 @@ def applies(question: str) -> bool:
 
 
 def passage(title: str, heading: str | None, text: str) -> str:
-    """What the cross-encoder reads for one candidate: the chunk, located."""
-    return f"{title} / {heading or 'introduction'}: {text}"
+    """What the cross-encoder reads for one candidate: the chunk, located,
+    capped at PASSAGE_MAX chars (see above — latency, not quality)."""
+    return f"{title} / {heading or 'introduction'}: {text}"[:PASSAGE_MAX]
 
 
 def scores(encoder, question: str, passages: list[str]) -> list[float]:
