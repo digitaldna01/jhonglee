@@ -32,7 +32,10 @@ def test_search_query_uses_the_rewrite_and_falls_back_to_the_question(monkeypatc
     q = asyncio.run(rewrite.search_query("초기화 방법은 뭐였어?", history, topic="KMeans Clustering"))
     assert q == "How did the KMeans Clustering project initialise centroids?"  # quotes/whitespace stripped
     sent = asked[0][0]["content"]
-    assert "k-means로 뭘 만들었어?" in sent and 'about "KMeans Clustering"' in sent  # conversation + topic went along
+    # the conversation went along; no topic hint line — a wrong hint (the previous
+    # turn's top-RANKED doc, not what the answer discussed) outvoted a right
+    # conversation, so references resolve from the conversation alone
+    assert "k-means로 뭘 만들었어?" in sent and "previous answer was about" not in sent
 
     # English first question: no call at all
     assert asyncio.run(rewrite.search_query("What did you build with k-means?", [])) == "What did you build with k-means?"

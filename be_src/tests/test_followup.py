@@ -56,12 +56,14 @@ def test_retrieve_anchors_ellipsis_without_sticking_on_topic_switch():
     asyncio.run(run())
 
 
-def test_generation_topic_prefers_the_project_the_rewrite_named():
+def test_generation_topic_is_only_the_project_the_rewrite_named():
     from app.chat.service import topic_named
 
-    assert topic_named("How was the Cogs and Gears project made with Blender?", "Smart Factory Dashboard") == "Cogs and Gears"
-    assert topic_named("How was that made?", "Smart Factory Dashboard") == "Smart Factory Dashboard"
-    assert topic_named(None, "Smart Factory Dashboard") == "Smart Factory Dashboard"  # (service passes None on NO_RETRIEVAL)
+    assert topic_named("How was the Cogs and Gears project made with Blender?") == "Cogs and Gears"
+    # no title in the query → no hint: the previous turn's top-ranked doc is not
+    # always what the answer discussed, and a wrong hint outvotes the conversation
+    assert topic_named("How was that made?") is None
+    assert topic_named(None) is None
 
 
 def test_index_doc_competes_only_for_enumeration_questions():

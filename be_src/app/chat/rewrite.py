@@ -75,11 +75,11 @@ _EXAMPLES = (
     "→ What is the Design Study about?\n"
     "Latest message: 스톱모션 영상\n"
     "→ stop-motion video\n"
-    "<conversation>\nuser: Tell me about the Gill Sans project\nassistant: (about the stop-motion typography video)\n"
-    "</conversation>\n(The previous answer was about \"Gill Sans\".)\nLatest message: 그거 어떻게 찍었어?\n"
+    "<conversation>\nuser: Tell me about the Gill Sans project\nassistant: (about the Gill Sans stop-motion typography video)\n"
+    "</conversation>\nLatest message: 그거 어떻게 찍었어?\n"
     "→ How was the Gill Sans stop-motion video shot?\n"
     "<conversation>\nuser: 스마트 팩토리 대시보드 어떻게 만들었어?\nassistant: (about the Claude Design → Claude Code flow)\n"
-    "</conversation>\n(The previous answer was about \"Smart Factory Dashboard\".)\nLatest message: 시 가지고 만든 작업도 있어?\n"
+    "</conversation>\nLatest message: 시 가지고 만든 작업도 있어?\n"
     "→ Is there a work made from a poem?\n"
     "Latest message: 자기소개 좀 해줘\n"
     "→ Who is Jae Hong Lee and what does he do?"
@@ -113,11 +113,15 @@ async def _ask(model: str, messages: list[Any]) -> str:  # MessageParam-shaped d
     return "".join(block.text for block in response.content if block.type == "text")
 
 
-async def rewrite(question: str, history: list[dict], *, topic: str | None = None) -> str | None:
+async def rewrite(question: str, history: list[dict]) -> str | None:
     """The English search question for `question`, or None when the rewrite
     isn't available (no model, error) — callers then search the original.
-    `topic` is the title the previous answer was about (the server knows it
-    from the session's sources), so a bare "it" resolves without guessing."""
+    References ("it", "그거") resolve from the conversation alone: the
+    previous answers are in it verbatim. A server-side topic hint used to be
+    appended here, but it named the previous turn's top-RANKED doc, which is
+    not always what the answer talked about — a wrong hint outvoted a right
+    conversation (2026-09-05 log #18: hint "Design Study", answer plainly
+    Gill Sans, follow-up explained the wrong project 3/3; hintless: 3/3 right)."""
     settings = get_settings()
     if not settings.anthropic_api_key:
         return None
@@ -125,7 +129,6 @@ async def rewrite(question: str, history: list[dict], *, topic: str | None = Non
     convo = "\n".join(f"{t['role']}: {t['content']}" for t in turns)
     prompt = (
         (f"<conversation>\n{convo}\n</conversation>\n" if convo else "")
-        + (f"(The previous answer was about \"{topic}\".)\n" if topic else "")
         + f"Latest message: {question}"
     )
     try:
@@ -155,7 +158,7 @@ async def search_plan(question: str, history: list[dict], *, topic: str | None =
     0.005 of flipping to the previous topic)."""
     if not needs_rewrite(question, history):
         return question, None
-    rewritten = await rewrite(question, history, topic=topic)
+    rewritten = await rewrite(question, history)
     if rewritten == NO_RETRIEVAL:
         return None, None  # nothing to look up: the answer comes from the bio alone
     return (rewritten, None) if rewritten else (question, topic)
