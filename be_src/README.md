@@ -26,7 +26,7 @@ app/
   chat/                   /api/chat/* — the RAG pipeline
     router.py             HTTP only (SSE serialisation)
     service.py            retrieve → context → generate, as (event, payload) async events
-    retrieval/            package: __init__ (warmup, edges, retrieve) · hybrid (dense + keyword + follow-up anchor, score fusion) · edges (graph)
+    retrieval/            package: __init__ (warmup, edges, retrieve) · hybrid (dense + keyword + follow-up anchor, score fusion) · reranker (gated cross-encoder over the candidates; RERANK_MODEL="" disables) · edges (graph)
     embedding.py          fastembed loader + custom (non-catalog) model registry; run directly by the Dockerfile
     store.py              VectorStore: PgVectorStore (pgvector + tsvector) | MemoryStore (numpy + BM25 fallback); shared tokeniser
     ingest.py             corpus → chunk plan (content hash) → embed only what changed
@@ -55,6 +55,8 @@ scripts/usage_report.py   chat_logs → per-day questions / answered / tokens / 
                           counts answers sitting exactly at CHAT_MAX_TOKENS ("capped" = likely cut mid-sentence)
 scripts/eval_retrieval.py --rewrite  adds a "hybrid + rewrite" row: the production query rewrite (Korean / referring
                           follow-ups → English question) before ranking; needs ANTHROPIC_API_KEY, ~$0.01
+scripts/eval_retrieval.py --rerank   adds a "hybrid + rerank" row (the gated cross-encoder; with --rewrite also the
+                          full pipeline "hybrid + rewrite + rerank"); `--sweep` adds gate variants
 scripts/judge_answers.py  answer-quality A/B: two system prompts ("current" = prompts.SYSTEM_PROMPT, "v1" = the one it
                           replaced), same retrieval, Sonnet 5 judge (faithfulness per claim + pairwise rubric verdict
                           with shuffled order); scripts/eval_questions.json is the 27-question set, ~$0.55 a run

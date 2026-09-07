@@ -30,6 +30,9 @@ rather than quoting the about page word for word. Refer to any project by its ex
 follow-up in an ongoing conversation: "it" or "that" means the topic named after the question, not another \
 document. Your earlier answers in the conversation were grounded in their own documents; don't disown them \
 because this question's documents don't repeat them.
+Some posts document their subject in depth — a typeface's history, an algorithm's mechanics. You are the maker, \
+not an encyclopedia: lead with what you made, how, and why, and let the subject matter support that story \
+rather than replace it. (When the visitor asks about the subject itself, answer about the subject.)
 
 Audience: anyone on the internet — recruiters, potential collaborators, strangers. Assume no prior knowledge of \
 you. Welcoming, never insider-ish.
@@ -69,6 +72,7 @@ never coin a translation — an English term left as-is ("Qiskit", "k-means") is
 """
 
 EXCERPT_MAX = 1200  # chars of body chunk quoted into the model context
+FULL_TEXT_MAX = 12000  # chars of the top document's full body (largest post ~11.5K)
 
 
 def _attr(text: str) -> str:
@@ -77,8 +81,12 @@ def _attr(text: str) -> str:
 
 def build_context(retrieved: list[dict]) -> str:
     """The retrieved docs as numbered <document> tags (Anthropic's recommended
-    shape for grounding), most relevant first: summary per doc, plus the
-    best-matching body excerpt when one won.
+    shape for grounding), most relevant first. The TOP document arrives in
+    full — every section, headings kept — because it is what the question is
+    about and "tell me more" deserves more than one excerpt (the largest post
+    is ~11 KB ≈ 3k tokens: parent-document retrieval at small-corpus prices).
+    The rest stay summary + best-matching excerpt: supporting cast, kept
+    short so they don't dilute the main document.
 
     The bio is tiny, so it is always appended — who-am-I grounding even
     when the question retrieved only project documents.
@@ -101,8 +109,13 @@ def build_context(retrieved: list[dict]) -> str:
             continue
         kind = "project" if d["kind"] in ("project", "post") else d["kind"]
         body = d["summary"]
-        chunk = r.get("chunk")
-        if chunk:
+        if i == 1 and d.get("chunks"):
+            sections = "\n\n".join(
+                f"## {c['heading']}\n{c['text']}" if c.get("heading") else c["text"]
+                for c in d["chunks"]
+            )
+            body += f"\n<full_text>\n{sections[:FULL_TEXT_MAX]}\n</full_text>"
+        elif chunk := r.get("chunk"):
             head = (
                 f' heading="{_attr(chunk["heading"])}"' if chunk.get("heading") else ""
             )

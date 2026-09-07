@@ -24,8 +24,9 @@ from ...content.repository import NODES, by_id
 from ...core.config import get_settings
 from .. import embedding, ingest
 from ..store import VectorStore, select_store
+from . import reranker
 from .edges import EDGE_K, EDGE_Z, build_edges
-from .hybrid import CONTEXT_WEIGHT, KEYWORD_WEIGHT, RRF_K, contextual_query, rank, rrf
+from .hybrid import CONTEXT_WEIGHT, KEYWORD_WEIGHT, RRF_K, Ranked, contextual_query, rank, rrf
 
 __all__ = [
     "CONTEXT_WEIGHT", "KEYWORD_WEIGHT", "RRF_K",
@@ -38,6 +39,7 @@ _model = None
 _store: VectorStore | None = None
 _edges: list[dict] | None = None
 _summary_vecs: dict[str, np.ndarray] = {}  # kept so edges can be re-derived with another z
+_reranker = None  # cross-encoder; None = disabled (RERANK_MODEL="")
 
 
 def _embed_passages(texts: list[str]) -> np.ndarray:
@@ -50,10 +52,12 @@ def _embed_query(text: str) -> np.ndarray:
 
 async def warmup() -> ingest.SyncReport:
     """Load the model, sync the vector index, derive graph edges (app startup)."""
-    global _model, _store, _edges, _summary_vecs
+    global _model, _store, _edges, _summary_vecs, _reranker
     settings = get_settings()
     if _model is None:
         _model = await asyncio.to_thread(embedding.load, settings.embed_model)
+    if _reranker is None and settings.rerank_model:
+        _reranker = await asyncio.to_thread(reranker.load, settings.rerank_model)
     if _store is None:
         _store = select_store(settings.database_url)
     report = await ingest.sync(_store, _embed_passages, settings.embed_model)
@@ -95,8 +99,29 @@ def is_enumeration(question: str) -> bool:
     return bool(_ENUMERATION.search(question))
 
 
+async def reranked(
+    question: str, ranked: list[Ranked], encoder=None, gate: float = reranker.GATE
+) -> list[Ranked]:
+    """`ranked` with its head re-ordered by the cross-encoder (reranker.py):
+    candidates the encoder confidently relates to the question move up, the
+    rest keep the fused order. Unchanged when reranking is off or the
+    question is not English."""
+    encoder = encoder or _reranker
+    if encoder is None or len(ranked) < 2 or not reranker.applies(question):
+        return ranked
+    head = ranked[: reranker.CANDIDATES]
+    passages = []
+    for r in head:
+        doc = by_id(r.doc_id)
+        title = doc["title"] if doc else r.doc_id
+        passages.append(reranker.passage(title, r.hit.heading, r.hit.text))
+    scored = await asyncio.to_thread(reranker.scores, encoder, question, passages)
+    return [head[i] for i in reranker.order(scored, gate)] + ranked[len(head):]
+
+
 async def retrieve(question: str, k: int = 4, *, context_title: str | None = None) -> list[dict]:
-    """Top-k documents for a question (hybrid.rank over the live store).
+    """Top-k documents for a question (hybrid.rank over the live store,
+    cross-encoder reranked — see reranker.py).
 
     In a conversation, pass the title of the previous turn's top source as
     `context_title` so elliptical follow-ups recover their topic.
@@ -108,7 +133,12 @@ async def retrieve(question: str, k: int = 4, *, context_title: str | None = Non
     store = await _ready()
     out = []
     enumerating = is_enumeration(question)
-    for r in await rank(store, _embed_query, question, context_title=context_title):
+    ranked = await rank(store, _embed_query, question, context_title=context_title)
+    # an anchored query ("tell me more about it" + the previous title) names no
+    # topic itself — the cross-encoder would score noise and undo the anchor
+    if context_title is None:
+        ranked = await reranked(question, ranked)
+    for r in ranked:
         doc = by_id(r.doc_id)
         if doc is None:  # index ahead of corpus.json (shouldn't happen after sync)
             continue

@@ -30,7 +30,8 @@ from pathlib import Path
 
 warnings.filterwarnings("ignore")
 
-from app.chat import embedding, ingest, rewrite  # noqa: E402
+from app.chat import embedding, ingest, retrieval, rewrite  # noqa: E402
+from app.chat.retrieval import reranker  # noqa: E402
 from app.chat.retrieval.hybrid import rank  # noqa: E402
 from app.chat.store import MemoryStore, PgVectorStore  # noqa: E402
 from app.content.repository import by_id  # noqa: E402
@@ -66,14 +67,20 @@ async def build(name: str, pg: bool):
     return store, (lambda text: embedding.embed_query(model, text)), time.perf_counter() - t0
 
 
-async def evaluate(store, embed_query, *, use_rewrite: bool = False, **opts) -> dict:
+async def evaluate(
+    store, embed_query, *, use_rewrite: bool = False, rerank_encoder=None,
+    rerank_gate: float = reranker.GATE, **opts,
+) -> dict:
     async def ranked(q: str, title: str | None = None, history: list[dict] | None = None):
         if use_rewrite:  # production's plan: the anchor survives only as the fallback
             planned, title = await rewrite.search_plan(q, history or [], topic=title)
             if planned is None:  # NO_RETRIEVAL: production answers from the bio alone
                 return [r for r in await rank(store, embed_query, "who are you", **opts) if r.doc_id == "bio"]
             q = planned
-        return await rank(store, embed_query, q, context_title=title, **opts)
+        results = await rank(store, embed_query, q, context_title=title, **opts)
+        if rerank_encoder is not None and title is None:  # production skips rerank on anchored queries
+            results = await retrieval.reranked(q, results, rerank_encoder, gate=rerank_gate)
+        return results
 
     async def ids(q: str, title: str | None = None, history: list[dict] | None = None) -> list[str]:
         return [r.doc_id for r in await ranked(q, title, history)]
@@ -147,10 +154,18 @@ def _cell(r: dict) -> str:
     return f"{r['r1']}/{r['n']} {r['rk']}/{r['n']}{chunk}"
 
 
-async def main(models: list[str], *, sweep: bool, pg: bool, use_rewrite: bool) -> None:
+async def main(models: list[str], *, sweep: bool, pg: bool, use_rewrite: bool, use_rerank: bool) -> None:
     settings = dict(SETTINGS, **(SWEEP if sweep else {}))
     if use_rewrite:
         settings["hybrid + rewrite"] = {"use_rewrite": True}
+    if use_rerank:
+        encoder = reranker.load(get_settings().rerank_model)
+        settings["hybrid + rerank"] = {"rerank_encoder": encoder}
+        if sweep:
+            for g in (-2.0, 2.0, float("-inf")):
+                settings[f"hybrid + rerank g={g}"] = {"rerank_encoder": encoder, "rerank_gate": g}
+        if use_rewrite:  # the full production pipeline
+            settings["hybrid + rewrite + rerank"] = {"use_rewrite": True, "rerank_encoder": encoder}
     for name in models:
         store, embed_query, t_build = await build(name, pg)
         print(f"\n===== {name}  [{type(store).__name__}]  index build {t_build:.2f}s =====")
@@ -163,7 +178,7 @@ async def main(models: list[str], *, sweep: bool, pg: bool, use_rewrite: bool) -
             print(f"  {label:<26}{_cell(res['en']):<14}{_cell(res['ko']):<14}"
                   + "".join(f"{_cell(fu[t]) if t in fu else '-':<20}" for t in ("A", "B", "D"))
                   + f"{res['query_ms']:.0f}")
-        for label in [l for l in ("dense", "hybrid", "hybrid + rewrite") if l in results]:
+        for label in [l for l in ("dense", "hybrid", "hybrid + rewrite", "hybrid + rerank", "hybrid + rewrite + rerank") if l in results]:
             res = results[label]
             lines = res["en"]["misses"] + res["ko"]["misses"] + [
                 m for t in sorted(res["followup"]) for m in res["followup"][t]["misses"]
@@ -178,10 +193,11 @@ async def main(models: list[str], *, sweep: bool, pg: bool, use_rewrite: bool) -
 if __name__ == "__main__":
     args = sys.argv[1:]
     sweep, pg, use_rewrite = "--sweep" in args, "--pg" in args, "--rewrite" in args
+    use_rerank = "--rerank" in args
     models = [a for a in args if not a.startswith("--")]
     if pg:
         if not get_settings().database_url.startswith("postgresql"):
             sys.exit("--pg needs DATABASE_URL=postgresql+asyncpg://... (the dev stack: port 5433)")
         models = [get_settings().embed_model]  # never re-embed the shared DB with another model
     asyncio.run(main(models or [get_settings().embed_model, "BAAI/bge-small-en-v1.5"], sweep=sweep, pg=pg,
-                     use_rewrite=use_rewrite))
+                     use_rewrite=use_rewrite, use_rerank=use_rerank))
