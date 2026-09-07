@@ -28,7 +28,7 @@ export default function MapLayer({ theme, introActive, projects, edges, onHover,
     const api = createGraph(canvasRef.current, {
       projects,
       edges,
-      reduced: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+      // reduced-motion deliberately ignored: the drifting graph IS the landing page
       quiet: window.matchMedia('(max-width: 720px)').matches,
       compact: window.matchMedia('(max-width: 720px)').matches,
       measure: measureBand,
