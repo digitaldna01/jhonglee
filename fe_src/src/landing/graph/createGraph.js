@@ -3,7 +3,6 @@
    ------------------------------------------------------------
    Wires a simulation to a <canvas>: DPR-aware sizing, the rAF
    loop, pointer hover/drag/click, and mode handling —
-     reduced: settle synchronously, draw once, no loop
      quiet  : (mobile) find a calm layout, then stop animating
      compact: (narrow) smaller labels, tighter node clearance
    The free band for the graph is measured from the page (`measure()`
@@ -16,7 +15,7 @@ import { createSimulation } from './simulation';
 import { readPalette, draw } from './renderer';
 
 export function createGraph(canvas, opts) {
-  const { projects, edges, reduced = false, quiet = false, compact = false, measure, onHover, onSelect } = opts;
+  const { projects, edges, quiet = false, compact = false, measure, onHover, onSelect } = opts;
   let theme = opts.theme || 'light';
 
   const ctx = canvas.getContext('2d');
@@ -61,7 +60,7 @@ export function createGraph(canvas, opts) {
 
   function loop() {
     if (destroyed) return;
-    if (running && !reduced) {
+    if (running) {
       sim.step(false);
       paint();
     }
@@ -69,22 +68,17 @@ export function createGraph(canvas, opts) {
   }
 
   /* boot: pre-settle + paint synchronously so the graph is never blank */
-  if (reduced) {
-    for (let s = 0; s < 320; s++) sim.step(true);
-    paint();
-  } else {
-    for (let s = 0; s < 70; s++) sim.step(true);
-    paint();
-    rafId = requestAnimationFrame(loop);
-    if (quiet) quietTimer = setTimeout(() => { running = false; paint(); }, 2600);
-  }
+  for (let s = 0; s < 70; s++) sim.step(true);
+  paint();
+  rafId = requestAnimationFrame(loop);
+  if (quiet) quietTimer = setTimeout(() => { running = false; paint(); }, 2600);
   // web fonts settle the intro's height a moment after first paint
-  const measureTimer = setTimeout(() => { remeasure(); if (reduced || !running) paint(); }, 400);
+  const measureTimer = setTimeout(() => { remeasure(); if (!running) paint(); }, 400);
 
   /* ---- pointer interaction ----------------------------------- */
   function setHover(id) {
     hoverId = id;
-    if (reduced || !running) paint();
+    if (!running) paint();
   }
 
   function onPointerMove(e) {
@@ -98,7 +92,6 @@ export function createGraph(canvas, opts) {
       n.y = my + dragDY;
       n.vx = n.vy = 0;
       if (quiet) running = true;
-      if (reduced) paint();
       return;
     }
     const hit = sim.nodeAt(mx, my);
@@ -137,7 +130,6 @@ export function createGraph(canvas, opts) {
       if (!moved) onSelect?.(id); // a click, not a drag
     }
     canvas.style.cursor = 'default';
-    if (reduced) paint();
   }
 
   function onPointerLeave() {
@@ -151,7 +143,7 @@ export function createGraph(canvas, opts) {
     resize();
     sim.setSize(W, H);
     remeasure();
-    if (reduced || !running) paint();
+    if (!running) paint();
   }
 
   canvas.addEventListener('pointermove', onPointerMove);
@@ -169,13 +161,13 @@ export function createGraph(canvas, opts) {
     setTheme(next) {
       theme = next;
       palette = readPalette(theme);
-      if (reduced || !running) paint();
+      if (!running) paint();
     },
 
     setIntro(on) {
       sim.setIntro(on);
       remeasure();
-      if (reduced || !running) paint();
+      if (!running) paint();
     },
 
     nodeScreenPos(id) {
@@ -186,7 +178,7 @@ export function createGraph(canvas, opts) {
     },
 
     pause() { running = false; },
-    resume() { if (!reduced && !quiet) running = true; },
+    resume() { if (!quiet) running = true; },
 
     destroy() {
       destroyed = true;

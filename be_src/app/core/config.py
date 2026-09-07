@@ -37,6 +37,9 @@ class Settings:
         self.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY", "")
         self.chat_model = os.getenv("CHAT_MODEL", "claude-haiku-4-5")
         self.embed_model = os.getenv("EMBED_MODEL", "Xenova/paraphrase-multilingual-MiniLM-L12-v2-q8")
+        # cross-encoder over the retrieval candidates ("" disables). English-only
+        # by design: the query rewrite anglicises Korean questions first.
+        self.rerank_model = os.getenv("RERANK_MODEL", "Xenova/ms-marco-MiniLM-L-6-v2")
 
         self.database_url = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./data/app.db")
         self.redis_url = os.getenv("REDIS_URL", "")

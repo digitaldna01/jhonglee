@@ -40,7 +40,7 @@ export default function Related({ slug }) {
     const api = createGraph(canvas, {
       projects: graph.projects,
       edges: graph.edges,
-      reduced: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+      // reduced-motion deliberately ignored, same call as the landing graph
       quiet: narrow,
       compact: narrow,
       // the free band is the whole canvas, minus room for a label on top

@@ -13,6 +13,12 @@ ENV EMBED_MODEL=${EMBED_MODEL}
 COPY app/chat/embedding.py app/chat/embedding.py
 RUN python app/chat/embedding.py "${EMBED_MODEL}"
 
+# Same for the reranker cross-encoder (retrieval/reranker.py, RERANK_MODEL).
+ARG RERANK_MODEL=Xenova/ms-marco-MiniLM-L-6-v2
+ENV RERANK_MODEL=${RERANK_MODEL}
+COPY app/chat/retrieval/reranker.py app/chat/retrieval/reranker.py
+RUN python app/chat/retrieval/reranker.py "${RERANK_MODEL}"
+
 COPY alembic.ini docker-entrypoint.sh ./
 COPY migrations ./migrations
 COPY app ./app

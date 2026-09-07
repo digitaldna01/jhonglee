@@ -16,19 +16,20 @@ from . import chatlog, generation, history, retrieval, rewrite
 TOP_K = 4
 
 
-def topic_named(query: str | None, fallback: str | None) -> str | None:
-    """The topic to tell the answering model about. When the rewrite named a
-    project, that is the topic — it resolved the visitor's reference. The
-    previous turn's top source is only the fallback: it can be a doc that
-    merely ranked first while the answer was about the second ("블렌더로 만든
-    거 있어?" ranked Smart Factory above Cogs and Gears; the answer was about
-    Cogs and Gears, and the next "그건…" was then explained as Smart Factory)."""
+def topic_named(query: str | None) -> str | None:
+    """The topic to tell the answering model about: a project title the
+    rewrite named — it resolved the visitor's reference from the conversation.
+    No other source qualifies. The previous turn's top-RANKED doc used to be
+    the fallback, but rank-1 is not always what the answer talked about
+    ("블렌더로 만든 거 있어?" ranked Smart Factory first while the answer was
+    about Cogs and Gears), and a wrong hint outvotes the conversation the
+    model could have resolved alone (2026-09-05 log #18). Unsure → no hint."""
     if query:
         low = query.lower()
         for d in content.nodes():
             if d["title"].lower() in low:
                 return d["title"]
-    return fallback
+    return None
 
 
 def retrieval_label() -> str:
@@ -100,7 +101,7 @@ async def answer(
     parts: list[str] = []
     model = ""
     usage: dict = {}
-    topic = topic_named(query, context_title) if query else None
+    topic = topic_named(query) if query else None
     async for name, payload in generation.generate(question, retrieved, turns, topic=topic):
         if name == "delta":
             parts.append(payload["text"])
