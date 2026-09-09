@@ -2,14 +2,14 @@
 title: Jae Hong Lee
 category: BIO
 excerpt: >-
-  Jae Hong Lee (이재홍) is a design engineer based in Seoul. He studied computer
+  Jae Hong Lee (이재홍) is a software engineer based in Seoul. He studied computer
   science and visual arts, and works at the seam of CS, design, and AI — designing
   an interface and building what's underneath it, models included. He cares about
   precision and craft over spectacle.
 keywords:
   - bio
   - about
-  - design engineer
+  - software engineer
 rag:
   node: false
 ---

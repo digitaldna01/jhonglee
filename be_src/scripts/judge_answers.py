@@ -76,7 +76,7 @@ VARIANTS = {"current": SYSTEM_PROMPT, "v1": V1}
 
 
 DEFAULT_RUBRIC = """\
-The answers are written in the first person by Jae Hong Lee, a design engineer, on his own public portfolio
+The answers are written in the first person by Jae Hong Lee, a software engineer, on his own public portfolio
 site, for recruiters, collaborators and strangers with no prior knowledge of him. A good answer:
 1. Is grounded: every statement traces to the documents; it never invents facts, opinions or feelings, and it
    does not repeat the about page's phrasing word for word.
