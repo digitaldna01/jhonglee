@@ -113,6 +113,19 @@
   .post-body .prose .media-strip img { height: 180px; }
 }
 
+/* ---- Photo caption — one small line under an image or media layout ----
+   <p className="cap">tbilisi · december</p>
+   The travel cousin of the placard's first line: lowercase mono, quiet,
+   pulled up toward the media it labels. */
+.post-body .prose .cap {
+  text-align: center;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.78em;
+  letter-spacing: 0.1em;
+  color: var(--fg-3);
+  margin: -0.9em auto 2.2em;
+}
+
 /* ---- Exhibit — a museum wall (visualArtPortfolio) --------------------
    <div className="exhibit wide">        one artwork hung on a wall panel
    <div className="exhibit matted wide"> works on paper: white mat + thin frame
