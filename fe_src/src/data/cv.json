@@ -17,7 +17,8 @@
     },
     {
       "degree": "Bowie High School / High School",
-      "date": "Sep 2015 – Jun 2016 / Austin, TX"
+      "date": "Sep 2015 – Jun 2016 / Austin, TX",
+      "link": "https://bowie.austinschools.org/"
     }
   ],
   "experience": [
@@ -67,7 +68,7 @@
     {
       "degree": "Quantum Simulator",
       "date": "Jun 2024 – Aug 2024 / Seongnam, KR",
-      "link": "https://github.com/digitaldna01/quantum-simulator"
+      "link": "https://quantum-simulator-production.up.railway.app/"
     },
     {
       "degree": "To-Do Calendar Web",
@@ -76,7 +77,8 @@
     },
     {
       "degree": "Gill Sans Typeface — Stop Motion",
-      "date": "Dec 2023 / Boston, MA"
+      "date": "Dec 2023 / Boston, MA",
+      "link": "/posts/gillSans"
     },
     {
       "degree": "One Call Away",
