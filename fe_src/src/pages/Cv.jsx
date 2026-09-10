@@ -55,12 +55,12 @@ export default function Cv() {
         </h1>
         <p className="cv-role">engineer · designer · researcher</p>
         <p className="cv-intro">
-          My name is Jae Hong Lee. I am a Computer Science major with a Visual
-          Arts minor at Boston University. I specialize in merging technical and
-          creative disciplines to build interactive digital experiences that are
-          both functional and visually compelling. My background spans algorithm
-          design, AI &amp; Machine Learning, and Quantum Computing, complemented
-          by strong skills in visual design and creative tools.
+          I design and build software from the model to the screen. Most of my
+          work sits between machine learning and interface design, and I like
+          carrying one idea through every layer myself: training the model,
+          writing the server, and shaping the page where it all shows up. I
+          want what I make to be simple to use, good to look at, and useful in
+          someone&apos;s day.
         </p>
         <div className="cv-contacts">
           {CONTACTS.map(({ label, href }) => (
