@@ -1,0 +1,294 @@
+---
+title: LSA Search
+displayTitle:
+  en: Searching by Meaning with LSA
+  ko: LSA 의미 기반 검색
+date: "2024-10-11"
+category: POST
+subcategory: blog
+medium: figure
+thumbnail: /images/projects/lsa-search/cover.png
+excerpt: >-
+  A latent semantic analysis search engine over 18,846 newsgroup posts — TF-IDF,
+  truncated SVD down to 100 dimensions, cosine similarity — live in the post,
+  answering in a millisecond from precomputed matrices.
+keywords:
+  - latent semantic analysis
+  - SVD
+  - tf-idf
+  - information retrieval
+  - search
+locales:
+  - en
+  - ko
+defaultLocale: en
+lean: ml
+stack: scikit-learn · NumPy · React
+---
+
+import { Lang } from "../utils/lang";
+import LsaDemo from "../components/LsaDemo";
+
+<p className="not-prose">words · concepts · cosine</p>
+
+<Lang locale="en">
+
+Type "car engine trouble" into a keyword search and it can only find documents
+that contain those letters — a post that says "my automobile won't start" is
+invisible to it. That gap between _words_ and _meaning_ is the oldest problem
+in search, and **[latent semantic analysis (LSA)](https://doi.org/10.1002/(SICI)1097-4571(199009)41:6%3C391::AID-ASI1%3E3.0.CO;2-9)**,
+from 1990, was one of the first working answers: squeeze every document into a small list of numbers so
+that documents _about the same thing_ end up with similar numbers, whether or
+not they share vocabulary.
+
+The search box below is exactly that, built over **18,846 newsgroup posts**
+(the classic [20 Newsgroups](https://scikit-learn.org/stable/datasets/real_world.html#the-20-newsgroups-text-dataset) dataset). Every document — and your query — becomes
+just **100 numbers**, and the results are ranked by the angle between them.
+Try the examples, then try to break it: the footer shows which of your words
+the search actually saw.
+
+</Lang>
+
+<Lang locale="ko">
+
+키워드 검색창에 "car engine trouble"을 치면, 딱 그 글자들이 들어 있는 문서만 찾을
+수 있어요. "my automobile won't start"라고 쓴 글은 같은 얘기를 하고 있어도 안
+보이죠. 이 *단어*와 *의미* 사이의 틈이 검색의 가장 오래된 문제고, 1990년에 나온
+**[잠재 의미 분석](https://doi.org/10.1002/(SICI)1097-4571(199009)41:6%3C391::AID-ASI1%3E3.0.CO;2-9)**(LSA,
+latent semantic analysis)이 처음으로 제대로 작동한 답 중 하나예요. 모든 문서를
+숫자 몇 개로 줄이되, *같은 주제를 다루는* 문서끼리는 어휘가 겹치든
+말든 비슷한 숫자가 되게 만드는 거예요.
+
+아래 검색창이 바로 그거예요. **뉴스그룹 게시글 18,846개**(고전 데이터셋인 [20
+Newsgroups](https://scikit-learn.org/stable/datasets/real_world.html#the-20-newsgroups-text-dataset)) 위에 만들었어요. 문서도, 여러분의 질문도
+딱 **숫자 100개**가 되고, 결과는 두 벡터 사이의 각도로 순위가 매겨져요. 예시를
+눌러 보고, 그다음엔 검색이 틀리는 질문을 찾아보세요. 검색에 실제로 쓰인 단어는
+아래 푸터에 표시돼요.
+
+</Lang>
+
+<LsaDemo />
+
+---
+
+<Lang locale="en">
+
+### From documents to a matrix — TF-IDF
+
+LSA starts from the **document-term matrix**: one row per document, one column
+per vocabulary word (20,000 here), each cell counting how often that word
+appears in that document. Raw counts overvalue common words, so each cell is
+weighted by **TF-IDF** — term frequency times inverse document frequency:
+
+</Lang>
+
+<Lang locale="ko">
+
+### 문서를 행렬로 — TF-IDF
+
+LSA는 **문서-단어 행렬**에서 출발해요. 문서마다 한 행, 어휘 단어마다 한 열(여기선
+20,000개), 각 칸에는 그 단어가 그 문서에 몇 번 나오는지가 적혀요. 그런데 횟수를
+그대로 쓰면 흔한 단어가 너무 큰 값을 받아요. 그래서 각 칸에 **TF-IDF**, 그러니까
+단어 빈도(term frequency)에 역문서 빈도(inverse document frequency)를 곱한
+가중치를 줘요:
+
+</Lang>
+
+$$
+w_{t,d} = \mathrm{tf}_{t,d} \times \log\frac{N}{\mathrm{df}_t}
+$$
+
+<Lang locale="en">
+
+$\mathrm{tf}_{t,d}$ is how often term _t_ appears in document _d_; $N$ is the
+total number of documents and $\mathrm{df}_t$ is how many of them contain _t_
+at all. A word that appears in every document ("just", "like") gets an idf near
+zero and stops mattering; a word that appears in few documents ("shuttle",
+"goalie") gets amplified. Stopwords — "the", "and", "of" — are dropped outright,
+which is why the demo strikes them out of your query.
+
+The result is a huge, sparse matrix: 18,846 × 20,000, almost entirely zeros.
+Searching in it directly is exactly the keyword search we started with — two
+documents about the same topic in different words are still orthogonal vectors.
+The interesting step is next.
+
+</Lang>
+
+<Lang locale="ko">
+
+$\mathrm{tf}_{t,d}$는 단어 *t*가 문서 *d*에 나오는 횟수, $N$은 전체 문서 수,
+$\mathrm{df}_t$는 *t*가 들어 있는 문서 수예요. 어디에나 나오는 단어("just",
+"like")는 idf가 0에 가까워져 힘을 잃고, 드문 단어("shuttle", "goalie")는
+증폭돼요. 불용어("the", "and", "of")는 아예 버려지는데, 데모가 여러분 질문에서
+그 단어들에 취소선을 긋는 이유가 이거예요.
+
+이렇게 만들어지는 건 18,846 × 20,000짜리 거대하고 희소한 행렬이에요. 거의 다
+0이죠. 이 행렬에서 그대로 검색하면 처음에 말한 키워드 검색 그대로예요. 같은
+주제를 다른 단어로 쓴 두 문서는 여전히 직교하는 벡터니까요. 재미있는 건 다음
+단계예요.
+
+</Lang>
+
+---
+
+<Lang locale="en">
+
+### The trick — SVD squeezes words into concepts
+
+LSA compresses that matrix with a **truncated singular value decomposition
+(SVD)**: keep only the _k_ directions along which the data varies most (here
+_k_ = 100) and throw the rest away.
+
+</Lang>
+
+<Lang locale="ko">
+
+### 핵심 — SVD가 단어를 개념으로 묶는다
+
+LSA는 그 행렬을 **특이값 분해**(SVD)로 압축해요. 데이터가 가장 크게 변하는
+방향 *k*개만 남기고(여기선 *k* = 100) 나머지는 버리는 truncated SVD예요.
+
+</Lang>
+
+$$
+A \;\approx\; U_k \, \Sigma_k \, V_k^{\top}
+$$
+
+<Lang locale="en">
+
+Each of those 100 directions is a weighted bundle of words that tend to appear
+together — "space, orbit, launch, NASA" load onto one, "team, season, game,
+playoff" onto another. The literature calls them _latent concepts_: nobody
+defined them, they fall out of the co-occurrence statistics. Every document is
+now its coordinates along those 100 directions (a row of $U_k \Sigma_k$), and a
+query is projected into the very same space by $V_k$. Two texts that never share
+a word can still sit close together, because their words load onto the same
+concepts — that's the whole magic, and it's just linear algebra.
+
+Ranking is then one **cosine similarity** per document — the angle between the
+query vector and each document vector, which is a single dot product once
+everything is length-normalized:
+
+</Lang>
+
+<Lang locale="ko">
+
+이 100개의 방향 하나하나가, 같이 나오는 경향이 있는 단어들의 가중치 묶음이에요.
+"space, orbit, launch, NASA"가 한 방향에 실리고, "team, season, game,
+playoff"가 또 한 방향에 실리는 식으로요. 문헌에서는 이걸 *잠재 개념*(latent
+concept)이라고 불러요. 아무도 정의한 적 없는데 동시 출현 통계에서 저절로
+드러나요. 이제 모든 문서는 그 100개 방향 위의 좌표($U_k \Sigma_k$의 한
+행)가 되고, 질문도 $V_k$로 똑같은 공간에 투영돼요. 단어 하나 안 겹치는 두 글이
+같은 개념에 실리기만 하면 가까워지는 거죠. 비결은 이게 전부고, 결국
+선형대수예요.
+
+순위는 문서마다 **코사인 유사도**를 한 번씩 재서 매겨요. 질문 벡터와 문서 벡터
+사이의 각도인데, 길이를 1로 맞춰 두면 내적 한 번이 돼요:
+
+</Lang>
+
+$$
+\cos(\hat{q}, d) \;=\; \frac{\hat{q} \cdot d}{\lVert \hat{q} \rVert \, \lVert d \rVert}
+$$
+
+<Lang locale="en">
+
+That's the score next to every result above. "space shuttle launch" scores
+0.95 against posts it shares no rare phrasing with — they simply point the same
+way in concept space.
+
+</Lang>
+
+<Lang locale="ko">
+
+위 데모의 결과마다 붙어 있는 점수가 바로 이거예요. "space shuttle launch"가
+특별한 표현 하나 안 겹치는 글들과 0.95가 나오는 건, 개념 공간에서 그냥 같은
+방향을 가리키고 있기 때문이에요.
+
+</Lang>
+
+---
+
+<Lang locale="en">
+
+### Where LSA breaks
+
+LSA's failure modes are easy to trigger in the demo above, and each one taught
+the field something:
+
+- **Polysemy — one word, several meanings.** Try "the goalie made a great
+  save": wedged between baseball and hockey you'll find _comp.sys.mac.hardware_,
+  because "save" also loads onto the saving-files concept (and "great" onto
+  every sport at once). LSA gives each word exactly one vector of concept
+  weights, so all its senses are blended into one.
+- **A frozen vocabulary.** The 20,000 words were fixed at build time. A query
+  made only of words outside it — try a word that didn't exist in 1990s
+  newsgroups — matches nothing at all: the query vector is literally zero.
+- **A bag of words.** Word order never enters the matrix. "dog bites man" and
+  "man bites dog" are the same point in concept space.
+
+None of these are bugs; they're the price of representing a word by one global
+vector of counts. Fixing them is what the next thirty years of the field did.
+
+</Lang>
+
+<Lang locale="ko">
+
+### LSA가 틀리는 곳
+
+LSA는 세 가지 상황에서 틀려요. 위 데모에서 쉽게 재현되고, 하나하나가 이 분야에
+숙제를 남겼어요.
+
+- **다의어(polysemy) — 한 단어, 여러 뜻.** "the goalie made a great save"를 쳐 보세요.
+  야구와 하키 사이에 *comp.sys.mac.hardware*가 끼어 있을 거예요. "save"가 파일
+  저장 개념에도 실리거든요("great"는 모든 스포츠에 동시에 실리고요). LSA는
+  단어마다 개념 가중치 벡터를 딱 하나만 주기 때문에, 모든 뜻이 한 벡터에 섞여
+  버려요.
+- **고정된 어휘.** 20,000개 단어는 만들 때 정해졌어요. 1990년대 뉴스그룹에
+  없던 단어로만 질문해 보세요. 아무것도 못 찾아요. 질문 벡터가 말 그대로
+  0이에요.
+- **bag-of-words.** 어순은 행렬에 들어가지 않아요. "dog bites
+  man"과 "man bites dog"는 개념 공간에서 같은 점이에요.
+
+셋 다 버그가 아니라, 단어 하나를 벡터 하나로 고정해 놓은 대가예요. 이걸
+고치는 데 그 뒤 30년이 걸렸고요.
+
+</Lang>
+
+---
+
+<Lang locale="en">
+
+### From LSA to embeddings
+
+The idea LSA pioneered — meaning as a point in a vector space, similarity as
+an angle — never went away; only the way the vectors are made did. Word2vec
+learned the vectors instead of decomposing a count matrix, by training a tiny
+network to guess each word from its neighbours and keeping the weights;
+transformers made them contextual, letting each word's vector be a weighted
+mix of the words around it, so "save" near "goalie" and "save" near "disk"
+finally get different vectors; multilingual encoders put different languages into one
+space. The graph on this site's landing page is drawn the same way: every post
+gets one embedding vector, and only posts whose cosine similarity stands out get
+a line between them. [The chat](/) embeds your question and my posts with a
+neural encoder and ranks by the same cosine similarity you just watched — it's
+this demo, thirty years later.
+
+</Lang>
+
+<Lang locale="ko">
+
+### LSA에서 임베딩으로
+
+의미는 벡터 공간의 점이고 유사도는 각도라는, LSA가 개척한 아이디어는 사라진
+적이 없어요. 벡터를 만드는 방법만 바뀌었죠. word2vec은 문서-단어 행렬을 분해하는
+대신, 앞뒤 단어로 가운데 단어를 맞히는 작은 신경망을 학습시키고 그 가중치를
+벡터로 삼았어요. 트랜스포머는 단어 벡터를 주변 단어들의 가중 합으로 다시
+만들어서, "goalie" 옆의 "save"와 "disk" 옆의 "save"가 드디어 다른 벡터를 갖게
+됐고요. 다국어 인코더는 서로 다른 언어를 한 공간에 넣었어요. 이 사이트 랜딩 페이지의
+그래프도 같은 원리로 그렸어요. 글마다 임베딩 벡터를 하나씩 만들고, 코사인
+유사도가 눈에 띄게 높은 글끼리만 선으로 이은 거예요. [챗](/)은 여러분의 질문과
+제 글을 신경망 인코더로 임베딩하고, 방금 본 것과 똑같은 코사인 유사도로 순위를
+매겨요. 달라진 건 벡터를 만드는 쪽이지, 재는 쪽이 아니에요.
+
+</Lang>

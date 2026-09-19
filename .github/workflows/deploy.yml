@@ -37,6 +37,24 @@ jobs:
           npm run corpus   # writes fe_src/src/landing/data/corpus.gen.json + be_src/app/content/corpus.json
           npm run build
 
+      # LSA demo artifacts (~24 MB of numpy arrays + SQLite snippets) are fit
+      # here on x86 — scikit-learn under QEMU would be slow, and serving only
+      # needs the saved arrays. Cached on the script's hash: the fit is
+      # deterministic, so a cache hit skips the ~2 min rebuild entirely.
+      - name: Cache LSA demo artifacts
+        id: lsa-cache
+        uses: actions/cache@v4
+        with:
+          path: be_src/app/demos/lsa/artifacts
+          key: lsa-artifacts-${{ hashFiles('be_src/scripts/build_lsa_demo.py') }}
+
+      - name: Build LSA demo artifacts
+        if: steps.lsa-cache.outputs.cache-hit != 'true'
+        working-directory: be_src
+        run: |
+          pip install --quiet numpy scikit-learn
+          python scripts/build_lsa_demo.py
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 

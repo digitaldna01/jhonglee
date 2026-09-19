@@ -60,6 +60,8 @@ be_src/app/
       schemas.py · router.py
     schemas.py
   demos/kmeans/         축 ②: 인터랙티브 데모 API (router · service · schemas)
+  demos/lsa/            축 ②: LSA 검색 데모 — scripts/build_lsa_demo.py가 오프라인 fit(TF-IDF+SVD, scikit-learn)한
+                        아티팩트(~24 MB: npz 행렬 + 스니펫 SQLite)를 numpy만으로 서빙; 상주 ~16 MB, 쿼리 ~1 ms
   social/               축 ③ (예정): 좋아요·댓글 — __init__ docstring에 계획 (Principal은 core/auth 공용)
 tests/                  TestClient 스모크 (기능별 1개 이상)
 be_src/migrations/      Alembic (env.py는 DATABASE_URL을 읽음; 0001 pgvector 확장, 0002 rag_* + HNSW, 0003 chat_logs)
@@ -116,6 +118,7 @@ GET  /api/chat/sessions/{sid}        전사 (id를 알면 누구나; can_continu
 GET  /api/chat/sessions?scope=mine|all   내 것 / 전체(Owner만, 403)
 POST /api/auth/owner {token}         DELETE /api/auth/owner   GET /api/auth/me
 GET  /api/kmeans/dataset             POST /api/kmeans/run
+POST /api/lsa/search                 (아티팩트 없으면 503 + 생성 명령 안내)
 --- planned ---
 POST /api/social/posts/{slug}/likes  GET/POST /api/social/posts/{slug}/comments
 ```
