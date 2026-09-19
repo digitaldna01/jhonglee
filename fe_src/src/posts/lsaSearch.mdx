@@ -137,7 +137,9 @@ $\mathrm{df}_t$는 *t*가 들어 있는 문서 수예요. 어디에나 나오는
 
 LSA compresses that matrix with a **truncated singular value decomposition
 (SVD)**: keep only the _k_ directions along which the data varies most (here
-_k_ = 100) and throw the rest away.
+_k_ = 100) and throw the rest away. If you want to see what that cut does
+before reading on, the [SVD compression](/posts/svdCompression) post does the
+same thing to a photograph, where the thrown-away part is visible.
 
 </Lang>
 
@@ -147,6 +149,9 @@ _k_ = 100) and throw the rest away.
 
 LSA는 그 행렬을 **특이값 분해**(SVD)로 압축해요. 데이터가 가장 크게 변하는
 방향 *k*개만 남기고(여기선 *k* = 100) 나머지는 버리는 truncated SVD예요.
+이렇게 잘라내면 뭐가 사라지는지 먼저 눈으로 보고 싶다면, [SVD로 사진
+압축하기](/posts/svdCompression)에서 같은 방식으로 사진을 잘라 보고, 버린
+부분을 그대로 보여 줘요.
 
 </Lang>
 

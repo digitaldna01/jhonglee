@@ -35,29 +35,29 @@ import SvdDemo from "../components/SvdDemo";
 
 The photograph below is 384 by 288 pixels in three colours: 331,776 numbers.
 Drag the slider and it is rebuilt from far fewer. At rank 1 it is a plaid; at
-rank 5 the buildings are blocks; by rank 20 you can read the skyline from 12%
+rank 5 the buildings are blocks. By rank 20 you can read the skyline from 12%
 of the numbers, by rank 50 the graffiti, and the last thing to arrive is the
 date the camera stamped in the corner. Tick "show what was thrown away" to
 see the rest.
 
 This is the same **singular value decomposition** that the
-[LSA search](/posts/lsaSearch) used on a matrix of words. There the
-compression was invisible; here it is a picture, so you can watch what a
+[LSA search](/posts/lsaSearch) runs on a matrix of words. There the
+compression is invisible; here it is a picture, so you can watch what a
 low-rank approximation keeps and what it drops.
 
 </Lang>
 
 <Lang locale="ko">
 
-아래 사진은 384 × 288 픽셀에 색이 세 채널, 그러니까 숫자 331,776개예요.
+아래 사진은 384 × 288 픽셀에 색 채널이 셋, 그러니까 숫자 331,776개예요.
 슬라이더를 끌면 그보다 훨씬 적은 숫자로 사진을 다시 만들어요. 랭크 1은
 체크무늬, 랭크 5에서 건물이 덩어리로 나타나고, 랭크 20이면 숫자의 12%로
-스카이라인이 읽혀요. 랭크 50에서 그래피티 글자가 읽히고, 제일 마지막에 오는
+스카이라인이 읽혀요. 랭크 50에서 그래피티 글자가 드러나고, 제일 마지막에 오는
 건 카메라가 구석에 찍은 날짜예요. "show what was thrown away"를 켜면 버린
 나머지가 보여요.
 
-[LSA 검색](/posts/lsaSearch)에서 단어 행렬에 썼던 것과 같은 **특이값
-분해**(SVD)예요. 거기서는 압축이 눈에 안 보였는데, 여기서는 결과가 사진이라
+[LSA 검색](/posts/lsaSearch)이 단어 행렬에 쓰는 것과 같은 **특이값
+분해**(SVD)예요. 거기서는 압축이 눈에 안 보이는데, 여기서는 결과가 사진이라
 저랭크 근사가 뭘 남기고 뭘 버리는지 직접 볼 수 있어요.
 
 </Lang>
@@ -98,7 +98,10 @@ woven from one warp pattern and one weft pattern is the simplest possible
 cloth. Rank 1 in the demo is exactly that: one vertical stripe pattern crossed
 with one horizontal one, a plaid. Every further layer adds another weave on
 top, and because the layers are sorted, the first few carry the big shapes and
-the last ones carry the grain.
+the last ones carry the grain. Stopping after _k_ of them is not just
+convenient: by the
+[Eckart–Young theorem](https://en.wikipedia.org/wiki/Low-rank_approximation)
+it is the closest any rank-_k_ image can get to the original.
 
 The saving is in the counting. A layer costs one column, one row and one
 weight: 288 + 384 + 1 = 673 numbers. Twenty layers are 13,460 numbers against
@@ -110,15 +113,19 @@ the layers cost more than the pixels they describe.
 <Lang locale="ko">
 
 말로 읽으면 이래요. 사진은 층 *k*장을 겹친 것이고, 층 하나는 세로 무늬
-$u_r$ 하나와 가로 무늬 $v_r$ 하나를 곱한 것이며, $\sigma_r$은 그 층을 얼마나
-진하게 넣을지예요. 세로 한 줄 곱하기 가로 한 줄은 가장 단순한 이미지예요.
-날실 무늬 하나와 씨실 무늬 하나로 짠 천이 가장 단순한 천인 것과 같아요.
+$u_r$ 하나와 가로 무늬 $v_r$ 하나를 곱한 거예요. $\sigma_r$은 그 층을 얼마나
+진하게 넣을지를 정하고요. 세로 한 줄 곱하기 가로 한 줄은 가장 단순한
+이미지예요. 날실 무늬 하나, 씨실 무늬 하나로 짠 천이 제일 단순한 천인
+것처럼요.
 데모의 랭크 1이 정확히 그거예요. 세로 줄무늬 하나와 가로 줄무늬 하나가
 교차한 체크무늬죠. 층을 하나 더할 때마다 그 위에 천을 한 겹 더 짜는 셈이고,
-층이 정렬돼 있어서 앞쪽 몇 장이 큰 형태를, 뒤쪽이 결을 맡아요.
+층이 정렬돼 있어서 앞쪽 몇 장이 큰 형태를, 뒤쪽이 결을 맡아요. *k*장에서
+끊는 게 그냥 편해서만은 아니에요. 랭크 *k*짜리 이미지 가운데 원본에 제일
+가까운 게 바로 그거라는 게 [Eckart-Young
+정리](https://en.wikipedia.org/wiki/Low-rank_approximation)예요.
 
-절약은 개수 세기에서 나와요. 층 하나 값은 세로 한 줄, 가로 한 줄, 가중치
-하나. 288 + 384 + 1 = 673개예요. 스무 장이면 13,460개인데, 채널 하나의 픽셀은
+왜 절약이 되는지는 세어 보면 나와요. 층 하나에 드는 숫자는 세로 한 줄, 가로
+한 줄, 가중치 하나. 288 + 384 + 1 = 673개예요. 스무 장이면 13,460개인데, 채널 하나의 픽셀은
 110,592개니까 12%죠. 손익분기는 랭크 165예요. 그 뒤로는 층이 픽셀보다 비싸요.
 
 </Lang>
@@ -163,17 +170,18 @@ in no row and no column, so they arrive last and cost the most.
 268이에요. 열 번째 층은 첫 층의 20분의 1, 백 번째 층은 거의 200분의 1
 밝기인 셈이죠. 슬라이더 아래 막대그래프가 그 곡선을 로그 눈금으로 그린
 건데, 꼬리가 길어요. 복잡한 거리 사진은 풍경 사진보다 담긴 게 많고, 그 많은
-것들이 꼬리에 살아요.
+것들이 꼬리에 들어 있어요.
 
-첫 층 하나가 사진 에너지의 89%를 갖고 있는데, 그래도 체크무늬예요. 첫 층이
+첫 층 하나가 사진 에너지(특이값을 제곱해 더한 것)의 89%를 갖고 있는데, 그래도
+체크무늬예요. 첫 층이
 평균 밝기와 밝은 하늘 대 어두운 거리라는 큰 대비를 담기 때문인데, 사진의
-에너지는 대부분 거기 있거든요. 그러니 에너지는 눈에 보이는 것의 지표로는
-나빠요. 그래서 데모는 픽셀당 오차도 같이 보여 줘요. 랭크 1은 255 단계 중
+에너지는 대부분 거기 있거든요. 그러니 에너지는 눈에 어떻게 보이는지의 잣대로는 못
+쓰고, 데모가 픽셀당 오차를 같이 보여 주는 것도 그래서예요. 랭크 1은 255 단계 중
 52만큼 틀리고, 5는 29, 20은 17, 50은 10, 100은 5예요.
 
 뭐가 싸고 뭐가 비싼지는 천 짜기 비유 그대로예요. 하늘은 매끈해서 행들이 다
 비슷하니까 층 두어 장이면 돼요. 가운데 고층 건물은 창문이 행과 열로 반복되는
-격자라 저랭크의 정의에 가깝고, 그래서 거의 무엇보다 먼저 나타나요. 그래피티
+격자라 저랭크의 정의에 가깝고, 그래서 거의 제일 먼저 나타나요. 그래피티
 글자, 버스의 줄무늬, 가방끈과 난간의 사선, 얼굴, 그리고 날짜 스탬프의 주황색
 숫자 여덟 개는 어느 행에서도 어느 열에서도 반복되지 않아서 제일 늦게 오고
 제일 비싸요.
@@ -192,17 +200,18 @@ date: everything that is sharp and uncorrelated between rows. Slide down to
 rank 5 and whole buildings move into the residual; slide up to 100 and what is
 left is the finest lettering and the diagonals.
 
-Notice the shape of the errors, too. At low rank the person is smeared into
-vertical and horizontal streaks, because every layer is a full-height column
+Notice the shape of the errors, too. At low rank the person on the sidewalk
+is smeared into vertical and horizontal streaks, because every layer is a full-height column
 pattern crossed with a full-width row pattern; a diagonal strap has to be
-built from many of them. JPEG does not do this: it cuts the picture into 8 by
-8 blocks and drops high-frequency detail inside each block, so its errors are
-local blocks, not global streaks. The SVD fits one basis to the whole
+built from many of them. JPEG does not do this: it cuts the picture into
+[8 by 8 blocks](https://en.wikipedia.org/wiki/JPEG#Discrete_cosine_transform)
+and drops high-frequency detail inside each block, so its errors are local
+blocks, not global streaks. The SVD fits one basis to the whole
 photograph, which is why it reproduces the sky and the window grids almost
 for free and struggles with one slanted line.
 
-That is also why nobody ships photos as singular vectors. The factors are dense
-decimals, not bytes, and computing them costs on the order of the image size
+Nobody ships photos as singular vectors, for two more reasons. The factors are
+dense decimals, not bytes, and computing them costs on the order of the image size
 times its smaller side. As a codec the SVD loses; as a picture of what "low
 rank" means, nothing is clearer.
 
@@ -213,22 +222,25 @@ rank" means, nothing is clearer.
 ### 버린 것
 
 랭크 20에서 체크박스를 켜 보면, 버린 부분은 잡음이 아니에요. 그래피티, 창틀,
-지붕마다의 윤곽선, 버스, 얼굴, 날짜. 날카롭고 행끼리 닮지 않은 것 전부예요.
-랭크 5로 내리면 건물이 통째로 잔차 쪽으로 넘어가고, 100으로 올리면 제일 가는
+지붕의 윤곽선, 버스, 얼굴, 날짜. 날카롭고 행끼리 닮지 않은 것 전부예요.
+랭크 5로 내리면 건물이 통째로 버린 쪽으로 넘어가고, 100으로 올리면 제일 가는
 글씨와 사선만 남아요.
 
-오차의 모양도 보세요. 낮은 랭크에서 사람이 세로와 가로로 번지는 건, 층
+오차의 모양도 보세요. 낮은 랭크에서 인도 위의 사람이 세로와 가로로 번지는 건, 층
 하나하나가 사진 높이 전체를 덮는 세로 무늬와 폭 전체를 덮는 가로 무늬의
 곱이기 때문이에요. 사선 하나짜리 가방끈은 그런 층을 여러 장 겹쳐야 겨우
-만들어지죠. JPEG는 이렇게 안 해요. 사진을 8 × 8 블록으로 잘라 블록 안의
-고주파 디테일을 버리니까, 오차가 전역 줄무늬가 아니라 블록 단위로 나타나요.
-SVD는 사진 전체에 기저 하나를 맞추기 때문에 하늘과 창문 격자는 거의 공짜로
-재현하면서 기울어진 선 하나에 쩔쩔매요.
+만들어지죠. 흔히 쓰는 사진 포맷인 JPEG는 이렇게 안 해요. 사진을 [8 × 8
+블록](https://en.wikipedia.org/wiki/JPEG#Discrete_cosine_transform)으로 잘라
+블록 안에서 잘게 변하는 부분(고주파 성분)을 버리니까, 오차가 사진 전체를
+가로지르는 줄무늬가 아니라 블록 단위로 나타나요. SVD는 사진 전체에 맞춘 무늬
+한 세트(기저)로 다 만들기 때문에 하늘과 창문 격자는 거의 공짜로 재현하면서
+기울어진 선 하나에 쩔쩔매요.
 
-아무도 사진을 특이벡터로 저장하지 않는 이유도 여기 있어요. 인수는 바이트가
-아니라 빽빽한 소수이고, 계산 비용은 이미지 크기에 짧은 변을 곱한 정도예요.
-코덱으로서 SVD는 지지만, "저랭크"가 무슨 뜻인지 보여 주는 그림으로는 이만한
-게 없어요.
+아무도 사진을 특이벡터로 저장하지 않는 데는 이유가 둘 더 있어요. 분해해서
+얻은 숫자들은 0에서 255 사이 정수가 아니라 소수라 자리를 더 차지하고, 계산
+비용은 이미지 크기에 짧은 변을 곱한 정도예요.
+코덱 경쟁에서는 JPEG에 지지만, "저랭크"가 무슨 뜻인지 보여 주는 그림으로는
+이만한 게 없어요.
 
 </Lang>
 
@@ -238,22 +250,22 @@ SVD는 사진 전체에 기저 하나를 맞추기 때문에 하늘과 창문 �
 
 ### The same cut on words
 
-The LSA post did this to an 18,846 by 20,000 matrix of word counts and kept
-100 layers. The picture there was which words appear together; the layers it
-dropped were the rare co-occurrences, the difference between "car" and
-"automobile" among them, and dropping them was the point. Here you can see the
+The LSA post does this to an 18,846 by 20,000 matrix of word counts and keeps
+100 layers. The picture there is which words appear together; the layers it
+drops are the rare co-occurrences, the difference between "car" and
+"automobile" among them, and dropping them is the point. Here you can see the
 dropped part with your eyes. Different matrix, same cut.
 
 </Lang>
 
 <Lang locale="ko">
 
-### 단어에 했던 것과 같은 절단
+### 단어 행렬에도 똑같이
 
-LSA 글에서는 18,846 × 20,000짜리 단어 빈도 행렬에 같은 일을 하고 100층을
-남겼어요. 거기서 그림은 "어떤 단어가 같이 나오는가"였고, 버린 층은 드문
-동시 출현들이었어요. "car"와 "automobile"의 차이도 그 안에 있었고, 그걸
-버리는 게 목적이었죠. 여기서는 버린 부분을 눈으로 볼 수 있어요. 행렬은
+LSA 블로그 글은 18,846 × 20,000짜리 단어 빈도 행렬에 같은 일을 하고 100층을
+남겨요. 거기서는 사진 자리에 "어떤 단어가 같이 나오는가"가 들어 있고, 버리는 층은
+드물게만 같이 나온 단어 쌍이에요. "car"와 "automobile"의 차이도 그 안에 있고, 그걸
+버리는 게 목적이죠. 여기서는 버린 부분을 눈으로 볼 수 있어요. 행렬은
 다르고, 자르는 법은 같아요.
 
 </Lang>
