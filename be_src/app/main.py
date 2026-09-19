@@ -17,6 +17,7 @@ from .content.router import router as content_router
 from .core.config import get_settings
 from .core.lifespan import lifespan
 from .demos.kmeans.router import router as kmeans_router
+from .demos.lsa.router import router as lsa_router
 
 
 def create_app() -> FastAPI:
@@ -41,6 +42,7 @@ def create_app() -> FastAPI:
     app.include_router(chat_router, prefix="/api")     # /api/chat/*
     app.include_router(auth_router, prefix="/api")     # /api/auth/*
     app.include_router(kmeans_router, prefix="/api")   # /api/kmeans/*
+    app.include_router(lsa_router, prefix="/api")      # /api/lsa/*
     return app
 
 

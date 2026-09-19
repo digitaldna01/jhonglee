@@ -42,6 +42,9 @@ app/
       service.py          ConversationService: begin (claim/verify before answering) · view · mine · all · working_memory
       schemas.py / router.py
   demos/kmeans/           stateless demo API
+  demos/lsa/              LSA search demo over 20 Newsgroups — numpy-only serving of artifacts
+                          prebuilt by scripts/build_lsa_demo.py (needs scikit-learn, build-time only;
+                          ~16 MB resident, snippets read from SQLite per query; CI rebuilds on deploy)
 migrations/               Alembic; env.py reads DATABASE_URL. 0001 pgvector ext, 0002 rag tables, 0003 chat_logs, 0004 rag_chunks.tsv, 0005 chat_logs tokens, 0006 chat_sessions (+ backfill)
 docker-entrypoint.sh      `alembic upgrade head`, then uvicorn
 tests/                    smoke (TestClient), cache, ingest, chat state (incl. global cap), conversation (policy · service · SQL · HTTP · owner),
@@ -110,6 +113,7 @@ GET  /api/chat/sessions/{sid}      the transcript — anyone with the id; can_co
 GET  /api/chat/sessions?scope=mine|all[&before=&limit=]   mine: this browser's; all: owner only (403)
 POST /api/auth/owner {token}       DELETE /api/auth/owner   GET /api/auth/me   (owner login: 401 wrong, 404 not configured, 429 5/min per IP)
 GET  /api/kmeans/dataset           POST /api/kmeans/run
+POST /api/lsa/search               (503 until scripts/build_lsa_demo.py has produced app/demos/lsa/artifacts/)
 ```
 
 ## Adding a feature

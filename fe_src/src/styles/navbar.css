@@ -75,6 +75,13 @@
 }
 @keyframes home-type { from { max-width: 0; } }
 @keyframes home-caret { 50% { border-color: transparent; } }
+/* pointer devices only. Touch has no hover to leave: a tap pins :hover until
+   the next tap elsewhere, so on a phone the hint typed itself out and sat
+   there with the caret blinking. Dropping the box (not just the reveal) also
+   stops it reserving its --w of width beside the wordmark. */
+@media (hover: none) {
+  .wordmark .home { display: none; }
+}
 @media (prefers-reduced-motion: reduce) {
   .wordmark .home > span { animation: none !important; border-color: transparent; }
 }

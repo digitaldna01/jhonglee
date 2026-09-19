@@ -44,3 +44,7 @@ v2-design-handoff/
 # run it once locally after cloning or editing posts/content
 be_src/app/content/corpus.json
 fe_src/src/landing/data/corpus.gen.json
+
+# LSA demo artifacts (~24 MB) — built by `python scripts/build_lsa_demo.py` in
+# be_src (needs scikit-learn); CI rebuilds them for the backend image
+be_src/app/demos/lsa/artifacts/
