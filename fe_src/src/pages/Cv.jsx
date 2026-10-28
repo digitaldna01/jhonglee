@@ -1,14 +1,31 @@
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import BackLink from '../components/BackLink';
 import cvData from '../data/cv.json';
-import { pad2 } from '../utils/format';
+import { pad2, fmtDate } from '../utils/format';
 import '../styles/cv.css';
+
+// Selected Projects is not hand-kept: it is the newest PROJECTS posts on /work,
+// so tagging a post PROJECTS is what puts it on the CV (and POST keeps it off).
+const PROJECT_COUNT = 5;
+const mdxModules = import.meta.glob('../posts/*.mdx', { eager: true });
+const projects = Object.entries(mdxModules)
+  .map(([path, mod]) => ({ slug: path.replace('../posts/', '').replace('.mdx', ''), ...(mod.metadata ?? {}) }))
+  .filter((p) => p.title && p.category === 'PROJECTS')
+  .sort((a, b) => (a.date < b.date ? 1 : -1))
+  .slice(0, PROJECT_COUNT)
+  .map((p) => ({
+    degree: p.title,
+    date: fmtDate(p.date),
+    sub: p.stack, // second line under the date; hand-written rows have none
+    link: `/posts/${p.slug}`,
+  }));
 
 const SECTIONS = [
   { title: 'Education', items: cvData.education },
   { title: 'Experience', items: cvData.experience },
+  { title: 'Research', items: cvData.research },
   { title: 'Publication', items: cvData.publication },
-  { title: 'Selected Projects', items: cvData.project },
+  { title: 'Selected Projects', items: projects },
 ];
 
 const CONTACTS = [
@@ -29,8 +46,15 @@ function CvRow({ item }) {
   );
   return (
     <div className="cv-row">
-      <div className="cv-date">{item.date}</div>
-      {item.link ? (
+      <div className="cv-date">
+        {item.date}
+        {item.sub && <span className="cv-sub">{item.sub}</span>}
+      </div>
+      {item.link?.startsWith('/posts/') ? (
+        <Link className="cv-title" to={item.link}>
+          {title}
+        </Link>
+      ) : item.link ? (
         <a className="cv-title" href={item.link} target="_blank" rel="noreferrer">
           {title}
         </a>
