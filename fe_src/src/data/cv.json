@@ -38,6 +38,12 @@
       "link": "https://lsatdemon.com/"
     },
     {
+      "degree": "Xenix Studio / Software Engineer Intern / Blockchain & Frontend",
+      "date": "Jul 2020 – Nov 2020 / Seoul, KR"
+    }
+  ],
+  "research": [
+    {
       "degree": "Boston University (IVC Group) / Undergraduate Research / Computer Vision",
       "date": "Apr 2024 – May 2025 / Boston, MA",
       "link": "https://www.bu.edu/cs/research-groups/ivc/"
@@ -46,10 +52,6 @@
       "degree": "Korea Electronics Technology Institute / Research Intern / Quantum Computing & Computer Vision",
       "date": "Summers 2022 & 2024 / Seongnam, KR",
       "link": "https://www.keti.re.kr/eng/main/main.php"
-    },
-    {
-      "degree": "Xenix Studio / Software Engineer Intern / Blockchain & Frontend",
-      "date": "Jul 2020 – Nov 2020 / Seoul, KR"
     }
   ],
   "publication": [
@@ -57,33 +59,6 @@
       "degree": "Machine Learning-Based Hand Pose Generation Using a Haptic Controller",
       "date": "May 2024 / Electronics 13.10, MDPI",
       "link": "https://www.mdpi.com/2079-9292/13/10/1970"
-    }
-  ],
-  "project": [
-    {
-      "degree": "Cogs and Gears",
-      "date": "Jan 2025 – Mar 2025 / Boston, MA",
-      "link": "https://digitaldna01.github.io/digital-narrative/"
-    },
-    {
-      "degree": "Quantum Simulator",
-      "date": "Jun 2024 – Aug 2024 / Seongnam, KR",
-      "link": "https://quantum-simulator-production.up.railway.app/"
-    },
-    {
-      "degree": "To-Do Calendar Web",
-      "date": "Jan 2024 – May 2024 / Boston, MA",
-      "link": "https://github.com/CS-411-To-Do-Calendar/cs411-to-do-calendar"
-    },
-    {
-      "degree": "Gill Sans Typeface — Stop Motion",
-      "date": "Dec 2023 / Boston, MA",
-      "link": "/posts/gillSans"
-    },
-    {
-      "degree": "One Call Away",
-      "date": "Dec 2023 / Boston, MA",
-      "link": "/pdf/OneCallAway.pdf"
     }
   ]
 }

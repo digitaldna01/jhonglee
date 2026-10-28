@@ -1,0 +1,258 @@
+---
+title: SVD Features
+displayTitle:
+  en: Classifying Handwritten Digits on Fifty Numbers
+  ko: 숫자 50개로 손글씨 분류하기
+date: "2024-10-06"
+category: POST
+subcategory: blog
+medium: figure
+thumbnail: /images/projects/svd-features/cover.png
+excerpt: >-
+  A handwritten digit is 784 pixels; a classifier reads it almost as well from
+  fifty coordinates the SVD finds in the training set — and the first time I
+  ran this, the accuracy curve went down, because I had given the test set its
+  own axes.
+keywords:
+  - MNIST
+  - singular value decomposition
+  - dimensionality reduction
+  - logistic regression
+  - feature extraction
+locales:
+  - en
+  - ko
+defaultLocale: en
+lean: ml
+stack: NumPy · scikit-learn · React
+---
+
+import { Lang } from "../utils/lang";
+import SvdFeaturesDemo from "../components/SvdFeaturesDemo";
+
+<p className="not-prose">pixels · axes · a knee in the curve</p>
+
+<Lang locale="en">
+
+A handwritten digit in [MNIST](https://www.openml.org/d/554) is 28 by 28
+pixels: 784 numbers. A logistic regression trained on all of them reads 92.1%
+of the test digits correctly and takes about two minutes to train on my
+laptop. Trained on fifty numbers per image instead, it reads 90.9% and takes
+two seconds. The fifty numbers are not fifty pixels. They are coordinates
+along the fifty directions that the singular value decomposition finds in the
+training set. The slider below rebuilds ten test digits from those
+coordinates one axis at a time and shows the accuracy at each setting.
+
+</Lang>
+
+<Lang locale="ko">
+
+[MNIST](https://www.openml.org/d/554)의 손글씨 숫자 한 장은 28 × 28 픽셀,
+값으로 치면 784개예요. 그 784개를 다 넣고 로지스틱 회귀를 학습시키면 테스트용
+숫자 이미지의 92.1%를 맞히고, 제 노트북에서 2분쯤 걸려요. 한 장을 값 50개로
+줄여서 넣으면 90.9%를 맞히고 2초 걸리고요. 이 50개는 픽셀 50개가 아니에요.
+특이값 분해(SVD)가 학습 세트에서 찾아낸 방향 50개 위의 좌표예요. 아래
+슬라이더를 끌면 축을 하나씩 늘려 가며 그 좌표만으로 숫자 열 장을 다시 그려요.
+축을 몇 개 쓰느냐(랭크)에 따라 분류기가 몇 퍼센트를 맞히는지도 같이 나와요.
+
+</Lang>
+
+<SvdFeaturesDemo />
+
+---
+
+<Lang locale="en">
+
+### Axes instead of pixels
+
+MNIST has 70,000 digits; I held out a fifth of them, 14,000, for testing.
+Stack the other 56,000 as rows and you have a 56,000 by 784 matrix. The SVD
+of that matrix gives 784 directions in pixel space, sorted by how much of the
+data lies along each one. I did not subtract the mean first, so the first
+direction points at where the images sit as a whole, and it looks like the
+average digit, a blurred loop that could be a 0 or a 9. The next few are
+strokes and tilts, the differences that separate one digit from another. By
+the fiftieth they are faint textures. Those directions are the axes, and each
+image is replaced by its coordinates along the first _k_ of them:
+
+</Lang>
+
+<Lang locale="ko">
+
+### 픽셀 대신 축
+
+MNIST에는 숫자 이미지가 70,000장 있고, 그중 5분의 1인 14,000장은 테스트용으로
+떼어 뒀어요. 나머지 56,000장을 한 줄에 한 장씩 쌓으면 56,000 × 784 행렬이에요.
+이 행렬을 SVD하면 픽셀 공간의 방향 784개가 나오는데, 데이터가 그 방향에 많이
+실린 순서대로 정렬돼 있어요. 평균을 먼저 빼지 않았기 때문에 첫 번째 방향은
+이미지들이 통째로 모여 있는 자리를 가리키고, 그래서 평균 숫자처럼 생겼어요.
+0인지 9인지 모를 흐릿한 고리죠. 그다음 몇 개는 획과 기울기, 그러니까 숫자와
+숫자를 가르는 차이고, 쉰 번째쯤 가면 희미한 결만 남아요. 이 방향들이 축이고,
+이미지 한 장은 앞쪽 축 *k*개 위의 좌표로 바뀌어요:
+
+</Lang>
+
+$$
+z \;=\; x \, V_k
+$$
+
+<Lang locale="en">
+
+Read aloud: multiply the 784 pixels (_x_) by the 784-by-_k_ table of axes
+(_V<sub>k</sub>_) and you get _k_ numbers (_z_), the image's position along
+each axis. Rebuilding the image is the same product run backwards, and that
+is how the demo above draws its digits. The
+[photograph post](/posts/svdCompression) makes this cut on one image, with
+the pixel rows of the picture as the rows of the matrix. Here the rows are
+whole images, so what the cut keeps is not the shape of one picture but the
+shapes shared by all of them. It is the same decomposition
+[the LSA search](/posts/lsaSearch) runs on words.
+
+</Lang>
+
+<Lang locale="ko">
+
+말로 읽으면 이래요. 픽셀 784개(*x*)에 784 × *k*짜리 축 표(*V<sub>k</sub>*)를
+곱하면 값 *k*개(*z*)가 나와요. 축마다 이 이미지가 어디쯤 있는지 적은 값이에요.
+이미지를 되살릴 때는 같은 곱셈을 거꾸로 하면 되고, 위 데모의 숫자들도 그렇게
+그린 거예요. [사진 압축 글](/posts/svdCompression)에서는 사진 한 장의 픽셀
+행들이 행렬의 행이에요. 여기서는 이미지 한 장이 통째로 한 행이라, 남는 건 사진
+한 장의 형태가 아니라 모든 숫자가 공유하는 형태예요.
+[LSA 검색](/posts/lsaSearch)이 단어 행렬에 쓰는 것도 같은 분해예요.
+
+</Lang>
+
+---
+
+<Lang locale="en">
+
+### The curve
+
+Accuracy climbs fast and then stops. Ten axes give 80%, twenty give 88%,
+fifty give 90.9%, a hundred give 91.8%, and all 784 give 92.1%, three tenths
+of a point more. Training time does not stop, and it grows faster than _k_:
+under a second at forty axes, two seconds at fifty, six at a hundred, and two
+minutes on all 784, which is the whole image, only rotated onto the axes. The
+knee is somewhere between thirty and a hundred, and which side of it you stop
+on depends on how much training time a point of accuracy is worth to you.
+
+Two things make the last axes cheap to drop. Sixty-eight of the 784 pixels,
+out at the edge of the frame, are never inked in any training image, and the
+matrix turns out to have rank 710, not 784: the last 74 axes carry nothing at
+all. And the remaining axes are sorted by how much of the data lies along
+them, not by how useful they are for telling digits apart, so the ones at the
+end mostly record how individual writers form their strokes: real variation,
+but little of it says which digit was written.
+
+</Lang>
+
+<Lang locale="ko">
+
+### 곡선
+
+정확도는 빠르게 오르다 멈춰요. 축 10개면 80%, 20개면 88%, 50개면 90.9%,
+100개면 91.8%이고, 784개를 다 써도 92.1%, 0.3%포인트 더 오를 뿐이에요. 학습
+시간은 멈추지 않고 늘어요. 그것도 *k*보다 가파르게요. 축 40개면 1초가 안
+걸리고, 50개면 2초, 100개면 6초, 784개를 다 쓰면, 그러니까 이미지 전체를 축
+방향으로 돌려 놓기만 하면 2분이에요. 꺾이는 지점은 30과 100 사이 어딘가에
+있고, 그 앞에서 멈출지 더 갈지는 정확도 1%포인트를 위해 학습 시간을 얼마나 더
+쓸 수 있느냐에 달렸어요.
+
+뒤쪽 축을 이렇게 버려도 손해가 거의 없는 이유는 둘이에요. 하나, 픽셀 784개 중
+68개는 어떤 학습 이미지에서도 잉크가 안 묻어요. 이미지 가장자리죠. 따져 보면
+행렬의 랭크(서로 독립인 방향의 수)도 784가 아니라 710이라, 마지막 축 74개는
+특이값이 사실상 0이고 담긴 정보가 없어요. 둘, 남은 축은 데이터가 많이 실린
+순이지 숫자를 구분하는 데 유용한 순이 아니에요. 그러니 뒤쪽 축은 대개 사람마다
+획을 긋는 버릇을 담고 있어요. 실제로 있는 차이지만, 어떤 숫자인지는 별로 말해
+주지 않는 차이죠.
+
+</Lang>
+
+---
+
+<Lang locale="en">
+
+### The first time, the curve went down
+
+When I first ran this, the accuracy curve peaked at 70% around ten axes and
+then slid to 50% by a hundred. I wrote a paragraph about the trade-off
+between compression and accuracy. There was no trade-off. There was a bug,
+and the paragraph was an explanation of a bug.
+
+I had factorised the training set and the test set separately and projected
+each onto its own axes. The first few axes of the two decompositions nearly
+agree, because the average digit and the main strokes are the same in any
+large enough sample; that is why the curve rises at first. Past that they
+drift: axis fifteen of the training set and axis fifteen of the test set
+point in different directions, sometimes the same direction with the opposite
+sign. The classifier learned that a large positive value on axis fifteen
+means one thing, and was then handed coordinates measured on a different
+ruler. More axes meant more mismatched coordinates, so more axes meant worse.
+Tick "my first attempt" in the demo and the falling curve is there,
+reproduced to the decimal.
+
+The fix is one line: factorise the training set once and use its axes for
+everything, the test set included, and every image the model will ever see.
+scikit-learn's documentation lists this mistake among its common pitfalls as
+[inconsistent preprocessing](https://scikit-learn.org/stable/common_pitfalls.html#inconsistent-preprocessing).
+The axes are part of the model, the way the vocabulary is part of
+[a search index](/posts/lsaSearch). Fit them once, on the training data, and
+never again.
+
+</Lang>
+
+<Lang locale="ko">
+
+### 처음엔 곡선이 내려갔다
+
+처음 이걸 돌렸을 때 정확도 곡선은 축 10개쯤에서 70%로 정점을 찍고 100개에서는
+50%까지 떨어졌어요. 그걸 보고 압축과 정확도 사이의 트레이드오프를 설명하는
+문단까지 썼고요. 트레이드오프는 없었어요. 버그가 있었고, 그 문단은 버그를
+해설한 글이었죠.
+
+학습 세트와 테스트 세트를 따로 분해해서 각각 자기 축에 투영했던 거예요. 두
+분해의 앞쪽 축 몇 개는 거의 같아요. 평균 숫자와 굵직한 획은 표본이 충분히
+크면 어디서나 같으니까요. 곡선이 처음에 오르는 이유가 그거예요. 그 뒤로는
+어긋나요. 학습 세트의 15번 축과 테스트 세트의 15번 축은 다른 방향을 가리키고,
+어떤 때는 같은 방향인데 부호만 반대예요. 분류기는 "15번 좌표가 크게 양수면
+이런 숫자"라고 배웠는데, 정작 받아 든 좌표는 다른 자로 잰 값이었던 거죠. 축을
+늘릴수록 어긋난 좌표도 늘어나니, 정확도는 떨어질 수밖에 없었어요. 데모의 "my
+first attempt"를 켜면 그 내려가는 곡선이 그대로 나와요. 소수점까지 그때 수치
+그대로예요.
+
+고치는 건 한 줄이에요. 학습 세트를 한 번만 분해하고, 그 축을 테스트 세트에도,
+앞으로 모델이 볼 모든 이미지에도 그대로 써요. scikit-learn 문서도 이 실수를
+흔한 함정으로 꼽아요([inconsistent preprocessing](https://scikit-learn.org/stable/common_pitfalls.html#inconsistent-preprocessing)).
+축은 모델의 일부예요. [LSA 검색](/posts/lsaSearch)이 어휘 20,000개를 처음에
+한 번 정해 두는 것과 같아요. 학습 데이터로 한 번 구하고, 그 뒤로는 다시 구하지
+않아요.
+
+</Lang>
+
+---
+
+<Lang locale="en">
+
+### Three matrices, one cut
+
+The SVD cuts three different matrices on this site: a photograph, a pile of
+digits, a table of word counts. In each it sorts the directions by how much
+of the data lies along them, and in each the question is where to stop. For
+[a photograph](/posts/svdCompression) the answer is what your eyes can
+forgive; for [a table of words](/posts/lsaSearch), what search can survive.
+For handwritten digits it is a curve with a knee, and the knee is around
+fifty.
+
+</Lang>
+
+<Lang locale="ko">
+
+### 행렬은 셋, 자르는 법은 하나
+
+이 사이트에서 SVD가 자르는 행렬은 셋이에요. 사진 한 장, 숫자 무더기, 단어
+빈도표. 셋 다 방향을 데이터가 많이 실린 순서대로 늘어놓고 나면, 남는 질문은
+어디서 멈추느냐 하나예요. [사진](/posts/svdCompression)은 눈에 거슬리기
+직전까지 자르고, [단어 빈도표](/posts/lsaSearch)는 검색이 제 구실을 하는
+선에서 멈춰요. 손글씨는 곡선이 답을 줘요. 50 근처에서 꺾이거든요.
+
+</Lang>

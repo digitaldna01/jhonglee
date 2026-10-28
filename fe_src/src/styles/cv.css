@@ -86,8 +86,9 @@
   color: var(--fg-2); /* a recruiter reads dates — information, not decoration */
   letter-spacing: 0.01em;
   line-height: 1.5;
-  white-space: nowrap;
+  overflow-wrap: anywhere; /* never run under the title, whatever a post's stack says */
 }
+.cv-sub { display: block; color: var(--fg-3); } /* a project's stack, under its date */
 .cv-title {
   font-size: var(--body-md);
   color: var(--fg-1);
@@ -124,5 +125,5 @@ a.cv-title:focus-visible .arr { opacity: 1; }
 
 @media (max-width: 640px) {
   .cv-row { grid-template-columns: 1fr; gap: 4px; }
-  .cv-date { order: 2; white-space: normal; }
+  .cv-date { order: 2; }
 }

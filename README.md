@@ -42,3 +42,4 @@ mdx 포스트 ──(npm run corpus)──▶ corpus.json ──▶ 백엔드 �
 
 - `docs/backend-architecture.md` — 패키지 구조, 규칙, 상태의 자리, 배포 메모
 - `docs/rag-design-notes.md` — 검색·인덱싱 기법 조사와 채택 결정, 로드맵
+- `CLAUDE.md` · `.claude/` — Claude Code 작업 규칙, 훅(git 가드, 포스트 검사, lint), 스킬(`/post`, `/release`), 에이전트(`ko-reviewer`)

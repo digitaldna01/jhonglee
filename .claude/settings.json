@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(npm run lint*)",
+      "Bash(npm run build*)",
+      "Bash(npm run corpus*)",
+      "Bash(npx eslint *)",
+      "Bash(node fe_src/scripts/screenshot.mjs *)",
+      "Bash(node scripts/screenshot.mjs *)",
+      "Bash(.venv/bin/python -m pytest*)",
+      "Bash(be_src/.venv/bin/python -m pytest*)",
+      "Bash(python3 .claude/hooks/check_post.py*)",
+      "Bash(docker compose -f docker-compose.dev.yml ps*)",
+      "Bash(docker compose -f docker-compose.dev.yml logs*)",
+      "Bash(docker compose -f docker-compose.dev.yml restart *)",
+      "Bash(gh pr view*)",
+      "Bash(gh pr list*)",
+      "Bash(gh pr checks*)",
+      "Bash(gh run list*)",
+      "Bash(gh run view*)"
+    ],
+    "deny": [
+      "Read(./.env)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard_git.py\"" }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|MultiEdit|Write",
+        "hooks": [
+          { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/check_post.py\" --hook" },
+          { "type": "command", "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/lint_js.py\"", "timeout": 30 }
+        ]
+      }
+    ]
+  }
+}

@@ -24,8 +24,11 @@ dist-ssr
 *.sw?
 .vite/
 
-#  Claude
-.claude/
+# Claude — .claude/ (settings, hooks, skills, agents) and CLAUDE.md are shared;
+# personal overrides and the private-context file stay local
+.claude/settings.local.json
+.claude/worktrees/
+CLAUDE.local.md
 
 # Python (be_src backend)
 __pycache__/
