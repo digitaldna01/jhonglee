@@ -5,7 +5,7 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 
 export default [
-  { ignores: ['dist'] },
+  { ignores: ['dist', '.vite'] },  // .vite/deps: the dev container's pre-bundle cache
   // build tooling runs in Node, not the browser
   { files: ['vite.config.js', 'scripts/**'], languageOptions: { globals: globals.node } },
   {
